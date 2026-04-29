@@ -48,7 +48,7 @@ export function AuthFlow() {
         throw new Error(data.error || "ارسال کد تایید ناموفق بود");
       }
 
-      setRequiresRegistration(data.next === "register");
+      setRequiresRegistration(false);
       setStep("otp");
       setSecondsRemaining(120);
       showToast({ type: "success", message: "کد تایید ارسال شد" });
@@ -86,6 +86,12 @@ export function AuthFlow() {
         }
 
         throw new Error(data.error || "کد تایید معتبر نیست");
+      }
+
+      if (data.next === "register") {
+        setRequiresRegistration(true);
+        setRegistrationError("شناسه ملی شرکت را برای تکمیل ثبت‌نام وارد کنید");
+        return;
       }
 
       showToast({

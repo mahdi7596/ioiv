@@ -1,5 +1,6 @@
 import { OtpPurpose } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomInt } from "node:crypto";
 import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth/session";
 import { logger, maskMobile } from "@/lib/logger";
@@ -8,6 +9,9 @@ import { createOtpSmsMessage } from "@/lib/sms/messages";
 import { requestOtpSchema, verifyOtpSchema } from "@/lib/validations/auth";
 
 const OTP_TTL_MS = 2 * 60 * 1000;
+const OTP_REQUEST_COOLDOWN_MS = 90 * 1000;
+const OTP_REQUEST_WINDOW_MS = 60 * 60 * 1000;
+const OTP_MAX_REQUESTS_PER_WINDOW = 5;
 
 export class ActionError extends Error {
   constructor(
@@ -23,7 +27,36 @@ function otpPurposeForMode(mode: "user" | "admin") {
 }
 
 function generateOtp() {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return randomInt(1000, 10000).toString();
+}
+
+async function enforceOtpRequestLimits(mobile: string, purpose: OtpPurpose, now: Date) {
+  const cooldownStart = new Date(now.getTime() - OTP_REQUEST_COOLDOWN_MS);
+  const windowStart = new Date(now.getTime() - OTP_REQUEST_WINDOW_MS);
+  const latestOtp = await db.otpCode.findFirst({
+    where: {
+      mobile,
+      purpose,
+      createdAt: { gte: cooldownStart },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (latestOtp) {
+    throw new ActionError("لطفاً کمی بعد دوباره برای دریافت کد تلاش کنید", 429);
+  }
+
+  const recentRequestCount = await db.otpCode.count({
+    where: {
+      mobile,
+      purpose,
+      createdAt: { gte: windowStart },
+    },
+  });
+
+  if (recentRequestCount >= OTP_MAX_REQUESTS_PER_WINDOW) {
+    throw new ActionError("تعداد درخواست‌های کد تایید بیش از حد مجاز است", 429);
+  }
 }
 
 export async function requestOtp(input: unknown): Promise<{ next: "otp" | "register" }> {
@@ -45,22 +78,33 @@ export async function requestOtp(input: unknown): Promise<{ next: "otp" | "regis
     const admin = await db.admin.findUnique({ where: { mobile } });
 
     if (!admin?.active) {
-      logger.warn("otp_request_rejected_inactive_admin", {
+      logger.warn("otp_request_skipped_inactive_admin", {
         mobile: maskMobile(mobile),
       });
-      throw new ActionError("مدیر فعالی با این شماره پیدا نشد", 403);
+      return { next: "otp" };
     }
   }
 
+  const now = new Date();
+  await enforceOtpRequestLimits(mobile, purpose, now);
   const code = generateOtp();
   const codeHash = await bcrypt.hash(code, 10);
+
+  await db.otpCode.updateMany({
+    where: {
+      mobile,
+      purpose,
+      consumedAt: null,
+    },
+    data: { consumedAt: now },
+  });
 
   await db.otpCode.create({
     data: {
       mobile,
       purpose,
       codeHash,
-      expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      expiresAt: new Date(now.getTime() + OTP_TTL_MS),
     },
   });
 
@@ -75,17 +119,15 @@ export async function requestOtp(input: unknown): Promise<{ next: "otp" | "regis
     return { next: "otp" };
   }
 
-  const user = await db.user.findUnique({ where: { mobile } });
-  const next = user ? "otp" : "register";
   logger.info("otp_request_completed", {
     mode,
     mobile: maskMobile(mobile),
-    next,
+    next: "otp",
   });
-  return { next };
+  return { next: "otp" };
 }
 
-export async function verifyOtp(input: unknown): Promise<{ redirectTo: string }> {
+export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; next?: "register" }> {
   const parsed = verifyOtpSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -119,11 +161,6 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo: string }>
     throw new ActionError("کد تایید معتبر نیست یا منقضی شده است");
   }
 
-  await db.otpCode.update({
-    where: { id: otp.id },
-    data: { consumedAt: new Date() },
-  });
-
   if (mode === "admin") {
     const admin = await db.admin.findUnique({ where: { mobile } });
 
@@ -131,6 +168,10 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo: string }>
       throw new ActionError("دسترسی مدیریت برای این شماره فعال نیست", 403);
     }
 
+    await db.otpCode.update({
+      where: { id: otp.id },
+      data: { consumedAt: new Date() },
+    });
     await createSession({ subjectId: admin.id, kind: "admin" });
     logger.info("otp_verify_completed", {
       mode,
@@ -143,7 +184,11 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo: string }>
   const existingUser = await db.user.findUnique({ where: { mobile } });
 
   if (!existingUser && !companyNationalId) {
-    throw new ActionError("شناسه ملی شرکت الزامی است");
+    logger.info("otp_verify_requires_registration", {
+      mode,
+      mobile: maskMobile(mobile),
+    });
+    return { next: "register" };
   }
 
   const user =
@@ -155,6 +200,10 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo: string }>
       },
     }));
 
+  await db.otpCode.update({
+    where: { id: otp.id },
+    data: { consumedAt: new Date() },
+  });
   await createSession({ subjectId: user.id, kind: "user" });
   logger.info("otp_verify_completed", {
     mode,

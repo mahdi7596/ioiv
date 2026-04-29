@@ -1,0 +1,105 @@
+import { OtpPurpose } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ActionError, requestOtp } from "@/lib/actions/auth";
+
+const mocks = vi.hoisted(() => ({
+  db: {
+    admin: {
+      findUnique: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
+    },
+    otpCode: {
+      findFirst: vi.fn(),
+      count: vi.fn(),
+      updateMany: vi.fn(),
+      create: vi.fn(),
+    },
+  },
+  sendSms: vi.fn(),
+}));
+
+vi.mock("@/lib/db", () => ({
+  db: mocks.db,
+}));
+
+vi.mock("@/lib/sms", () => ({
+  sendSms: mocks.sendSms,
+}));
+
+describe("auth actions", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-29T10:00:00.000Z"));
+    vi.clearAllMocks();
+    mocks.db.admin.findUnique.mockResolvedValue({
+      id: "admin-1",
+      active: true,
+    });
+    mocks.db.user.findUnique.mockResolvedValue(null);
+    mocks.db.otpCode.findFirst.mockResolvedValue(null);
+    mocks.db.otpCode.count.mockResolvedValue(0);
+    mocks.db.otpCode.updateMany.mockResolvedValue({ count: 0 });
+    mocks.db.otpCode.create.mockResolvedValue({ id: "otp-1" });
+    mocks.sendSms.mockResolvedValue({ ok: true });
+  });
+
+  it("invalidates older unused OTPs before creating a replacement", async () => {
+    await requestOtp({ mobile: "09123456789", mode: "admin" });
+
+    expect(mocks.db.otpCode.updateMany).toHaveBeenCalledWith({
+      where: {
+        mobile: "09123456789",
+        purpose: OtpPurpose.ADMIN_LOGIN,
+        consumedAt: null,
+      },
+      data: {
+        consumedAt: new Date("2026-04-29T10:00:00.000Z"),
+      },
+    });
+    expect(mocks.db.otpCode.create).toHaveBeenCalledOnce();
+  });
+
+  it("rejects OTP requests made too soon for the same mobile and purpose", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({
+      createdAt: new Date("2026-04-29T09:59:30.000Z"),
+    });
+
+    await expect(
+      requestOtp({ mobile: "09123456789", mode: "admin" }),
+    ).rejects.toMatchObject<ActionError>({ status: 429 });
+    expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
+    expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+
+  it("rejects OTP requests after five requests in an hour for the same mobile and purpose", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({
+      createdAt: new Date("2026-04-29T09:55:00.000Z"),
+    });
+    mocks.db.otpCode.count.mockResolvedValue(5);
+
+    await expect(
+      requestOtp({ mobile: "09123456789", mode: "admin" }),
+    ).rejects.toMatchObject<ActionError>({ status: 429 });
+    expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
+    expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+
+  it("does not reveal whether an admin mobile exists when requesting an OTP", async () => {
+    mocks.db.admin.findUnique.mockResolvedValue(null);
+
+    await expect(
+      requestOtp({ mobile: "09123456789", mode: "admin" }),
+    ).resolves.toEqual({ next: "otp" });
+    expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
+    expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+
+  it("does not reveal whether a user mobile is already registered when requesting an OTP", async () => {
+    await expect(
+      requestOtp({ mobile: "09123456789", mode: "user" }),
+    ).resolves.toEqual({ next: "otp" });
+    expect(mocks.db.user.findUnique).not.toHaveBeenCalled();
+  });
+});
