@@ -23,7 +23,7 @@ describe("Ghasedak SMS adapter", () => {
     vi.restoreAllMocks();
   });
 
-  it("sends OTP templates with param1 through Ghasedak template params endpoint", async () => {
+  it("sends OTP templates with param1 through Ghasedak verify endpoint", async () => {
     const fetchMock = mockSuccessfulFetch();
 
     await sendGhasedakSms({
@@ -34,25 +34,19 @@ describe("Ghasedak SMS adapter", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://gateway.ghasedak.me/rest/api/v1/WebService/SendOtpWithParams",
+      "https://api.smsapp.ir/v2/send/verify",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
-          "Content-Type": "application/json",
-          ApiKey: "test-api-key",
+          "Content-Type": "application/x-www-form-urlencoded",
+          apikey: "test-api-key",
         }),
       }),
     );
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
-      receptors: [{ mobile: "09123456789" }],
-      templateName: "sanaotp",
-      param1: "4321",
-      isVoice: false,
-      udh: false,
-    });
+    expect(fetchMock.mock.calls[0][1].body).toBe("type=1&receptor=09123456789&template=sanaotp&param1=4321");
   });
 
-  it("sends no-param templates through Ghasedak OTP endpoint with empty inputs", async () => {
+  it("sends no-param templates through Ghasedak verify endpoint with an empty param1", async () => {
     const fetchMock = mockSuccessfulFetch();
 
     await sendGhasedakSms({
@@ -62,15 +56,10 @@ describe("Ghasedak SMS adapter", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://gateway.ghasedak.me/rest/api/v1/WebService/SendOtpSMS",
+      "https://api.smsapp.ir/v2/send/verify",
       expect.any(Object),
     );
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
-      receptors: [{ mobile: "09123456789" }],
-      templateName: "sanastatus",
-      inputs: [],
-      udh: false,
-    });
+    expect(fetchMock.mock.calls[0][1].body).toBe("type=1&receptor=09123456789&template=sanastatus&param1=");
   });
 
   it("treats unsuccessful Ghasedak JSON responses as failures", async () => {
@@ -78,7 +67,7 @@ describe("Ghasedak SMS adapter", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ IsSuccess: false, StatusCode: 400, Message: "bad template" }),
+        json: async () => ({ result: "error", message: "bad template" }),
       }),
     );
 

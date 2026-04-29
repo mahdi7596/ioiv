@@ -1,11 +1,14 @@
 import type { SmsMessage } from "./index";
 
-const GHASEDAK_BASE_URL = "https://gateway.ghasedak.me/rest/api/v1/WebService";
+const GHASEDAK_BASE_URL = "https://api.smsapp.ir/v2";
 
 type GhasedakResponse = {
   IsSuccess?: boolean;
   StatusCode?: number;
   Message?: string;
+  result?: string;
+  message?: string;
+  messageids?: number | string;
 };
 
 async function postToGhasedak(path: string, body: Record<string, unknown>) {
@@ -18,10 +21,19 @@ async function postToGhasedak(path: string, body: Record<string, unknown>) {
   const response = await fetch(`${GHASEDAK_BASE_URL}${path}`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      ApiKey: apiKey,
+      "Content-Type": "application/x-www-form-urlencoded",
+      apikey: apiKey,
     },
-    body: JSON.stringify(body),
+    body: new URLSearchParams(
+      Object.entries(body).reduce<Record<string, string>>((params, [key, value]) => {
+        if (value === undefined) {
+          return params;
+        }
+
+        params[key] = value === null ? "" : String(value);
+        return params;
+      }, {}),
+    ).toString(),
   });
 
   if (!response.ok) {
@@ -31,8 +43,10 @@ async function postToGhasedak(path: string, body: Record<string, unknown>) {
 
   const result = (await response.json()) as GhasedakResponse;
 
-  if (result.IsSuccess === false) {
-    throw new Error(`Ghasedak SMS request failed: ${result.StatusCode || "unknown"} ${result.Message || ""}`.trim());
+  if (result.IsSuccess === false || result.result === "error") {
+    throw new Error(
+      `Ghasedak SMS request failed: ${result.StatusCode || "unknown"} ${result.Message || result.message || ""}`.trim(),
+    );
   }
 
   return result;
@@ -56,35 +70,22 @@ function paramsToTemplateFields(params: SmsMessage["params"]) {
   }, {});
 }
 
-function hasParams(params: SmsMessage["params"]) {
-  return Boolean(params && Object.values(params).some(Boolean));
-}
-
 export async function sendGhasedakSms(message: SmsMessage) {
   if (message.template) {
-    if (hasParams(message.params)) {
-      return postToGhasedak("/SendOtpWithParams", {
-        receptors: [{ mobile: message.to, clientReferenceId: message.clientReferenceId }],
-        templateName: message.template,
-        ...paramsToTemplateFields(message.params),
-        isVoice: false,
-        udh: false,
-      });
-    }
-
-    return postToGhasedak("/SendOtpSMS", {
-      receptors: [{ mobile: message.to, clientReferenceId: message.clientReferenceId }],
-      templateName: message.template,
-      inputs: [],
-      udh: false,
+    return postToGhasedak("/send/verify", {
+      type: 1,
+      receptor: message.to,
+      template: message.template,
+      param1: "",
+      ...paramsToTemplateFields(message.params),
+      checkingids: message.clientReferenceId,
     });
   }
 
-  return postToGhasedak("/SendSingleSMS", {
+  return postToGhasedak("/sms/send/simple", {
     receptor: message.to,
     message: message.text,
-    lineNumber: process.env.GHASEDAK_SENDER || undefined,
-    clientReferenceId: message.clientReferenceId,
-    udh: false,
+    sender: process.env.GHASEDAK_SENDER || undefined,
+    checkingids: message.clientReferenceId,
   });
 }

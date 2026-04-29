@@ -14,7 +14,6 @@ export function AuthFlow() {
   const [code, setCode] = useState("");
   const [companyNationalId, setCompanyNationalId] = useState("");
   const [requiresRegistration, setRequiresRegistration] = useState(false);
-  const [devOtp, setDevOtp] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [registrationError, setRegistrationError] = useState<string>();
@@ -50,7 +49,6 @@ export function AuthFlow() {
       }
 
       setRequiresRegistration(data.next === "register");
-      setDevOtp(data.devOtp);
       setStep("otp");
       setSecondsRemaining(120);
       showToast({ type: "success", message: "کد تایید ارسال شد" });
@@ -108,7 +106,6 @@ export function AuthFlow() {
     return (
       <OtpForm
         code={code}
-        devOtp={devOtp}
         error={error}
         loading={loading}
         canResend={secondsRemaining === 0}

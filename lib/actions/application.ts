@@ -1,6 +1,6 @@
 "use server";
 
-import { ApplicationStatus, PaymentStatus } from "@prisma/client";
+import { PaymentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { canEditApplication } from "@/lib/application/status";
@@ -10,23 +10,6 @@ import { ActionError } from "./auth";
 
 export async function getCurrentUserApplication() {
   const session = await requireSession("user");
-
-  if (session.subjectId.startsWith("dev-user:")) {
-    const [, mobile, companyNationalId] = session.subjectId.split(":");
-
-    return {
-      user: {
-        id: session.subjectId,
-        mobile,
-        companyNationalId,
-        nationalCode: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        applications: [],
-      },
-      application: null,
-    };
-  }
 
   const user = await db.user.findUnique({
     where: { id: session.subjectId },
@@ -53,30 +36,6 @@ export async function getCurrentUserApplication() {
 
 export async function createOrGetDraftApplication() {
   const session = await requireSession("user");
-
-  if (session.subjectId.startsWith("dev-user:")) {
-    const [, mobile, companyNationalId] = session.subjectId.split(":");
-
-    return {
-      id: "dev-application",
-      userId: session.subjectId,
-      mobile,
-      companyNationalId: companyNationalId || "00000000000",
-      nationalCode: null,
-      applicationRound: APPLICATION_ROUND,
-      status: ApplicationStatus.DRAFT,
-      currentStep: 1,
-      taxDeclarations: [],
-      financials: [],
-      trialBalance: {},
-      creditReports: {},
-      adminNote: null,
-      submittedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      payments: [],
-    };
-  }
 
   const user = await db.user.findUnique({ where: { id: session.subjectId } });
 
@@ -133,10 +92,6 @@ export async function saveApplicationDraft(input: unknown) {
 
   if (!parsed.success) {
     throw new ActionError(parsed.error.issues[0]?.message || "اطلاعات فرم معتبر نیست");
-  }
-
-  if (session.subjectId.startsWith("dev-user:")) {
-    return createOrGetDraftApplication();
   }
 
   const application = await createOrGetDraftApplication();

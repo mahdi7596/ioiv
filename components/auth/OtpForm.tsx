@@ -2,7 +2,6 @@
 
 type OtpFormProps = {
   code: string;
-  devOtp?: string;
   error?: string;
   loading?: boolean;
   canResend?: boolean;
@@ -17,7 +16,6 @@ type OtpFormProps = {
 
 export function OtpForm({
   code,
-  devOtp,
   error,
   loading,
   canResend,
@@ -37,13 +35,6 @@ export function OtpForm({
         onSubmit();
       }}
     >
-      {devOtp ? (
-        <div className="dev-otp-box">
-          <span>کد آزمایشی برای ورود</span>
-          <strong dir="ltr">{devOtp}</strong>
-        </div>
-      ) : null}
-
       {showRegistration ? children : null}
 
       <div className="field" data-invalid={error ? "true" : undefined}>

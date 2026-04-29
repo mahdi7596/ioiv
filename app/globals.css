@@ -209,29 +209,6 @@ textarea:focus-visible {
   line-height: 1.7;
 }
 
-.dev-otp-box {
-  align-items: center;
-  background: #effaf4;
-  border: 1px solid rgb(20 122 74 / 0.22);
-  border-radius: var(--radius-card);
-  color: var(--color-success);
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  padding: 12px 14px;
-}
-
-.dev-otp-box span {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.dev-otp-box strong {
-  color: var(--color-text);
-  font-size: 1.35rem;
-  letter-spacing: 0.08em;
-}
-
 .app-shell {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
@@ -697,6 +674,10 @@ textarea:focus-visible {
 }
 
 .status-card .status-info + .review-message {
+  margin-block-start: 18px;
+}
+
+.status-card .status-info + .button {
   margin-block-start: 18px;
 }
 

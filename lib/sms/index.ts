@@ -9,7 +9,7 @@ export type SmsMessage = {
 };
 
 export async function sendSms(message: SmsMessage) {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && process.env.SMS_SEND_IN_DEVELOPMENT !== "true") {
     logger.info("sms_dev_message", {
       to: maskMobile(message.to),
       template: message.template,

@@ -8,7 +8,6 @@ export default function AdminLoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>();
-  const [devOtp, setDevOtp] = useState<string>();
 
   async function requestOtp() {
     setLoading(true);
@@ -23,7 +22,6 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "ارسال کد ناموفق بود");
-      setDevOtp(data.devOtp);
       setOtpSent(true);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "خطا رخ داد");
@@ -99,13 +97,6 @@ export default function AdminLoginPage() {
             void (otpSent ? verifyOtp() : requestOtp());
           }}
         >
-          {devOtp ? (
-            <div className="dev-otp-box">
-              <span>کد آزمایشی برای ورود</span>
-              <strong dir="ltr">{devOtp}</strong>
-            </div>
-          ) : null}
-
           <div className="field" data-invalid={message && !otpSent ? "true" : undefined}>
             <label htmlFor="admin-mobile">
               شماره موبایل <span className="text-red-600">*</span>
@@ -157,7 +148,6 @@ export default function AdminLoginPage() {
                 setOtpSent(false);
                 setCode("");
                 setMessage(undefined);
-                setDevOtp(undefined);
               }}
               className="button button--ghost w-full"
             >
