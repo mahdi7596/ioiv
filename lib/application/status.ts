@@ -8,3 +8,10 @@ const EDITABLE_STATUSES: ApplicationStatus[] = [
 export function canEditApplication(status: ApplicationStatus) {
   return EDITABLE_STATUSES.includes(status);
 }
+
+export function getApplicationAccess(status: ApplicationStatus) {
+  return {
+    canView: true,
+    canEdit: canEditApplication(status),
+  };
+}

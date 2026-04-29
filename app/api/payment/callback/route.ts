@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { verifyZarinpalPayment } from "@/lib/payments/zarinpal";
 import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
 import { notifyAdminOfSubmission } from "@/lib/actions/payment";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -12,6 +13,11 @@ export async function GET(request: Request) {
   const status = url.searchParams.get("Status");
 
   if (!paymentId || !authority || status !== "OK") {
+    logger.warn("payment_callback_rejected", {
+      paymentId,
+      status,
+      reason: "missing_or_not_ok",
+    });
     redirect("/dashboard?payment=failed");
   }
 
@@ -21,10 +27,19 @@ export async function GET(request: Request) {
   });
 
   if (!payment || payment.authority !== authority) {
+    logger.warn("payment_callback_rejected", {
+      paymentId,
+      reason: "payment_not_found_or_authority_mismatch",
+    });
     redirect("/dashboard?payment=failed");
   }
 
   try {
+    logger.info("payment_verification_started", {
+      paymentId: payment.id,
+      applicationId: payment.applicationId,
+    });
+
     const verified = await verifyZarinpalPayment({
       amountToman: PAYMENT_AMOUNT_TOMAN,
       authority,
@@ -51,15 +66,23 @@ export async function GET(request: Request) {
           applicationId: payment.applicationId,
           previousStatus: payment.application.status,
           newStatus: ApplicationStatus.SUBMITTED,
-          note: "پرداخت تایید شد و پرونده ارسال شد",
+          note: "پرداخت موفق بود و پرونده در صف بررسی قرار گرفت",
         },
       }),
     ]);
 
     await notifyAdminOfSubmission(payment.applicationId);
+    logger.info("payment_verification_succeeded", {
+      paymentId: payment.id,
+      applicationId: payment.applicationId,
+      referenceId: verified.referenceId,
+    });
     redirect("/dashboard?payment=verified");
   } catch (error) {
-    console.error(error);
+    logger.error("payment_verification_failed", error, {
+      paymentId: payment.id,
+      applicationId: payment.applicationId,
+    });
     await db.payment.update({
       where: { id: payment.id },
       data: {

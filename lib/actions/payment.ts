@@ -3,6 +3,7 @@
 import { ApplicationStatus, PaymentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
+import { logger } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
 import { finalSubmissionSchema } from "@/lib/validations/application";
 import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
@@ -38,6 +39,9 @@ export async function startPayment() {
       where: { id: application.id },
       data: { status: ApplicationStatus.SUBMITTED },
     });
+    logger.info("application_resubmitted_without_payment", {
+      applicationId: application.id,
+    });
     return { redirectTo: "/dashboard" };
   }
 
@@ -50,12 +54,28 @@ export async function startPayment() {
     },
   });
 
-  const zarinpal = await requestZarinpalPayment({
+  logger.info("payment_start_requested", {
+    applicationId: application.id,
+    paymentId: payment.id,
     amountToman: PAYMENT_AMOUNT_TOMAN,
-    description: "پرداخت ثبت پرونده سامانه ثنا",
-    callbackUrl: `${appUrl}/api/payment/callback?paymentId=${payment.id}`,
-    mobile: application.mobile,
   });
+
+  let zarinpal: { authority: string; paymentUrl: string };
+
+  try {
+    zarinpal = await requestZarinpalPayment({
+      amountToman: PAYMENT_AMOUNT_TOMAN,
+      description: "پرداخت ثبت پرونده سامانه ثنا",
+      callbackUrl: `${appUrl}/api/payment/callback?paymentId=${payment.id}`,
+      mobile: application.mobile,
+    });
+  } catch (error) {
+    logger.error("payment_start_failed", error, {
+      applicationId: application.id,
+      paymentId: payment.id,
+    });
+    throw error;
+  }
 
   await db.$transaction([
     db.application.update({
@@ -68,6 +88,11 @@ export async function startPayment() {
     }),
   ]);
 
+  logger.info("payment_start_succeeded", {
+    applicationId: application.id,
+    paymentId: payment.id,
+  });
+
   return { redirectTo: zarinpal.paymentUrl };
 }
 
@@ -75,11 +100,18 @@ export async function notifyAdminOfSubmission(applicationId: string) {
   const adminMobile = process.env.ADMIN_ALERT_MOBILE;
 
   if (!adminMobile) {
+    logger.warn("admin_submission_notification_skipped", {
+      applicationId,
+      reason: "missing_admin_alert_mobile",
+    });
     return;
   }
 
   await sendSms({
     to: adminMobile,
     text: `پرونده جدید در سامانه ثنا ثبت شد: ${applicationId}`,
+  });
+  logger.info("admin_submission_notification_sent", {
+    applicationId,
   });
 }

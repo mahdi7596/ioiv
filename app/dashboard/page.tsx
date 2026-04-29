@@ -1,27 +1,20 @@
 import Link from "next/link";
+import { ClipboardList, Info, MessageSquareWarning } from "lucide-react";
 import { redirect } from "next/navigation";
+import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { AppShell } from "@/components/layout/AppShell";
 import { canEditApplication } from "@/lib/application/status";
 import { getCurrentUserApplication } from "@/lib/actions/application";
 
-const statusLabels: Record<string, string> = {
-  DRAFT: "پیش‌نویس",
-  PENDING_PAYMENT: "در انتظار پرداخت",
-  SUBMITTED: "ارسال شده",
-  UNDER_REVIEW: "در حال بررسی",
-  NEEDS_EDIT: "نیازمند ویرایش",
-  REJECTED: "رد شده",
-  ACCEPTED: "پذیرفته شده",
-};
-
 const statusGuidance: Record<string, string> = {
   DRAFT: "پرونده هنوز ارسال نشده است. می‌توانید مدارک را کامل کنید و پرداخت را انجام دهید.",
-  PENDING_PAYMENT: "پرونده آماده پرداخت است. پس از پرداخت، پرونده برای بررسی ارسال می‌شود.",
-  SUBMITTED: "پرونده ارسال شده و منتظر شروع بررسی است.",
+  PENDING_PAYMENT: "پرونده کامل شده و منتظر نتیجه پرداخت از درگاه است.",
+  SUBMITTED: "پرداخت موفق بوده و پرونده در صف بررسی مدیریت قرار دارد.",
   UNDER_REVIEW: "تیم مدیریت در حال بررسی مدارک شماست.",
-  NEEDS_EDIT: "پرونده نیازمند اصلاح است. یادداشت مدیریت را بررسی کنید و مدارک را اصلاح کنید.",
+  NEEDS_EDIT: "پرونده نیازمند اصلاح است. یادداشت مدیریت را بررسی کنید و موارد خواسته شده را اصلاح کنید.",
   REJECTED: "پرونده رد شده است. برای پیگیری، یادداشت مدیریت یا پشتیبانی را بررسی کنید.",
-  ACCEPTED: "پرونده پذیرفته شده و نیازی به اقدام بیشتر نیست.",
+  ACCEPTED: "پرونده تایید شده و نیازی به اقدام بیشتر نیست.",
 };
 
 export default async function DashboardPage() {
@@ -36,6 +29,7 @@ export default async function DashboardPage() {
   const { application } = data;
   const latestPayment = application?.payments[0];
   const editable = application ? canEditApplication(application.status) : true;
+  const hasActiveEditRequest = application?.status === "NEEDS_EDIT";
 
   return (
     <AppShell
@@ -44,7 +38,14 @@ export default async function DashboardPage() {
       title="وضعیت پرونده"
       description="وضعیت فعلی، اقدام بعدی و پیام‌های مدیریت را از اینجا دنبال کنید."
       action={
-        <Link href="/dashboard/application" className="button button--primary" aria-disabled={application ? !editable : false}>
+        <Link
+          href="/dashboard/application"
+          className="button button--primary"
+          aria-disabled={false}
+          aria-label={application ? "مشاهده پرونده" : "شروع ثبت مدارک"}
+          title={application ? "مشاهده پرونده" : "شروع ثبت مدارک"}
+        >
+          <ClipboardList aria-hidden="true" size={19} strokeWidth={2} />
           {application ? "مشاهده پرونده" : "شروع ثبت مدارک"}
         </Link>
       }
@@ -55,7 +56,9 @@ export default async function DashboardPage() {
             <div className="detail-grid">
               <div>
                 <p className="stat-label">وضعیت</p>
-                <p className="stat-value">{statusLabels[application.status]}</p>
+                <div className="mt-2">
+                  <StatusBadge status={application.status} />
+                </div>
               </div>
               <div>
                 <p className="stat-label">شناسه ملی شرکت</p>
@@ -65,9 +68,9 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="stat-label">پرداخت</p>
-                <p className="stat-value">
-                  {latestPayment ? statusLabels[latestPayment.status] || latestPayment.status : "ثبت نشده"}
-                </p>
+                <div className="mt-2">
+                  <PaymentStatusBadge status={latestPayment?.status} />
+                </div>
               </div>
               <div>
                 <p className="stat-label">مرحله فعلی</p>
@@ -75,26 +78,60 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <p className="notice">{statusGuidance[application.status]}</p>
+            <p className="status-info" role="status">
+              <Info aria-hidden="true" size={20} strokeWidth={2.2} />
+              <span>{statusGuidance[application.status]}</span>
+            </p>
 
             {application.adminNote ? (
-              <div className="notice">
-                {application.adminNote}
-              </div>
+              <article
+                className="review-message"
+                data-state={hasActiveEditRequest ? "active" : "resolved"}
+                aria-label="پیام مدیریت"
+              >
+                <div className="review-message__header">
+                  <span className="review-message__icon" aria-hidden="true">
+                    <MessageSquareWarning size={21} strokeWidth={2.2} />
+                  </span>
+                  <div>
+                    <p className="review-message__eyebrow">
+                      {hasActiveEditRequest ? "پیام کارشناس بررسی" : "پیام قبلی کارشناس"}
+                    </p>
+                    <h2>
+                      {hasActiveEditRequest
+                        ? "مواردی که باید اصلاح شود"
+                        : "درخواست اصلاح قبلی شما ثبت و ارسال شده است"}
+                    </h2>
+                  </div>
+                  <span className="review-message__badge">
+                    {hasActiveEditRequest ? "اقدام لازم" : "ارسال شد"}
+                  </span>
+                </div>
+                {!hasActiveEditRequest ? (
+                  <p className="review-message__context">
+                    این پیام مربوط به مرحله اصلاح قبلی است. اگر کارشناس دوباره موردی ثبت کند،
+                    پیام جدید همین‌جا جایگزین می‌شود.
+                  </p>
+                ) : null}
+                <div className="review-message__body">
+                  <p>{application.adminNote}</p>
+                </div>
+              </article>
             ) : null}
 
             <Link
               href="/dashboard/application"
-              aria-disabled={!editable}
               className={editable ? "button button--primary" : "button button--ghost"}
             >
-              {editable ? "ادامه یا ویرایش پرونده" : "پرونده قابل ویرایش نیست"}
+              <ClipboardList aria-hidden="true" size={18} strokeWidth={2} />
+              {editable ? "ادامه یا ویرایش پرونده" : "مشاهده پرونده ثبت شده"}
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
             <p>برای شروع، پرونده ثبت مدارک شرکت را ایجاد کنید. پس از ذخیره، می‌توانید مرحله‌ها را ادامه دهید.</p>
             <Link href="/dashboard/application" className="button button--primary">
+              <ClipboardList aria-hidden="true" size={18} strokeWidth={2} />
               شروع ثبت مدارک
             </Link>
           </div>

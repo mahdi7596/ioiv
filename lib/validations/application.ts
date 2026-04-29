@@ -10,6 +10,16 @@ const yearFileRowSchema = z.object({
   file: fileRefSchema,
 });
 
+const optionalYearFileRowsSchema = z.preprocess((value) => {
+  if (!Array.isArray(value)) return value;
+
+  return value.filter((row) => {
+    if (!row || typeof row !== "object") return false;
+    const candidate = row as { year?: unknown; file?: unknown };
+    return Boolean(candidate.year || candidate.file);
+  });
+}, z.array(yearFileRowSchema));
+
 export const applicationDraftSchema = z.object({
   currentStep: z.number().int().min(1).max(5).optional(),
   taxDeclarations: z.array(yearFileRowSchema.partial()).optional(),
@@ -33,7 +43,7 @@ export const finalSubmissionSchema = z.object({
   taxDeclarations: z
     .array(yearFileRowSchema)
     .min(3, "حداقل سه سال اظهارنامه مالیاتی الزامی است"),
-  financials: z.array(yearFileRowSchema),
+  financials: optionalYearFileRowsSchema,
   trialBalance: z.object({
     generalLedger: fileRefSchema,
     subsidiaryLedger: fileRefSchema,

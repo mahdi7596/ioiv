@@ -38,6 +38,22 @@ describe("application validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("allows blank optional financial statement rows", () => {
+    const result = finalSubmissionSchema.safeParse({
+      taxDeclarations: [
+        { year: "1400", file: fileRef },
+        { year: "1401", file: fileRef },
+        { year: "1402", file: fileRef },
+      ],
+      financials: [{}],
+      trialBalance: { generalLedger: fileRef, subsidiaryLedger: fileRef },
+      creditReports: { company: fileRef, ceo: fileRef, boardMember: fileRef },
+      acceptedTerms: true,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("requires year and file when optional financial row is present", () => {
     const result = finalSubmissionSchema.safeParse({
       taxDeclarations: [
@@ -46,6 +62,22 @@ describe("application validation", () => {
         { year: "1402", file: fileRef },
       ],
       financials: [{ year: "1402" }],
+      trialBalance: { generalLedger: fileRef, subsidiaryLedger: fileRef },
+      creditReports: { company: fileRef, ceo: fileRef, boardMember: fileRef },
+      acceptedTerms: true,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("requires a year when optional financial file is uploaded", () => {
+    const result = finalSubmissionSchema.safeParse({
+      taxDeclarations: [
+        { year: "1400", file: fileRef },
+        { year: "1401", file: fileRef },
+        { year: "1402", file: fileRef },
+      ],
+      financials: [{ file: fileRef }],
       trialBalance: { generalLedger: fileRef, subsidiaryLedger: fileRef },
       creditReports: { company: fileRef, ceo: fileRef, boardMember: fileRef },
       acceptedTerms: true,

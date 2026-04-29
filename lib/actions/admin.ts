@@ -4,18 +4,11 @@ import { ApplicationStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
+import { getAllowedNextApplicationStatuses } from "@/lib/application/status-transitions";
+import { validateStatusChangeConfirmation } from "@/lib/application/status-change-validation";
+import { logger, maskMobile } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
 import { ActionError } from "./auth";
-
-const allowedTransitions: Partial<Record<ApplicationStatus, ApplicationStatus[]>> = {
-  SUBMITTED: [ApplicationStatus.UNDER_REVIEW, ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED],
-  UNDER_REVIEW: [
-    ApplicationStatus.NEEDS_EDIT,
-    ApplicationStatus.ACCEPTED,
-    ApplicationStatus.REJECTED,
-  ],
-  NEEDS_EDIT: [ApplicationStatus.UNDER_REVIEW],
-};
 
 async function requireActiveAdmin() {
   const session = await requireSession("admin");
@@ -90,16 +83,27 @@ export async function changeSubmissionStatus(formData: FormData) {
   const applicationId = String(formData.get("applicationId") || "");
   const nextStatus = String(formData.get("status") || "") as ApplicationStatus;
   const note = String(formData.get("note") || "").trim();
+  const rejectionCompanyNationalId = String(formData.get("rejectionCompanyNationalId") || "");
   const application = await db.application.findUnique({ where: { id: applicationId } });
 
   if (!application || !Object.values(ApplicationStatus).includes(nextStatus)) {
     throw new ActionError("درخواست تغییر وضعیت معتبر نیست");
   }
 
-  const allowed = allowedTransitions[application.status] || [];
+  const allowed = getAllowedNextApplicationStatuses(application.status);
 
   if (!allowed.includes(nextStatus)) {
     throw new ActionError("این تغییر وضعیت مجاز نیست");
+  }
+
+  const confirmation = validateStatusChangeConfirmation({
+    nextStatus,
+    companyNationalId: application.companyNationalId,
+    rejectionCompanyNationalId,
+  });
+
+  if (!confirmation.valid) {
+    throw new ActionError(confirmation.message);
   }
 
   await db.$transaction([
@@ -126,6 +130,15 @@ export async function changeSubmissionStatus(formData: FormData) {
     text: note
       ? `وضعیت پرونده شما تغییر کرد. برای مشاهده یادداشت وارد سامانه ثنا شوید.`
       : `وضعیت پرونده شما در سامانه ثنا تغییر کرد.`,
+  });
+
+  logger.info("submission_status_changed", {
+    applicationId: application.id,
+    previousStatus: application.status,
+    newStatus: nextStatus,
+    adminId: admin.id,
+    mobile: maskMobile(application.mobile),
+    hasNote: Boolean(note),
   });
 
   revalidatePath("/admin");

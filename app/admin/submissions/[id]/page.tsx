@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
+import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
+import { SubmissionFiles } from "@/components/admin/SubmissionFiles";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { StatusChangeForm } from "@/components/admin/StatusChangeForm";
+import { StatusHistoryTimeline } from "@/components/admin/StatusHistoryTimeline";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSubmission } from "@/lib/actions/admin";
 
@@ -24,11 +28,13 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
       title={submission.companyNationalId}
       description="مدارک، پرداخت، سوابق و تغییر وضعیت پرونده."
       action={
-        <Link href="/admin/submissions" className="button button--ghost">
+        <Link href="/admin/submissions" className="button button--ghost" aria-label="بازگشت" title="بازگشت">
+          <ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
           بازگشت
         </Link>
       }
     >
+      <div className="admin-submission-detail">
 
       <section className="panel detail-grid">
         <div>
@@ -41,35 +47,34 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
         </div>
         <div>
           <p className="text-sm text-stone-500">پرداخت</p>
-          <p className="mt-1 font-semibold">{submission.payments[0]?.status || "ثبت نشده"}</p>
+          <div className="mt-1"><PaymentStatusBadge status={submission.payments[0]?.status} /></div>
+        </div>
+        <div>
+          <p className="text-sm text-stone-500">دوره درخواست</p>
+          <p className="mt-1 font-semibold">{submission.applicationRound}</p>
         </div>
       </section>
 
       <section className="panel">
-        <h2 className="text-xl font-bold text-stone-950">فایل‌ها</h2>
-        <div className="mt-4 grid gap-3">
-          {submission.files.map((file) => (
-            <a key={file.id} className="text-sm font-medium text-emerald-800" href={`/api/files/${file.id}`}>
-              {file.fieldKey} - {file.originalName}
-            </a>
-          ))}
-          {submission.files.length === 0 ? <p className="text-sm text-stone-500">فایلی ثبت نشده است.</p> : null}
-        </div>
+        <h2 className="text-xl font-bold text-stone-950">فایل های آپلود شده</h2>
+        <SubmissionFiles
+          files={submission.files}
+          taxDeclarations={submission.taxDeclarations}
+          financials={submission.financials}
+        />
       </section>
 
       <section className="panel">
         <h2 className="text-xl font-bold text-stone-950">سوابق وضعیت</h2>
-        <div className="mt-4 space-y-3">
-          {submission.history.map((item) => (
-            <div key={item.id} className="rounded-md bg-stone-50 p-3 text-sm text-stone-700">
-              {item.previousStatus || "-"} به {item.newStatus} - {item.createdAt.toLocaleDateString("fa-IR")}
-              {item.note ? <p className="mt-2">{item.note}</p> : null}
-            </div>
-          ))}
-        </div>
+        <StatusHistoryTimeline items={submission.history} />
       </section>
 
-      <StatusChangeForm applicationId={submission.id} />
+      <StatusChangeForm
+        applicationId={submission.id}
+        currentStatus={submission.status}
+        companyNationalId={submission.companyNationalId}
+      />
+      </div>
     </AppShell>
   );
 }

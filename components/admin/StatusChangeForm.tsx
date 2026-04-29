@@ -1,63 +1,221 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/toast";
+import { getAllowedNextApplicationStatuses } from "@/lib/application/status-transitions";
 import { changeSubmissionStatus } from "@/lib/actions/admin";
+import { applicationStatusLabels } from "./StatusBadge";
 
-const options = [
-  ["UNDER_REVIEW", "در حال بررسی"],
-  ["NEEDS_EDIT", "نیازمند ویرایش"],
-  ["ACCEPTED", "پذیرفته شده"],
-  ["REJECTED", "رد شده"],
-];
+const noTransitionMessages: Record<string, string> = {
+  DRAFT: "این پرونده هنوز برای بررسی مدیریتی ارسال نشده است. پس از تکمیل ارسال و پرداخت، امکان تغییر وضعیت فعال می‌شود.",
+  PENDING_PAYMENT: "این پرونده در انتظار پرداخت است. پس از تایید پرداخت، امکان تغییر وضعیت مدیریتی فعال می‌شود.",
+  ACCEPTED: "این پرونده تایید شده و وضعیت دیگری برای آن قابل انتخاب نیست.",
+  REJECTED: "این پرونده رد شده و وضعیت دیگری برای آن قابل انتخاب نیست.",
+};
 
-export function StatusChangeForm({ applicationId }: { applicationId: string }) {
+export function StatusChangeForm({
+  applicationId,
+  currentStatus,
+  companyNationalId,
+}: {
+  applicationId: string;
+  currentStatus: string;
+  companyNationalId: string;
+}) {
+  const options = getAllowedNextApplicationStatuses(currentStatus);
+  const router = useRouter();
   const [message, setMessage] = useState<string>();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormData>();
+  const [selectedStatus, setSelectedStatus] = useState<string>(options[0] || "");
+  const [rejectionCompanyNationalId, setRejectionCompanyNationalId] = useState("");
   const [isPending, startTransition] = useTransition();
+  const noTransitionMessage =
+    noTransitionMessages[currentStatus] || "در وضعیت فعلی امکان تغییر وضعیت وجود ندارد.";
+  const selectedStatusLabel = applicationStatusLabels[selectedStatus] || selectedStatus;
+  const isFinalDecision = selectedStatus === "ACCEPTED" || selectedStatus === "REJECTED";
+  const requiresRejectionConfirmation = selectedStatus === "REJECTED";
+  const canConfirm =
+    !requiresRejectionConfirmation || rejectionCompanyNationalId.trim() === companyNationalId;
+
+  if (options.length === 0) {
+    return (
+      <section className="panel status-change-panel status-change-panel--empty space-y-3" aria-label="تغییر وضعیت پرونده">
+        <h2 className="text-xl font-bold text-stone-950">تغییر وضعیت</h2>
+        <p className="text-sm text-stone-700">{noTransitionMessage}</p>
+      </section>
+    );
+  }
 
   return (
     <form
-      className="panel space-y-4"
+      className="panel status-change-panel space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        const formStatus = String(formData.get("status") || "");
 
-        startTransition(async () => {
-          try {
-            await changeSubmissionStatus(formData);
-            setMessage("وضعیت ذخیره شد");
-            showToast({ type: "success", message: "وضعیت پرونده ذخیره شد" });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "تغییر وضعیت ناموفق بود";
-            setMessage(errorMessage);
-            showToast({ type: "error", message: errorMessage });
-          }
-        });
+        setSelectedStatus(formStatus);
+        setPendingFormData(formData);
+        setRejectionCompanyNationalId("");
+        setIsConfirming(true);
       }}
     >
       <input type="hidden" name="applicationId" value={applicationId} />
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-stone-800">وضعیت جدید</label>
-        <select name="status" className="w-full rounded-md border border-stone-300 px-3 py-2">
-          {options.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+      <div className="status-change-panel__summary">
+        <div>
+          <h2 className="text-lg font-bold text-stone-950">تغییر وضعیت</h2>
+          <p className="text-sm text-stone-600">
+            وضعیت فعلی: {applicationStatusLabels[currentStatus] || currentStatus}
+          </p>
+        </div>
+        {!isExpanded ? (
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={() => setIsExpanded(true)}
+          >
+            تغییر وضعیت
+          </button>
+        ) : null}
       </div>
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-stone-800">یادداشت مدیر</label>
-        <textarea name="note" rows={4} className="w-full rounded-md border border-stone-300 px-3 py-2" />
-      </div>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="button button--primary"
-      >
-        ذخیره وضعیت
-      </button>
+      {isExpanded ? (
+        <>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-stone-800">وضعیت جدید</label>
+            <select
+              name="status"
+              className="w-full rounded-md border border-stone-300 px-3 py-2"
+              value={selectedStatus}
+              onChange={(event) => setSelectedStatus(event.target.value)}
+            >
+              {options.map((value) => (
+                <option key={value} value={value}>
+                  {applicationStatusLabels[value]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-stone-800">توضیح مدیر برای کاربر</label>
+            <textarea
+              name="note"
+              rows={3}
+              className="w-full rounded-md border border-stone-300 px-3 py-2"
+              placeholder="در صورت نیاز، توضیحی برای کاربر بنویسید."
+            />
+          </div>
+          <div className="status-change-panel__actions">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="button button--primary"
+            >
+              تغییر وضعیت
+            </button>
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={() => setIsExpanded(false)}
+              disabled={isPending}
+            >
+              انصراف
+            </button>
+          </div>
+        </>
+      ) : null}
       {message ? <p className="text-sm text-stone-700">{message}</p> : null}
+      {isConfirming ? (
+        <div className="modal-backdrop" role="presentation">
+          <div
+            className="status-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="status-confirm-title"
+          >
+            <div className="space-y-2">
+              <h3 id="status-confirm-title" className="text-xl font-bold text-stone-950">
+                تایید تغییر وضعیت
+              </h3>
+              <p className="text-sm text-stone-700">
+                وضعیت پرونده به «{selectedStatusLabel}» تغییر می‌کند.
+              </p>
+              {isFinalDecision ? (
+                <p className="status-confirm-modal__warning">
+                  بعد از تغییر وضعیت به {selectedStatus === "ACCEPTED" ? "تایید شده" : "رد شده"} راه برگشتی در سامانه وجود ندارد.
+                </p>
+              ) : null}
+            </div>
+            {requiresRejectionConfirmation ? (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-stone-800">
+                  برای رد پرونده، شناسه ملی ثبت شده را وارد کنید
+                </label>
+                <input
+                  name="rejectionCompanyNationalId"
+                  value={rejectionCompanyNationalId}
+                  onChange={(event) => setRejectionCompanyNationalId(event.target.value)}
+                  className="w-full rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  dir="ltr"
+                  placeholder={companyNationalId}
+                />
+                <p className="text-xs text-stone-500">
+                  شناسه ملی ثبت شده: <span dir="ltr">{companyNationalId}</span>
+                </p>
+              </div>
+            ) : null}
+            <div className="status-change-panel__actions">
+              <button
+                type="button"
+                className="button button--primary"
+                disabled={isPending || !canConfirm}
+                onClick={() => {
+                  if (!pendingFormData) return;
+
+                  const confirmedFormData = new FormData();
+                  pendingFormData.forEach((value, key) => {
+                    confirmedFormData.append(key, value);
+                  });
+                  confirmedFormData.set("rejectionCompanyNationalId", rejectionCompanyNationalId);
+
+                  startTransition(async () => {
+                    try {
+                      await changeSubmissionStatus(confirmedFormData);
+                      setMessage("وضعیت ذخیره شد");
+                      setIsExpanded(false);
+                      setIsConfirming(false);
+                      setPendingFormData(undefined);
+                      showToast({ type: "success", message: "وضعیت پرونده ذخیره شد" });
+                      router.push("/admin/submissions");
+                    } catch (error) {
+                      const errorMessage = error instanceof Error ? error.message : "تغییر وضعیت ناموفق بود";
+                      setMessage(errorMessage);
+                      showToast({ type: "error", message: errorMessage });
+                    }
+                  });
+                }}
+              >
+                تایید و ذخیره
+              </button>
+              <button
+                type="button"
+                className="button button--ghost"
+                disabled={isPending}
+                onClick={() => {
+                  setIsConfirming(false);
+                  setPendingFormData(undefined);
+                  setRejectionCompanyNationalId("");
+                }}
+              >
+                بازگشت
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

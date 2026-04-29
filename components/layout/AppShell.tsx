@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList, Files, LayoutDashboard, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 
 type AppShellProps = {
@@ -11,13 +12,13 @@ type AppShellProps = {
 };
 
 const userNav = [
-  { href: "/dashboard", label: "داشبورد" },
-  { href: "/dashboard/application", label: "ثبت مدارک" },
+  { href: "/dashboard", label: "داشبورد", icon: LayoutDashboard },
+  { href: "/dashboard/application", label: "ثبت مدارک", icon: ClipboardList },
 ];
 
 const adminNav = [
-  { href: "/admin", label: "نمای کلی" },
-  { href: "/admin/submissions", label: "پرونده‌ها" },
+  { href: "/admin", label: "نمای کلی", icon: LayoutDashboard },
+  { href: "/admin/submissions", label: "پرونده‌ها", icon: Files },
 ];
 
 export function AppShell({ area, eyebrow, title, description, action, children }: AppShellProps) {
@@ -34,14 +35,22 @@ export function AppShell({ area, eyebrow, title, description, action, children }
           </span>
         </Link>
         <nav className="app-nav">
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href} className="app-nav__link">
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link key={item.href} href={item.href} className="app-nav__link" aria-label={item.label} title={item.label}>
+                <Icon aria-hidden="true" size={18} strokeWidth={2} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
         <form action="/api/auth/logout" method="post" className="app-logout">
-          <button type="submit">خروج</button>
+          <button type="submit" aria-label="خروج" title="خروج">
+            <LogOut aria-hidden="true" size={18} strokeWidth={2} />
+            <span>خروج</span>
+          </button>
         </form>
       </aside>
 
@@ -56,13 +65,21 @@ export function AppShell({ area, eyebrow, title, description, action, children }
         </header>
 
         <nav className="mobile-nav" aria-label="ناوبری موبایل">
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href}>
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link key={item.href} href={item.href} aria-label={item.label} title={item.label}>
+                <Icon aria-hidden="true" size={18} strokeWidth={2} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
           <form action="/api/auth/logout" method="post">
-            <button type="submit">خروج</button>
+            <button type="submit" aria-label="خروج" title="خروج">
+              <LogOut aria-hidden="true" size={18} strokeWidth={2} />
+              <span>خروج</span>
+            </button>
           </form>
         </nav>
 

@@ -11,6 +11,7 @@ export function TaxDeclarationStep({
   uploadingKey,
   uploadProgress,
   uploadErrors,
+  readOnly,
   onDraftChange,
   onUpload,
 }: StepProps) {
@@ -32,6 +33,7 @@ export function TaxDeclarationStep({
               id={`taxDeclarations.${index}.year`}
               value={row.year}
               required
+              disabled={readOnly}
               onChange={(year) => updateRow(index, { ...row, year })}
             />
             <FileUploadControl
@@ -39,6 +41,7 @@ export function TaxDeclarationStep({
               label="فایل اظهارنامه"
               required
               value={row.file}
+              readOnly={readOnly}
               uploading={uploadingKey === fieldKey}
               progress={uploadProgress[fieldKey]}
               error={uploadErrors[fieldKey]}
@@ -51,13 +54,15 @@ export function TaxDeclarationStep({
         );
       })}
 
-      <button
-        type="button"
-        onClick={() => onDraftChange({ ...draft, taxDeclarations: [...rows, {}] })}
-        className="button button--ghost"
-      >
-        افزودن سال
-      </button>
+      {readOnly ? null : (
+        <button
+          type="button"
+          onClick={() => onDraftChange({ ...draft, taxDeclarations: [...rows, {}] })}
+          className="button button--ghost"
+        >
+          افزودن سال
+        </button>
+      )}
     </div>
   );
 }

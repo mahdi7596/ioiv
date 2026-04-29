@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { canEditApplication } from "@/lib/application/status";
+import { logger } from "@/lib/logger";
 import { storeUploadFile } from "@/lib/uploads/storage";
 
 export async function POST(request: Request) {
@@ -37,13 +38,21 @@ export async function POST(request: Request) {
       },
     });
 
+    logger.info("upload_succeeded", {
+      applicationId,
+      fieldKey,
+      fileId: record.id,
+      size: record.size,
+      mimeType: record.mimeType,
+    });
+
     return Response.json({
       fileId: record.id,
       name: record.originalName,
       fieldKey: record.fieldKey,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("upload_failed", error);
     const message = error instanceof Error ? error.message : "";
     const knownMessages = [
       "Unauthorized",

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Download, LayoutDashboard } from "lucide-react";
+import { SubmissionsFilters } from "@/components/admin/SubmissionsFilters";
 import { SubmissionsTable } from "@/components/admin/SubmissionsTable";
 import { AppShell } from "@/components/layout/AppShell";
 import { listSubmissions } from "@/lib/actions/admin";
@@ -29,40 +31,30 @@ export default async function AdminSubmissionsPage({
       area="admin"
       eyebrow="مدیریت"
       title="پرونده‌ها"
-      description="فیلتر، خروجی و بررسی پرونده‌های ارسال شده."
+      description="فیلتر، خروجی و بررسی پرونده‌های ثبت شده."
       action={
-        <Link href="/admin" className="button button--ghost">
+        <Link href="/admin" className="button button--ghost" aria-label="نمای کلی" title="نمای کلی">
+          <LayoutDashboard aria-hidden="true" size={19} strokeWidth={2} />
           نمای کلی
         </Link>
       }
     >
-      <form className="panel grid gap-3 sm:grid-cols-4">
-        <input name="q" defaultValue={params.q} placeholder="جستجو" className="rounded-md border border-stone-300 px-3 py-2" />
-        <select name="status" defaultValue={params.status} className="rounded-md border border-stone-300 px-3 py-2">
-          <option value="">همه وضعیت‌ها</option>
-          <option value="SUBMITTED">ارسال شده</option>
-          <option value="UNDER_REVIEW">در حال بررسی</option>
-          <option value="NEEDS_EDIT">نیازمند ویرایش</option>
-          <option value="ACCEPTED">پذیرفته شده</option>
-          <option value="REJECTED">رد شده</option>
-        </select>
-        <select name="sort" defaultValue={params.sort} className="rounded-md border border-stone-300 px-3 py-2">
-          <option value="newest">جدیدترین</option>
-          <option value="oldest">قدیمی‌ترین</option>
-        </select>
-        <button className="button button--primary">اعمال</button>
-      </form>
-      <div className="flex justify-end">
-        <Link className="ml-4 text-sm font-medium text-emerald-800" href={`/api/admin/export?${exportQuery.toString()}`}>
-          خروجی XLSX
-        </Link>
+      <SubmissionsFilters
+        q={params.q}
+        status={params.status}
+        sort={params.sort}
+      />
+      <section className="panel export-actions" aria-label="خروجی پرونده‌ها">
         <Link
-          className="text-sm font-medium text-emerald-800"
+          className="button export-button"
           href={`/api/admin/export?${new URLSearchParams({ ...Object.fromEntries(exportQuery), format: "csv" }).toString()}`}
+          aria-label="خروجی CSV"
+          title="خروجی CSV"
         >
+          <Download aria-hidden="true" size={18} strokeWidth={2} />
           خروجی CSV
         </Link>
-      </div>
+      </section>
       <SubmissionsTable submissions={submissions} />
     </AppShell>
   );

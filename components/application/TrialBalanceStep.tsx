@@ -8,6 +8,7 @@ export function TrialBalanceStep({
   uploadingKey,
   uploadProgress,
   uploadErrors,
+  readOnly,
   onDraftChange,
   onUpload,
 }: StepProps) {
@@ -18,6 +19,7 @@ export function TrialBalanceStep({
         label="تراز کل"
         required
         value={draft.trialBalance.generalLedger}
+        readOnly={readOnly}
         uploading={uploadingKey === "trialBalance.generalLedger"}
         progress={uploadProgress["trialBalance.generalLedger"]}
         error={uploadErrors["trialBalance.generalLedger"]}
@@ -36,6 +38,7 @@ export function TrialBalanceStep({
         label="تراز معین"
         required
         value={draft.trialBalance.subsidiaryLedger}
+        readOnly={readOnly}
         uploading={uploadingKey === "trialBalance.subsidiaryLedger"}
         progress={uploadProgress["trialBalance.subsidiaryLedger"]}
         error={uploadErrors["trialBalance.subsidiaryLedger"]}

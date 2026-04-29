@@ -30,6 +30,7 @@ export type ApplicationDraft = {
 export type StepProps = {
   applicationId: string;
   draft: ApplicationDraft;
+  readOnly?: boolean;
   uploadingKey?: string;
   uploadProgress: Record<string, number>;
   uploadErrors: Record<string, string>;

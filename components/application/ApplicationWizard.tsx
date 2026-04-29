@@ -23,9 +23,17 @@ type ApplicationWizardProps = {
   applicationId: string;
   initialStep: number;
   initialDraft: ApplicationDraft;
+  readOnly?: boolean;
+  hasVerifiedPayment?: boolean;
 };
 
-export function ApplicationWizard({ applicationId, initialStep, initialDraft }: ApplicationWizardProps) {
+export function ApplicationWizard({
+  applicationId,
+  initialStep,
+  initialDraft,
+  readOnly,
+  hasVerifiedPayment = false,
+}: ApplicationWizardProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [draft, setDraft] = useState<ApplicationDraft>(initialDraft);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -36,6 +44,8 @@ export function ApplicationWizard({ applicationId, initialStep, initialDraft }: 
   const title = useMemo(() => steps[currentStep - 1] ?? steps[0], [currentStep]);
 
   function persistDraft(nextDraft = draft, nextStep = currentStep) {
+    if (readOnly) return;
+
     startTransition(async () => {
       try {
         await saveApplicationDraft({ ...nextDraft, currentStep: nextStep });
@@ -51,15 +61,21 @@ export function ApplicationWizard({ applicationId, initialStep, initialDraft }: 
     const boundedStep = Math.min(steps.length, Math.max(1, nextStep));
     setCurrentStep(boundedStep);
     setDraft((current) => ({ ...current, currentStep: boundedStep }));
-    persistDraft({ ...draft, currentStep: boundedStep }, boundedStep);
+    if (!readOnly) {
+      persistDraft({ ...draft, currentStep: boundedStep }, boundedStep);
+    }
   }
 
   function updateDraft(nextDraft: ApplicationDraft) {
+    if (readOnly) return;
+
     setDraft(nextDraft);
     persistDraft(nextDraft, nextDraft.currentStep);
   }
 
   async function uploadFile(fieldKey: string, file: File): Promise<FileRef | null> {
+    if (readOnly) return null;
+
     setUploadingKey(fieldKey);
 
     try {
@@ -85,6 +101,7 @@ export function ApplicationWizard({ applicationId, initialStep, initialDraft }: 
   const stepProps = {
     applicationId,
     draft,
+    readOnly,
     uploadingKey,
     uploadProgress,
     uploadErrors,
@@ -110,6 +127,8 @@ export function ApplicationWizard({ applicationId, initialStep, initialDraft }: 
             <FinalPaymentStep
               draft={draft}
               acceptedTerms={acceptedTerms}
+              readOnly={readOnly}
+              hasVerifiedPayment={hasVerifiedPayment}
               onAcceptedTermsChange={setAcceptedTerms}
             />
           ) : null}
@@ -129,7 +148,7 @@ export function ApplicationWizard({ applicationId, initialStep, initialDraft }: 
         <button
           type="button"
           onClick={() => persistDraft()}
-          disabled={isPending}
+          disabled={isPending || readOnly}
           className="button button--ghost"
         >
           ذخیره

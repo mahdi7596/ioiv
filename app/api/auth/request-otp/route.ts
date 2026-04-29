@@ -1,4 +1,5 @@
 import { ActionError, requestOtp } from "@/lib/actions/auth";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
       return Response.json({ error: error.message }, { status: error.status });
     }
 
-    console.error(error);
+    logger.error("api_request_otp_failed", error);
     return Response.json({ error: "خطای غیرمنتظره رخ داد" }, { status: 500 });
   }
 }

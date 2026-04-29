@@ -7,6 +7,7 @@ type FileUploadControlProps = {
   label: string;
   required?: boolean;
   value?: FileRef;
+  readOnly?: boolean;
   uploading?: boolean;
   progress?: number;
   error?: string;
@@ -18,6 +19,7 @@ export function FileUploadControl({
   label,
   required,
   value,
+  readOnly,
   uploading,
   progress,
   error,
@@ -28,13 +30,15 @@ export function FileUploadControl({
       <label className="font-bold" htmlFor={id}>
         {label} {required ? <span className="text-red-600">*</span> : null}
       </label>
-      <p className="field__hint">فرمت مجاز: PDF، Word یا ZIP. حداکثر حجم ۲۰ مگابایت.</p>
+      {readOnly ? null : (
+        <p className="field__hint">فرمت مجاز: PDF، Word یا ZIP. حداکثر حجم ۲۰ مگابایت.</p>
+      )}
       <div className="upload-picker">
         <input
           id={id}
           type="file"
           accept=".pdf,.doc,.docx,.zip"
-          disabled={uploading}
+          disabled={uploading || readOnly}
           onChange={(event) => {
             const file = event.target.files?.[0];
 
@@ -45,9 +49,11 @@ export function FileUploadControl({
           }}
           className="upload-picker__input"
         />
-        <label className="button button--ghost upload-picker__button" htmlFor={id}>
-          {value ? "تغییر فایل" : "انتخاب فایل"}
-        </label>
+        {readOnly ? null : (
+          <label className="button button--ghost upload-picker__button" htmlFor={id}>
+            {value ? "تغییر فایل" : "انتخاب فایل"}
+          </label>
+        )}
         <span className={value ? "upload-picker__name" : "upload-picker__placeholder"}>
           {value ? value.name : "هنوز فایلی ثبت نشده است"}
         </span>
@@ -62,7 +68,7 @@ export function FileUploadControl({
       ) : null}
       {value ? <p className="upload-control__success">فایل با موفقیت ثبت شد.</p> : null}
       {error ? <p className="field__hint">{error}</p> : null}
-      {error ? (
+      {error && !readOnly ? (
         <label className="button button--ghost" htmlFor={id}>
           تلاش دوباره
         </label>

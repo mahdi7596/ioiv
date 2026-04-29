@@ -9,6 +9,7 @@ export function FinancialStatementsStep({
   uploadingKey,
   uploadProgress,
   uploadErrors,
+  readOnly,
   onDraftChange,
   onUpload,
 }: StepProps) {
@@ -29,12 +30,14 @@ export function FinancialStatementsStep({
             <YearSelect
               id={`financials.${index}.year`}
               value={row.year}
+              disabled={readOnly}
               onChange={(year) => updateRow(index, { ...row, year })}
             />
             <FileUploadControl
               id={fieldKey}
               label="فایل صورت مالی"
               value={row.file}
+              readOnly={readOnly}
               uploading={uploadingKey === fieldKey}
               progress={uploadProgress[fieldKey]}
               error={uploadErrors[fieldKey]}
@@ -47,13 +50,15 @@ export function FinancialStatementsStep({
         );
       })}
 
-      <button
-        type="button"
-        onClick={() => onDraftChange({ ...draft, financials: [...rows, {}] })}
-        className="button button--ghost"
-      >
-        افزودن سال
-      </button>
+      {readOnly ? null : (
+        <button
+          type="button"
+          onClick={() => onDraftChange({ ...draft, financials: [...rows, {}] })}
+          className="button button--ghost"
+        >
+          افزودن سال
+        </button>
+      )}
     </div>
   );
 }

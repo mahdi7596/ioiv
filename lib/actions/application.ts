@@ -1,6 +1,6 @@
 "use server";
 
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus, PaymentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { canEditApplication } from "@/lib/application/status";
@@ -74,6 +74,7 @@ export async function createOrGetDraftApplication() {
       submittedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      payments: [],
     };
   }
 
@@ -95,6 +96,13 @@ export async function createOrGetDraftApplication() {
         applicationRound: APPLICATION_ROUND,
       },
     },
+    include: {
+      payments: {
+        where: { status: PaymentStatus.VERIFIED },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
   });
 
   if (existing) {
@@ -108,6 +116,13 @@ export async function createOrGetDraftApplication() {
       companyNationalId: user.companyNationalId,
       nationalCode: user.nationalCode,
       applicationRound: APPLICATION_ROUND,
+    },
+    include: {
+      payments: {
+        where: { status: PaymentStatus.VERIFIED },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
   });
 }

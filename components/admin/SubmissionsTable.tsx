@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Eye } from "lucide-react";
+import { PaymentStatusBadge } from "./PaymentStatusBadge";
 import { StatusBadge } from "./StatusBadge";
 
 type SubmissionRow = {
@@ -36,11 +38,18 @@ export function SubmissionsTable({ submissions }: { submissions: SubmissionRow[]
               <td className="px-4 py-3">
                 <StatusBadge status={submission.status} />
               </td>
-              <td className="px-4 py-3">{submission.payments[0]?.status || "ثبت نشده"}</td>
+              <td className="px-4 py-3">
+                <PaymentStatusBadge status={submission.payments[0]?.status} />
+              </td>
               <td className="px-4 py-3">{submission.createdAt.toLocaleDateString("fa-IR")}</td>
               <td className="px-4 py-3">
-                <Link className="font-medium text-emerald-800" href={`/admin/submissions/${submission.id}`}>
-                  مشاهده
+                <Link
+                  className="icon-button"
+                  href={`/admin/submissions/${submission.id}`}
+                  aria-label={`مشاهده پرونده ${submission.companyNationalId}`}
+                  title="مشاهده پرونده"
+                >
+                  <Eye aria-hidden="true" size={18} strokeWidth={2} />
                 </Link>
               </td>
             </tr>

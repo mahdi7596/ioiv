@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { redirect } from "next/navigation";
 import { ApplicationWizard } from "@/components/application/ApplicationWizard";
 import { AppShell } from "@/components/layout/AppShell";
 import type { ApplicationDraft } from "@/components/application/types";
-import { canEditApplication } from "@/lib/application/status";
+import { getApplicationAccess } from "@/lib/application/status";
 import { createOrGetDraftApplication } from "@/lib/actions/application";
 
 function arrayOrEmpty(value: unknown) {
@@ -23,25 +24,35 @@ export default async function ApplicationPage() {
     redirect("/");
   }
 
-  if (!canEditApplication(application.status)) {
+  const access = getApplicationAccess(application.status);
+  const hasVerifiedPayment = application.payments.length > 0;
+
+  if (!access.canView) {
     redirect("/dashboard");
   }
 
   return (
     <AppShell
       area="user"
-      eyebrow="ثبت مدارک"
+      eyebrow={access.canEdit ? "ثبت مدارک" : "مشاهده مدارک"}
       title="فرم پرونده شرکت"
-      description="مدارک را مرحله به مرحله بارگذاری کنید. پیش‌نویس شما در طول مسیر ذخیره می‌شود."
+      description={
+        access.canEdit
+          ? "مدارک را مرحله به مرحله بارگذاری کنید. پیش‌نویس شما در طول مسیر ذخیره می‌شود."
+          : "پرونده ثبت شده قابل مشاهده است. ویرایش فقط زمانی فعال می‌شود که مدیر پرونده درخواست اصلاح ثبت کند."
+      }
       action={
-        <Link href="/dashboard" className="button button--ghost">
-          بازگشت به داشبورد
+        <Link href="/dashboard" className="button button--ghost" aria-label="بازگشت به داشبورد" title="بازگشت به داشبورد">
+          <ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
+          بازگشت
         </Link>
       }
     >
       <ApplicationWizard
         applicationId={application.id}
         initialStep={application.currentStep}
+        readOnly={!access.canEdit}
+        hasVerifiedPayment={hasVerifiedPayment}
         initialDraft={
           {
             currentStep: application.currentStep,
