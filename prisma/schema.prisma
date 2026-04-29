@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OtpPurpose {
+  USER_LOGIN
+  ADMIN_LOGIN
+}
+
+enum ApplicationStatus {
+  DRAFT
+  PENDING_PAYMENT
+  SUBMITTED
+  UNDER_REVIEW
+  NEEDS_EDIT
+  REJECTED
+  ACCEPTED
+}
+
+enum PaymentStatus {
+  INITIATED
+  VERIFIED
+  FAILED
+}
+
+model User {
+  id                String        @id @default(cuid())
+  mobile            String        @unique
+  companyNationalId String?
+  nationalCode      String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  applications      Application[]
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  mobile    String   @unique
+  role      UserRole @default(ADMIN)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpCode {
+  id         String     @id @default(cuid())
+  mobile     String
+  codeHash   String
+  purpose    OtpPurpose
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([mobile, purpose])
+}
+
+model Application {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+  mobile            String
+  companyNationalId String
+  nationalCode      String?
+  applicationRound  String            @default("1403")
+  status            ApplicationStatus @default(DRAFT)
+  currentStep       Int               @default(1)
+  taxDeclarations   Json              @default("[]")
+  financials        Json              @default("[]")
+  trialBalance      Json              @default("{}")
+  creditReports     Json              @default("{}")
+  adminNote         String?
+  submittedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  files             ApplicationFile[]
+  payments          Payment[]
+  history           StatusHistory[]
+
+  @@unique([mobile, companyNationalId, applicationRound])
+  @@index([status])
+  @@index([companyNationalId])
+}
+
+model ApplicationFile {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  fieldKey      String
+  originalName  String
+  mimeType      String
+  size          Int
+  storagePath   String
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, fieldKey])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  applicationId String
+  application   Application   @relation(fields: [applicationId], references: [id])
+  amountToman   Int
+  gateway       String        @default("zarinpal")
+  authority     String?
+  referenceId   String?
+  status        PaymentStatus @default(INITIATED)
+  rawData       Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model StatusHistory {
+  id             String             @id @default(cuid())
+  applicationId  String
+  application    Application        @relation(fields: [applicationId], references: [id])
+  previousStatus ApplicationStatus?
+  newStatus      ApplicationStatus
+  changedById    String?
+  note           String?
+  createdAt      DateTime           @default(now())
+
+  @@index([applicationId])
+}
