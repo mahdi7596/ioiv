@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth/session";
 import { logger, maskMobile } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
+import { createOtpSmsMessage } from "@/lib/sms/messages";
 import { requestOtpSchema, verifyOtpSchema } from "@/lib/validations/auth";
 
 const OTP_TTL_MS = 2 * 60 * 1000;
@@ -70,12 +71,7 @@ export async function requestOtp(input: unknown): Promise<{ next: "otp" | "regis
       },
     });
 
-    await sendSms({
-      to: mobile,
-      text: `کد تایید سامانه ثنا: ${code}`,
-      template: process.env.GHASEDAK_OTP_TEMPLATE || undefined,
-      params: { code },
-    });
+    await sendSms(createOtpSmsMessage(mobile, code));
 
     if (mode === "admin") {
       logger.info("otp_request_completed", {

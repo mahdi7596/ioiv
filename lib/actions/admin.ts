@@ -8,6 +8,7 @@ import { getAllowedNextApplicationStatuses } from "@/lib/application/status-tran
 import { validateStatusChangeConfirmation } from "@/lib/application/status-change-validation";
 import { logger, maskMobile } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
+import { createStatusChangeSmsMessage } from "@/lib/sms/messages";
 import { ActionError } from "./auth";
 
 async function requireActiveAdmin() {
@@ -125,12 +126,7 @@ export async function changeSubmissionStatus(formData: FormData) {
     }),
   ]);
 
-  await sendSms({
-    to: application.mobile,
-    text: note
-      ? `وضعیت پرونده شما تغییر کرد. برای مشاهده یادداشت وارد سامانه ثنا شوید.`
-      : `وضعیت پرونده شما در سامانه ثنا تغییر کرد.`,
-  });
+  await sendSms(createStatusChangeSmsMessage(application.mobile));
 
   logger.info("submission_status_changed", {
     applicationId: application.id,

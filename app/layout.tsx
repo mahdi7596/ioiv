@@ -21,8 +21,8 @@ const iranyekan = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "سامانه ثبت نام ثنا",
-  description: "سامانه ثبت نام، پرداخت و بررسی مدارک",
+  title: "سامانه اعتبار سنجی نفت ایران (سانا)",
+  description: "سامانه ثبت نام، پرداخت و بررسی مدارک سانا",
 };
 
 export default function RootLayout({

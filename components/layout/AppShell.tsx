@@ -28,9 +28,9 @@ export function AppShell({ area, eyebrow, title, description, action, children }
     <div className="app-shell">
       <aside className="app-sidebar" aria-label="ناوبری">
         <Link href={area === "admin" ? "/admin" : "/dashboard"} className="app-brand">
-          <span className="app-brand__mark">ث</span>
+          <span className="app-brand__mark">س</span>
           <span>
-            <strong>ثنا</strong>
+            <strong>سانا</strong>
             <small>{area === "admin" ? "پنل مدیریت" : "پنل متقاضی"}</small>
           </span>
         </Link>

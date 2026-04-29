@@ -27,7 +27,9 @@ Required environment:
 - ZARINPAL_MERCHANT_ID
 - ZARINPAL_SANDBOX=false
 - GHASEDAK_API_KEY
-- GHASEDAK_OTP_TEMPLATE
+- GHASEDAK_OTP_TEMPLATE=sanaotp
+- GHASEDAK_STATUS_TEMPLATE=sanastatus
+- GHASEDAK_SUBMITTED_TEMPLATE=sanasubmitted
 - GHASEDAK_SENDER
 - ADMIN_ALERT_MOBILE
 
@@ -47,4 +49,6 @@ Operational notes:
 - Back up PostgreSQL and UPLOAD_DIR together.
 - Ensure the app process user can read and write UPLOAD_DIR.
 - Keep ZARINPAL_SANDBOX=true outside production.
+- Rotate the Ghasedak API key if it was shared during setup, then store only the new key in the production environment.
+- Wait for Ghasedak approval on `sanaotp`, `sanastatus`, and `sanasubmitted` before enabling production SMS.
 - Seed or manually create at least one active admin before handoff.

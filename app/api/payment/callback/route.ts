@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { verifyZarinpalPayment } from "@/lib/payments/zarinpal";
 import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
-import { notifyAdminOfSubmission } from "@/lib/actions/payment";
+import { notifyAdminOfSubmission, notifyUserOfSubmission } from "@/lib/actions/payment";
 import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
@@ -71,7 +71,10 @@ export async function GET(request: Request) {
       }),
     ]);
 
-    await notifyAdminOfSubmission(payment.applicationId);
+    await Promise.all([
+      notifyAdminOfSubmission(payment.applicationId),
+      notifyUserOfSubmission(payment.application.mobile, payment.applicationId),
+    ]);
     logger.info("payment_verification_succeeded", {
       paymentId: payment.id,
       applicationId: payment.applicationId,

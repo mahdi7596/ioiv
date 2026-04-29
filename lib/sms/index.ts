@@ -5,6 +5,7 @@ export type SmsMessage = {
   text: string;
   template?: string;
   params?: Record<string, string>;
+  clientReferenceId?: string;
 };
 
 export async function sendSms(message: SmsMessage) {

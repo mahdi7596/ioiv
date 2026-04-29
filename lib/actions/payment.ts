@@ -5,6 +5,10 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { logger } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
+import {
+  createAdminSubmissionSmsMessage,
+  createSubmissionReceivedSmsMessage,
+} from "@/lib/sms/messages";
 import { finalSubmissionSchema } from "@/lib/validations/application";
 import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
 import { requestZarinpalPayment } from "@/lib/payments/zarinpal";
@@ -65,7 +69,7 @@ export async function startPayment() {
   try {
     zarinpal = await requestZarinpalPayment({
       amountToman: PAYMENT_AMOUNT_TOMAN,
-      description: "پرداخت ثبت پرونده سامانه ثنا",
+      description: "پرداخت ثبت پرونده سامانه اعتبار سنجی نفت ایران (سانا)",
       callbackUrl: `${appUrl}/api/payment/callback?paymentId=${payment.id}`,
       mobile: application.mobile,
     });
@@ -107,11 +111,15 @@ export async function notifyAdminOfSubmission(applicationId: string) {
     return;
   }
 
-  await sendSms({
-    to: adminMobile,
-    text: `پرونده جدید در سامانه ثنا ثبت شد: ${applicationId}`,
-  });
+  await sendSms(createAdminSubmissionSmsMessage(adminMobile, applicationId));
   logger.info("admin_submission_notification_sent", {
+    applicationId,
+  });
+}
+
+export async function notifyUserOfSubmission(mobile: string, applicationId: string) {
+  await sendSms(createSubmissionReceivedSmsMessage(mobile));
+  logger.info("user_submission_notification_sent", {
     applicationId,
   });
 }

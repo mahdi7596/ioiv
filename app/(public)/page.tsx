@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="auth-page">
       <section className="auth-info" aria-labelledby="auth-info-title">
-        <p className="eyebrow">سامانه ثبت و بررسی</p>
+        <p className="eyebrow">سامانه اعتبار سنجی نفت ایران (سانا)</p>
         <h1 id="auth-info-title">ثبت مدارک شرکت و پیگیری وضعیت پرونده</h1>
         <p>
           در این سامانه مدارک مورد نیاز را مرحله به مرحله بارگذاری می‌کنید، وضعیت بررسی را دنبال
@@ -31,7 +31,7 @@ export default function Home() {
 
       <section className="auth-panel" aria-labelledby="auth-form-title">
         <div className="auth-panel__header">
-          <p className="eyebrow">ورود متقاضی</p>
+          <p className="eyebrow">ورود متقاضی به سانا</p>
           <h2 id="auth-form-title">شماره موبایل خود را وارد کنید</h2>
           <p>
             اگر قبلا ثبت‌نام کرده باشید وارد داشبورد می‌شوید؛ در غیر این صورت شناسه ملی شرکت را

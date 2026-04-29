@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-info" aria-labelledby="admin-auth-info-title">
-        <p className="eyebrow">مدیریت سامانه</p>
+        <p className="eyebrow">سامانه اعتبار سنجی نفت ایران (سانا)</p>
         <h1 id="admin-auth-info-title">ورود امن مدیران برای بررسی پرونده‌ها</h1>
         <p>
           مدیران فعال می‌توانند با شماره موبایل ثبت‌شده وارد پنل شوند، وضعیت پرونده‌ها را بررسی
@@ -83,7 +83,7 @@ export default function AdminLoginPage() {
 
       <section className="auth-panel" aria-labelledby="admin-auth-form-title">
         <div className="auth-panel__header">
-          <p className="eyebrow">ورود مدیران</p>
+          <p className="eyebrow">ورود مدیران سانا</p>
           <h2 id="admin-auth-form-title">
             {otpSent ? "کد تایید را وارد کنید" : "شماره موبایل مدیر را وارد کنید"}
           </h2>
