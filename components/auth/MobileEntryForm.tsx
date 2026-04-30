@@ -1,5 +1,7 @@
 "use client";
 
+import { keepAsciiDigits } from "@/lib/input/digits";
+
 type MobileEntryFormProps = {
   mobile: string;
   error?: string;
@@ -29,11 +31,15 @@ export function MobileEntryForm({
         </label>
         <input
           id="mobile"
+          type="tel"
           inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="tel"
           dir="ltr"
           value={mobile}
-          onChange={(event) => onMobileChange(event.target.value)}
+          onChange={(event) => onMobileChange(keepAsciiDigits(event.target.value).slice(0, 11))}
           placeholder="09123456789"
+          maxLength={11}
         />
         {error ? <p className="field__hint">{error}</p> : null}
       </div>

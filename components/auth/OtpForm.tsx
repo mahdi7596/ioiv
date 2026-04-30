@@ -1,5 +1,7 @@
 "use client";
 
+import { keepAsciiDigits } from "@/lib/input/digits";
+
 type OtpFormProps = {
   code: string;
   error?: string;
@@ -43,10 +45,13 @@ export function OtpForm({
         </label>
         <input
           id="otp"
+          type="tel"
           inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="one-time-code"
           dir="ltr"
           value={code}
-          onChange={(event) => onCodeChange(event.target.value)}
+          onChange={(event) => onCodeChange(keepAsciiDigits(event.target.value).slice(0, 4))}
           placeholder="1234"
           maxLength={4}
           className="text-center text-xl"

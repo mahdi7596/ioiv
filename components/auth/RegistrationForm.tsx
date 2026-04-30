@@ -1,5 +1,7 @@
 "use client";
 
+import { keepAsciiDigits } from "@/lib/input/digits";
+
 type RegistrationFormProps = {
   companyNationalId: string;
   error?: string;
@@ -18,11 +20,14 @@ export function RegistrationForm({
       </label>
       <input
         id="companyNationalId"
+        type="tel"
         inputMode="numeric"
+        pattern="[0-9]*"
         dir="ltr"
         value={companyNationalId}
-        onChange={(event) => onCompanyNationalIdChange(event.target.value)}
+        onChange={(event) => onCompanyNationalIdChange(keepAsciiDigits(event.target.value).slice(0, 11))}
         placeholder="12345678901"
+        maxLength={11}
       />
       {error ? <p className="field__hint">{error}</p> : null}
     </div>

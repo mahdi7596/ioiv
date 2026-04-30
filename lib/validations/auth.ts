@@ -1,16 +1,20 @@
 import { z } from "zod";
+import { normalizeLocalizedDigits } from "@/lib/input/digits";
 
 export const mobileSchema = z
   .string()
-  .regex(/^09\d{9}$/, "شماره موبایل معتبر نیست");
+  .transform(normalizeLocalizedDigits)
+  .pipe(z.string().regex(/^09\d{9}$/, "شماره موبایل معتبر نیست"));
 
 export const otpSchema = z
   .string()
-  .regex(/^\d{4}$/, "کد تایید باید ۴ رقم باشد");
+  .transform(normalizeLocalizedDigits)
+  .pipe(z.string().regex(/^\d{4}$/, "کد تایید باید ۴ رقم باشد"));
 
 export const companyNationalIdSchema = z
   .string()
-  .regex(/^\d{11}$/, "شناسه ملی شرکت باید ۱۱ رقم باشد");
+  .transform(normalizeLocalizedDigits)
+  .pipe(z.string().regex(/^\d{11}$/, "شناسه ملی شرکت باید ۱۱ رقم باشد"));
 
 export const requestOtpSchema = z.object({
   mobile: mobileSchema,
