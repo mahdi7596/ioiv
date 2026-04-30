@@ -3,6 +3,7 @@ import type { SmsMessage } from "./index";
 const DEFAULT_OTP_TEMPLATE = "sanaotp";
 const DEFAULT_STATUS_TEMPLATE = "sanastatus";
 const DEFAULT_SUBMITTED_TEMPLATE = "sanasubmitted";
+const DEFAULT_RECIPIENT_LABEL = "کاربر";
 
 export function createOtpSmsMessage(to: string, code: string): SmsMessage {
   return {
@@ -16,16 +17,18 @@ export function createOtpSmsMessage(to: string, code: string): SmsMessage {
 export function createStatusChangeSmsMessage(to: string): SmsMessage {
   return {
     to,
-    text: "وضعیت پرونده شما در سامانه اعتبار سنجی نفت ایران (سانا) تغییر کرد، برای مشاهده جزئیات وارد پنل شوید.",
+    text: `${DEFAULT_RECIPIENT_LABEL} گرامی، وضعیت پرونده شما در اعتبار سنجی نفت ایران (سانا) تغییر کرد. برای مشاهده جزئیات وارد پنل شوید.`,
     template: process.env.GHASEDAK_STATUS_TEMPLATE || DEFAULT_STATUS_TEMPLATE,
+    params: { recipient: DEFAULT_RECIPIENT_LABEL },
   };
 }
 
 export function createSubmissionReceivedSmsMessage(to: string): SmsMessage {
   return {
     to,
-    text: "پرونده شما در اعتبار سنجی نفت ایران (سانا) با موفقیت ثبت شد و در انتظار بررسی است.",
+    text: `${DEFAULT_RECIPIENT_LABEL} گرامی، پرونده شما در اعتبار سنجی نفت ایران (سانا) با موفقیت ثبت شد و در انتظار بررسی است.`,
     template: process.env.GHASEDAK_SUBMITTED_TEMPLATE || DEFAULT_SUBMITTED_TEMPLATE,
+    params: { recipient: DEFAULT_RECIPIENT_LABEL },
   };
 }
 

@@ -46,20 +46,23 @@ describe("Ghasedak SMS adapter", () => {
     expect(fetchMock.mock.calls[0][1].body).toBe("type=1&receptor=09123456789&template=sanaotp&param1=4321");
   });
 
-  it("sends no-param templates through Ghasedak verify endpoint with an empty param1", async () => {
+  it("sends recipient params as param1 through Ghasedak verify endpoint", async () => {
     const fetchMock = mockSuccessfulFetch();
 
     await sendGhasedakSms({
       to: "09123456789",
       text: "status changed",
       template: "sanastatus",
+      params: { recipient: "کاربر" },
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.smsapp.ir/v2/send/verify",
       expect.any(Object),
     );
-    expect(fetchMock.mock.calls[0][1].body).toBe("type=1&receptor=09123456789&template=sanastatus&param1=");
+    expect(fetchMock.mock.calls[0][1].body).toBe(
+      "type=1&receptor=09123456789&template=sanastatus&param1=%DA%A9%D8%A7%D8%B1%D8%A8%D8%B1",
+    );
   });
 
   it("treats unsuccessful Ghasedak JSON responses as failures", async () => {

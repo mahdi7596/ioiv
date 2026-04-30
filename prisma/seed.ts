@@ -16,7 +16,7 @@ const nationalCode = "0012345678";
 const applicationId = "seed-app-09108119122-1403";
 const userId = "seed-user-09108119122";
 const paymentId = "seed-payment-09108119122-verified";
-const defaultAdminMobiles = ["09120000000", "09127670204", "09132974595"];
+const defaultAdminMobiles = ["09390649614", "09127670204", "09132974595"];
 
 const demoSubmissions = [
   {
@@ -191,6 +191,10 @@ async function main() {
     ),
   );
   const admin = admins[0];
+
+  if (process.env.SEED_DEMO_DATA !== "true") {
+    return;
+  }
 
   const user = await prisma.user.upsert({
     where: { mobile: applicantMobile },

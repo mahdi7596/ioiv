@@ -13,6 +13,7 @@ describe("auth validation", () => {
   it("accepts Persian and Arabic digits for mobile numbers", () => {
     expect(mobileSchema.safeParse("۰۹۱۲۳۴۵۶۷۸۹").data).toBe("09123456789");
     expect(mobileSchema.safeParse("٠٩١٢٣٤٥٦٧٨٩").data).toBe("09123456789");
+    expect(mobileSchema.safeParse("۰۹۳۹۰۶۴۹۶۱۴").data).toBe("09390649614");
     expect(mobileSchema.safeParse("۰۹۱۲ ۳۴۵ ۶۷۸۹").data).toBe("09123456789");
   });
 

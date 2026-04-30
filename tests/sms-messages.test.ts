@@ -14,23 +14,23 @@ describe("SMS message templates", () => {
     });
   });
 
-  it("uses the registered status-change template without dynamic params", () => {
+  it("uses the registered status-change template with a safe recipient param", () => {
     const message = createStatusChangeSmsMessage("09123456789");
 
     expect(message).toMatchObject({
       to: "09123456789",
       template: "sanastatus",
+      params: { recipient: "کاربر" },
     });
-    expect(message).not.toHaveProperty("params");
   });
 
-  it("uses the registered successful-submission template without dynamic params", () => {
+  it("uses the registered successful-submission template with a safe recipient param", () => {
     const message = createSubmissionReceivedSmsMessage("09123456789");
 
     expect(message).toMatchObject({
       to: "09123456789",
       template: "sanasubmitted",
+      params: { recipient: "کاربر" },
     });
-    expect(message).not.toHaveProperty("params");
   });
 });
