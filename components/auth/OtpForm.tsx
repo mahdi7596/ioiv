@@ -47,7 +47,6 @@ export function OtpForm({
           id="otp"
           type="tel"
           inputMode="numeric"
-          pattern="[0-9]*"
           autoComplete="one-time-code"
           dir="ltr"
           value={code}

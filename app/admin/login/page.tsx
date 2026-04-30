@@ -107,7 +107,6 @@ export default function AdminLoginPage() {
               type="tel"
               dir="ltr"
               inputMode="numeric"
-              pattern="[0-9]*"
               autoComplete="tel"
               value={mobile}
               onChange={(event) => setMobile(keepAsciiDigits(event.target.value).slice(0, 11))}
@@ -127,7 +126,6 @@ export default function AdminLoginPage() {
                 type="tel"
                 dir="ltr"
                 inputMode="numeric"
-                pattern="[0-9]*"
                 autoComplete="one-time-code"
                 value={code}
                 onChange={(event) => setCode(keepAsciiDigits(event.target.value).slice(0, 4))}

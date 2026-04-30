@@ -22,7 +22,6 @@ export function RegistrationForm({
         id="companyNationalId"
         type="tel"
         inputMode="numeric"
-        pattern="[0-9]*"
         dir="ltr"
         value={companyNationalId}
         onChange={(event) => onCompanyNationalIdChange(keepAsciiDigits(event.target.value).slice(0, 11))}

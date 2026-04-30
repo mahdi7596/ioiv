@@ -33,7 +33,6 @@ export function MobileEntryForm({
           id="mobile"
           type="tel"
           inputMode="numeric"
-          pattern="[0-9]*"
           autoComplete="tel"
           dir="ltr"
           value={mobile}
