@@ -16,6 +16,7 @@ const nationalCode = "0012345678";
 const applicationId = "seed-app-09108119122-1403";
 const userId = "seed-user-09108119122";
 const paymentId = "seed-payment-09108119122-verified";
+const defaultAdminMobiles = ["09120000000", "09127670204", "09132974595"];
 
 const demoSubmissions = [
   {
@@ -155,20 +156,41 @@ function demoApplicationData(mobile: string) {
   };
 }
 
+function seedAdminMobiles() {
+  const envMobiles = [
+    process.env.SEED_ADMIN_MOBILE,
+    process.env.SEED_ADMIN_MOBILES,
+  ]
+    .filter(Boolean)
+    .flatMap((value) => value!.split(","))
+    .map((mobile) => mobile.trim())
+    .filter(Boolean);
+
+  return [...new Set([...defaultAdminMobiles, ...envMobiles])];
+}
+
 async function main() {
-  const mobile = process.env.SEED_ADMIN_MOBILE || "09120000000";
   const seededAt = new Date();
 
-  const admin = await prisma.admin.upsert({
-    where: { mobile },
-    update: { active: true },
-    create: {
-      name: "مدیر سامانه",
-      mobile,
-      role: UserRole.SUPER_ADMIN,
-      active: true,
-    },
-  });
+  const adminMobiles = seedAdminMobiles();
+  const admins = await Promise.all(
+    adminMobiles.map((mobile) =>
+      prisma.admin.upsert({
+        where: { mobile },
+        update: {
+          role: UserRole.SUPER_ADMIN,
+          active: true,
+        },
+        create: {
+          name: "مدیر سامانه",
+          mobile,
+          role: UserRole.SUPER_ADMIN,
+          active: true,
+        },
+      }),
+    ),
+  );
+  const admin = admins[0];
 
   const user = await prisma.user.upsert({
     where: { mobile: applicantMobile },

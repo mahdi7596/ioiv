@@ -10,9 +10,7 @@ Required server access:
 - DNS record for sana.ioiv.ir
 
 Recommended runtime:
-- Node.js LTS
-- PostgreSQL
-- PM2 or Docker
+- Docker Engine with Docker Compose
 - Nginx reverse proxy
 
 Nginx routes:
@@ -20,10 +18,10 @@ Nginx routes:
 - sana.ioiv.ir proxies to the Next.js app port
 
 Required environment:
-- DATABASE_URL
+- DATABASE_URL is set automatically by Docker Compose for the app container
 - APP_URL=https://sana.ioiv.ir
 - SESSION_SECRET
-- UPLOAD_DIR
+- UPLOAD_DIR=/app/uploads
 - ZARINPAL_MERCHANT_ID
 - ZARINPAL_SANDBOX=false
 - GHASEDAK_API_KEY
@@ -32,13 +30,34 @@ Required environment:
 - GHASEDAK_SUBMITTED_TEMPLATE=sanasubmitted
 - GHASEDAK_SENDER
 - ADMIN_ALERT_MOBILE
+- POSTGRES_DB=sana
+- POSTGRES_USER=postgres
+- POSTGRES_PASSWORD=replace-with-strong-password
 
-Deployment commands:
-- npm ci
-- npx prisma migrate deploy
-- npm run db:seed
-- npm run build
-- npm run start
+Docker deployment commands:
+
+```bash
+docker compose build app
+docker compose up -d
+docker compose ps
+docker compose logs -f app
+```
+
+The app container runs `npx prisma migrate deploy` before starting Next.js.
+
+Run the seed command once after the first deploy:
+
+```bash
+docker compose exec app npm run db:seed
+```
+
+If Docker Hub or npm is blocked from the server network, configure a Docker registry mirror before building, or build while connected through a reliable route. For npm registry issues, set `NPM_CONFIG_REGISTRY` in `.env` before running `docker compose build app`.
+
+Example:
+
+```env
+NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+```
 
 Local development:
 - Use `docker compose up -d postgres` to start the project-local PostgreSQL service.
