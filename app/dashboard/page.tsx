@@ -3,6 +3,7 @@ import { ClipboardList, Info, MessageSquareWarning } from "lucide-react";
 import { redirect } from "next/navigation";
 import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { DashboardEvaluationNotice } from "@/components/dashboard/DashboardEvaluationNotice";
 import { AppShell } from "@/components/layout/AppShell";
 import { canEditApplication } from "@/lib/application/status";
 import { getCurrentUserApplication } from "@/lib/actions/application";
@@ -50,6 +51,8 @@ export default async function DashboardPage() {
         </Link>
       }
     >
+      <DashboardEvaluationNotice />
+
       <section className="panel status-card">
         {application ? (
           <div className="space-y-5">
