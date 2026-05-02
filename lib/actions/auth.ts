@@ -108,7 +108,11 @@ export async function requestOtp(input: unknown): Promise<{ next: "otp" | "regis
     },
   });
 
-  await sendSms(createOtpSmsMessage(mobile, code));
+  try {
+    await sendSms(createOtpSmsMessage(mobile, code));
+  } catch {
+    throw new ActionError("ارسال پیامک ناموفق بود. کمی بعد دوباره تلاش کنید.", 502);
+  }
 
   if (mode === "admin") {
     logger.info("otp_request_completed", {

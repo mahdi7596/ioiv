@@ -14,7 +14,7 @@ function mockSuccessfulFetch() {
 
 describe("Ghasedak SMS adapter", () => {
   beforeEach(() => {
-    process.env = { ...originalEnv, GHASEDAK_API_KEY: "test-api-key" };
+    process.env = { ...originalEnv, GHASEDAK_API_KEY: "test-api-key", GHASEDAK_BASE_URL: undefined };
   });
 
   afterEach(() => {
@@ -34,7 +34,7 @@ describe("Ghasedak SMS adapter", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.smsapp.ir/v2/send/verify",
+      "http://api.smsapp.ir/v2/send/verify",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
@@ -57,11 +57,28 @@ describe("Ghasedak SMS adapter", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.smsapp.ir/v2/send/verify",
+      "http://api.smsapp.ir/v2/send/verify",
       expect.any(Object),
     );
     expect(fetchMock.mock.calls[0][1].body).toBe(
       "type=1&receptor=09123456789&template=sanastatus&param1=%DA%A9%D8%A7%D8%B1%D8%A8%D8%B1",
+    );
+  });
+
+  it("allows overriding the Ghasedak base URL for alternate provider domains", async () => {
+    process.env.GHASEDAK_BASE_URL = "https://api.ghasedaksms.com/v2";
+    const fetchMock = mockSuccessfulFetch();
+
+    await sendGhasedakSms({
+      to: "09123456789",
+      text: "fallback",
+      template: "sanaotp",
+      params: { code: "4321" },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.ghasedaksms.com/v2/send/verify",
+      expect.any(Object),
     );
   });
 

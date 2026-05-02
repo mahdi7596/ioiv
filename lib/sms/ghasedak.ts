@@ -1,6 +1,6 @@
 import type { SmsMessage } from "./index";
 
-const GHASEDAK_BASE_URL = "https://api.smsapp.ir/v2";
+const DEFAULT_GHASEDAK_BASE_URL = "http://api.smsapp.ir/v2";
 
 type GhasedakResponse = {
   IsSuccess?: boolean;
@@ -13,12 +13,13 @@ type GhasedakResponse = {
 
 async function postToGhasedak(path: string, body: Record<string, unknown>) {
   const apiKey = process.env.GHASEDAK_API_KEY;
+  const baseUrl = process.env.GHASEDAK_BASE_URL || DEFAULT_GHASEDAK_BASE_URL;
 
   if (!apiKey) {
     throw new Error("GHASEDAK_API_KEY is required in production");
   }
 
-  const response = await fetch(`${GHASEDAK_BASE_URL}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

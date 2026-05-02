@@ -25,6 +25,7 @@ Required environment:
 - ZARINPAL_MERCHANT_ID
 - ZARINPAL_SANDBOX=false
 - GHASEDAK_API_KEY
+- GHASEDAK_BASE_URL=http://api.smsapp.ir/v2
 - GHASEDAK_OTP_TEMPLATE=sanaotp
 - GHASEDAK_STATUS_TEMPLATE=sanastatus
 - GHASEDAK_SUBMITTED_TEMPLATE=sanasubmitted
