@@ -23,7 +23,11 @@ export async function getSubmissionExportRows(filters: ExportFilters) {
         ? {
             OR: [
               { mobile: { contains: q } },
+              { companyName: { contains: q } },
               { companyNationalId: { contains: q } },
+              { companyContactFullName: { contains: q } },
+              { companyContactNationalId: { contains: q } },
+              { companyContactNationalCode: { contains: q } },
               { nationalCode: { contains: q } },
             ],
           }
@@ -44,7 +48,11 @@ export async function getSubmissionExportRows(filters: ExportFilters) {
       "Submitted Date": application.submittedAt?.toISOString() || "",
       Status: application.status,
       Mobile: application.mobile,
+      "Company Name": application.companyName || "",
       "Company National ID": application.companyNationalId,
+      "Company Contact National ID": application.companyContactNationalId || "",
+      "Company Contact Full Name": application.companyContactFullName || "",
+      "Company Contact National Code": application.companyContactNationalCode || "",
       "Payment Status": latestPayment?.status || "",
       "Payment Reference ID": latestPayment?.referenceId || "",
       "Tax Declaration Files": application.files.filter((file) =>

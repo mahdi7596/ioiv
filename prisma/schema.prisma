@@ -35,13 +35,17 @@ enum PaymentStatus {
 }
 
 model User {
-  id                String        @id @default(cuid())
-  mobile            String        @unique
-  companyNationalId String?
-  nationalCode      String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  applications      Application[]
+  id                         String        @id @default(cuid())
+  mobile                     String        @unique
+  companyName                String?
+  companyNationalId          String?
+  companyContactNationalId   String?
+  companyContactFullName     String?
+  companyContactNationalCode String?
+  nationalCode               String?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+  applications               Application[]
 }
 
 model Admin {
@@ -67,26 +71,30 @@ model OtpCode {
 }
 
 model Application {
-  id                String            @id @default(cuid())
-  userId            String
-  user              User              @relation(fields: [userId], references: [id])
-  mobile            String
-  companyNationalId String
-  nationalCode      String?
-  applicationRound  String            @default("1403")
-  status            ApplicationStatus @default(DRAFT)
-  currentStep       Int               @default(1)
-  taxDeclarations   Json              @default("[]")
-  financials        Json              @default("[]")
-  trialBalance      Json              @default("{}")
-  creditReports     Json              @default("{}")
-  adminNote         String?
-  submittedAt       DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  files             ApplicationFile[]
-  payments          Payment[]
-  history           StatusHistory[]
+  id                         String            @id @default(cuid())
+  userId                     String
+  user                       User              @relation(fields: [userId], references: [id])
+  mobile                     String
+  companyName                String?
+  companyNationalId          String
+  companyContactNationalId   String?
+  companyContactFullName     String?
+  companyContactNationalCode String?
+  nationalCode               String?
+  applicationRound           String            @default("1403")
+  status                     ApplicationStatus @default(DRAFT)
+  currentStep                Int               @default(1)
+  taxDeclarations            Json              @default("[]")
+  financials                 Json              @default("[]")
+  trialBalance               Json              @default("{}")
+  creditReports              Json              @default("{}")
+  adminNote                  String?
+  submittedAt                DateTime?
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  files                      ApplicationFile[]
+  payments                   Payment[]
+  history                    StatusHistory[]
 
   @@unique([mobile, companyNationalId, applicationRound])
   @@index([status])

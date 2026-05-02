@@ -3,6 +3,7 @@ import {
   companyNationalIdSchema,
   mobileSchema,
   otpSchema,
+  verifyOtpSchema,
 } from "@/lib/validations/auth";
 
 describe("auth validation", () => {
@@ -32,5 +33,35 @@ describe("auth validation", () => {
     expect(companyNationalIdSchema.safeParse("12345678901").success).toBe(true);
     expect(companyNationalIdSchema.safeParse("۱۲۳۴۵۶۷۸۹۰۱").data).toBe("12345678901");
     expect(companyNationalIdSchema.safeParse("abc").success).toBe(false);
+  });
+
+  it("requires all registration fields when company national ID is provided", () => {
+    expect(
+      verifyOtpSchema.safeParse({
+        mobile: "09123456789",
+        code: "1234",
+        mode: "user",
+        companyNationalId: "12345678901",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      verifyOtpSchema.safeParse({
+        mobile: "09123456789",
+        code: "1234",
+        mode: "user",
+        companyName: "شرکت نمونه",
+        companyNationalId: "۱۲۳۴۵۶۷۸۹۰۱",
+        companyContactNationalId: "۱۰۹۸۷۶۵۴۳۲۱",
+        companyContactFullName: "علی رضایی",
+        companyContactNationalCode: "۰۰۱۲۳۴۵۶۷۸",
+      }).data,
+    ).toMatchObject({
+      companyName: "شرکت نمونه",
+      companyNationalId: "12345678901",
+      companyContactNationalId: "10987654321",
+      companyContactFullName: "علی رضایی",
+      companyContactNationalCode: "0012345678",
+    });
   });
 });

@@ -52,7 +52,11 @@ export async function listSubmissions(input?: {
         ? {
             OR: [
               { mobile: { contains: q } },
+              { companyName: { contains: q } },
               { companyNationalId: { contains: q } },
+              { companyContactFullName: { contains: q } },
+              { companyContactNationalId: { contains: q } },
+              { companyContactNationalCode: { contains: q } },
               { nationalCode: { contains: q } },
             ],
           }

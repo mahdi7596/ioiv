@@ -72,7 +72,11 @@ export async function createOrGetDraftApplication() {
     data: {
       userId: user.id,
       mobile: user.mobile,
+      companyName: user.companyName,
       companyNationalId: user.companyNationalId,
+      companyContactNationalId: user.companyContactNationalId,
+      companyContactFullName: user.companyContactFullName,
+      companyContactNationalCode: user.companyContactNationalCode,
       nationalCode: user.nationalCode,
       applicationRound: APPLICATION_ROUND,
     },

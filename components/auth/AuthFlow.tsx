@@ -12,7 +12,11 @@ export function AuthFlow() {
   const [step, setStep] = useState<Step>("mobile");
   const [mobile, setMobile] = useState("");
   const [code, setCode] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [companyNationalId, setCompanyNationalId] = useState("");
+  const [companyContactNationalId, setCompanyContactNationalId] = useState("");
+  const [companyContactFullName, setCompanyContactFullName] = useState("");
+  const [companyContactNationalCode, setCompanyContactNationalCode] = useState("");
   const [requiresRegistration, setRequiresRegistration] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -74,13 +78,17 @@ export function AuthFlow() {
           mobile,
           code,
           mode: "user",
+          companyName: requiresRegistration ? companyName : undefined,
           companyNationalId: requiresRegistration ? companyNationalId : undefined,
+          companyContactNationalId: requiresRegistration ? companyContactNationalId : undefined,
+          companyContactFullName: requiresRegistration ? companyContactFullName : undefined,
+          companyContactNationalCode: requiresRegistration ? companyContactNationalCode : undefined,
         }),
       });
       const data = await response.json();
 
       if (!response.ok) {
-        if (requiresRegistration && String(data.error || "").includes("شناسه")) {
+        if (requiresRegistration) {
           setRegistrationError(data.error);
           return;
         }
@@ -90,7 +98,7 @@ export function AuthFlow() {
 
       if (data.next === "register") {
         setRequiresRegistration(true);
-        setRegistrationError("شناسه ملی شرکت را برای تکمیل ثبت‌نام وارد کنید");
+        setRegistrationError("اطلاعات شرکت و رابط شرکت را برای تکمیل ثبت‌نام وارد کنید");
         return;
       }
 
@@ -127,9 +135,17 @@ export function AuthFlow() {
         }}
       >
         <RegistrationForm
+          companyName={companyName}
           companyNationalId={companyNationalId}
+          companyContactNationalId={companyContactNationalId}
+          companyContactFullName={companyContactFullName}
+          companyContactNationalCode={companyContactNationalCode}
           error={registrationError}
+          onCompanyNameChange={setCompanyName}
           onCompanyNationalIdChange={setCompanyNationalId}
+          onCompanyContactNationalIdChange={setCompanyContactNationalId}
+          onCompanyContactFullNameChange={setCompanyContactFullName}
+          onCompanyContactNationalCodeChange={setCompanyContactNationalCode}
         />
       </OtpForm>
     );

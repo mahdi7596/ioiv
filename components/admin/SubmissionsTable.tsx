@@ -6,6 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 type SubmissionRow = {
   id: string;
   mobile: string;
+  companyName: string | null;
   companyNationalId: string;
   status: string;
   createdAt: Date;
@@ -19,6 +20,7 @@ export function SubmissionsTable({ submissions }: { submissions: SubmissionRow[]
         <thead className="bg-stone-50 text-stone-600">
           <tr>
             <th className="px-4 py-3 text-right">موبایل</th>
+            <th className="px-4 py-3 text-right">نام شرکت</th>
             <th className="px-4 py-3 text-right">شناسه ملی شرکت</th>
             <th className="px-4 py-3 text-right">وضعیت</th>
             <th className="px-4 py-3 text-right">پرداخت</th>
@@ -31,6 +33,9 @@ export function SubmissionsTable({ submissions }: { submissions: SubmissionRow[]
             <tr key={submission.id}>
               <td className="px-4 py-3" dir="ltr">
                 {submission.mobile}
+              </td>
+              <td className="px-4 py-3">
+                {submission.companyName || "-"}
               </td>
               <td className="px-4 py-3" dir="ltr">
                 {submission.companyNationalId}

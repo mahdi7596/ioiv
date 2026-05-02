@@ -138,7 +138,16 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
     throw new ActionError(parsed.error.issues[0]?.message || "Invalid OTP verification");
   }
 
-  const { mobile, code, mode, companyNationalId } = parsed.data;
+  const {
+    mobile,
+    code,
+    mode,
+    companyName,
+    companyNationalId,
+    companyContactNationalId,
+    companyContactFullName,
+    companyContactNationalCode,
+  } = parsed.data;
   const purpose = otpPurposeForMode(mode);
 
   logger.info("otp_verify_started", {
@@ -200,7 +209,11 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
     (await db.user.create({
       data: {
         mobile,
+        companyName,
         companyNationalId,
+        companyContactNationalId,
+        companyContactFullName,
+        companyContactNationalCode,
       },
     }));
 
