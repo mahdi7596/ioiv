@@ -4,6 +4,9 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+ARG ALPINE_REPOSITORY=https://mirror.arvancloud.ir/alpine/v3.23
+
+RUN printf '%s/main\n%s/community\n' "$ALPINE_REPOSITORY" "$ALPINE_REPOSITORY" > /etc/apk/repositories
 RUN apk add --no-cache libc6-compat openssl
 
 FROM base AS deps
@@ -17,8 +20,9 @@ FROM base AS builder
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY prisma-engine-export/.prisma ./node_modules/.prisma
+COPY prisma-engine-export/@prisma ./node_modules/@prisma
 
-RUN npx prisma generate
 RUN npm run build
 
 FROM base AS runner
@@ -31,6 +35,7 @@ COPY package.json package-lock.json ./
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm prune --omit=dev && npm cache clean --force
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/lib ./lib

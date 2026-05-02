@@ -10,6 +10,8 @@ uploads
 Dockerfile
 docker-compose.yml
 *.pem
+*.tar
+*.tar.gz
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
