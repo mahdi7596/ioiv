@@ -766,15 +766,19 @@ textarea:focus-visible {
   align-items: center;
   color: var(--color-text);
   cursor: pointer;
-  display: flex;
+  display: block;
   font-size: 1.02rem;
   font-weight: 700;
-  gap: 10px;
-  justify-content: space-between;
   line-height: 1.8;
   list-style: none;
-  padding: 18px 20px;
+  padding: 18px 20px 18px 48px;
+  position: relative;
   text-align: right;
+}
+
+.dashboard-evaluation-notice__summary span {
+  display: block;
+  width: 100%;
 }
 
 .dashboard-evaluation-notice__summary::-webkit-details-marker {
@@ -785,23 +789,27 @@ textarea:focus-visible {
   border-block-start: 2px solid currentColor;
   border-inline-start: 2px solid currentColor;
   content: "";
-  flex: 0 0 auto;
   height: 8px;
-  transform: rotate(-45deg);
+  inset-block-start: 50%;
+  left: 20px;
+  position: absolute;
+  transform: translateY(-50%) rotate(-45deg);
   transition: transform 160ms ease;
   width: 8px;
 }
 
 .dashboard-evaluation-notice[open] .dashboard-evaluation-notice__summary::before {
-  transform: rotate(45deg);
+  transform: translateY(-50%) rotate(45deg);
 }
 
 .dashboard-evaluation-notice__body {
+  animation: details-open 190ms ease;
   border-block-start: 1px solid var(--color-border);
   color: var(--color-text-muted);
   display: grid;
   gap: 12px;
   line-height: 2;
+  overflow: hidden;
   padding: 0 20px 20px;
   text-align: justify;
   text-align-last: right;
@@ -817,6 +825,17 @@ textarea:focus-visible {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+@keyframes details-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .status-card .detail-grid + .status-info {
