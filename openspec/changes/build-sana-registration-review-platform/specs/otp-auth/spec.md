@@ -12,14 +12,14 @@ The system SHALL authenticate users and admins with a 4-digit mobile OTP that ex
 - **THEN** the system rejects verification and does not create a session
 
 ### Requirement: User registration after OTP
-The system SHALL require company national ID for new user registration and create the user only after OTP verification succeeds.
+The system SHALL require company name, company national ID, company contact full name, and company contact national code for new user registration and create the user only after OTP verification succeeds.
 
-#### Scenario: New user verifies with company national ID
-- **WHEN** a mobile number has no existing user and the submitted OTP and company national ID are valid
-- **THEN** the system creates the user and starts a user session
+#### Scenario: New user verifies with required registration fields
+- **WHEN** a mobile number has no existing user and the submitted OTP plus all required registration fields are valid
+- **THEN** the system creates the user with `companyName`, `companyNationalId`, `companyContactFullName`, and `companyContactNationalCode`, then starts a user session
 
-#### Scenario: New user omits company national ID
-- **WHEN** a mobile number has no existing user and verification omits company national ID
+#### Scenario: New user omits registration fields
+- **WHEN** a mobile number has no existing user and verification omits any required registration field
 - **THEN** the system rejects verification
 
 ### Requirement: Admin OTP login

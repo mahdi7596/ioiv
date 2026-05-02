@@ -105,7 +105,22 @@ Initial fields were extracted from `saana.docx`. These may change, but they shou
 
 Registration:
 
+- Company name / `نام شرکت`.
 - Company national ID / `شناسه ملی شرکت`.
+- Company contact full name / `نام و نام خانوادگی رابط شرکت`.
+- Company contact national code / `کد ملی رابط شرکت`.
+
+Registration database fields:
+
+- `User.companyName`: company name entered during first-time registration.
+- `User.companyNationalId`: company national ID entered during first-time registration.
+- `User.companyContactFullName`: full name for the company contact.
+- `User.companyContactNationalCode`: national code for the company contact.
+- `Application.companyName`: copied from `User.companyName` when the active-round draft application is created.
+- `Application.companyContactFullName`: copied from `User.companyContactFullName` when the active-round draft application is created.
+- `Application.companyContactNationalCode`: copied from `User.companyContactNationalCode` when the active-round draft application is created.
+
+The `User` fields are the registration source of truth. The matching `Application` fields preserve the registration snapshot that belongs to a submitted application and are available in admin review/search/export.
 
 Application form fields:
 

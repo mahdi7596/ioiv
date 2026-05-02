@@ -74,7 +74,6 @@ export async function createOrGetDraftApplication() {
       mobile: user.mobile,
       companyName: user.companyName,
       companyNationalId: user.companyNationalId,
-      companyContactNationalId: user.companyContactNationalId,
       companyContactFullName: user.companyContactFullName,
       companyContactNationalCode: user.companyContactNationalCode,
       nationalCode: user.nationalCode,

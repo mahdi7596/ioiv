@@ -5,13 +5,11 @@ import { keepAsciiDigits } from "@/lib/input/digits";
 type RegistrationFormProps = {
   companyName: string;
   companyNationalId: string;
-  companyContactNationalId: string;
   companyContactFullName: string;
   companyContactNationalCode: string;
   error?: string;
   onCompanyNameChange: (value: string) => void;
   onCompanyNationalIdChange: (value: string) => void;
-  onCompanyContactNationalIdChange: (value: string) => void;
   onCompanyContactFullNameChange: (value: string) => void;
   onCompanyContactNationalCodeChange: (value: string) => void;
 };
@@ -19,13 +17,11 @@ type RegistrationFormProps = {
 export function RegistrationForm({
   companyName,
   companyNationalId,
-  companyContactNationalId,
   companyContactFullName,
   companyContactNationalCode,
   error,
   onCompanyNameChange,
   onCompanyNationalIdChange,
-  onCompanyContactNationalIdChange,
   onCompanyContactFullNameChange,
   onCompanyContactNationalCodeChange,
 }: RegistrationFormProps) {
@@ -55,23 +51,6 @@ export function RegistrationForm({
           dir="ltr"
           value={companyNationalId}
           onChange={(event) => onCompanyNationalIdChange(keepAsciiDigits(event.target.value).slice(0, 11))}
-          placeholder="12345678901"
-          maxLength={11}
-          required
-        />
-      </div>
-
-      <div className="field">
-        <label htmlFor="companyContactNationalId">
-          شناسه ملی رابط شرکت <span className="text-red-600">*</span>
-        </label>
-        <input
-          id="companyContactNationalId"
-          type="tel"
-          inputMode="numeric"
-          dir="ltr"
-          value={companyContactNationalId}
-          onChange={(event) => onCompanyContactNationalIdChange(keepAsciiDigits(event.target.value).slice(0, 11))}
           placeholder="12345678901"
           maxLength={11}
           required

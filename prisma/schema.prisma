@@ -39,7 +39,6 @@ model User {
   mobile                     String        @unique
   companyName                String?
   companyNationalId          String?
-  companyContactNationalId   String?
   companyContactFullName     String?
   companyContactNationalCode String?
   nationalCode               String?
@@ -77,7 +76,6 @@ model Application {
   mobile                     String
   companyName                String?
   companyNationalId          String
-  companyContactNationalId   String?
   companyContactFullName     String?
   companyContactNationalCode String?
   nationalCode               String?

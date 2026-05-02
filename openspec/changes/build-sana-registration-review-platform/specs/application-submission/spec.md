@@ -5,7 +5,7 @@ The system SHALL allow only one application per `mobile + companyNationalId + ap
 
 #### Scenario: User starts first application
 - **WHEN** a user has no application for the active round
-- **THEN** the system creates a draft application for that round
+- **THEN** the system creates a draft application for that round and copies the user's registration snapshot fields into the application: `companyName`, `companyNationalId`, `companyContactFullName`, and `companyContactNationalCode`
 
 #### Scenario: Duplicate active-round application
 - **WHEN** a user already has an application for the same mobile, company national ID, and round

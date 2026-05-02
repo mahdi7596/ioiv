@@ -144,7 +144,6 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
     mode,
     companyName,
     companyNationalId,
-    companyContactNationalId,
     companyContactFullName,
     companyContactNationalCode,
   } = parsed.data;
@@ -211,7 +210,6 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
         mobile,
         companyName,
         companyNationalId,
-        companyContactNationalId,
         companyContactFullName,
         companyContactNationalCode,
       },

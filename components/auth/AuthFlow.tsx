@@ -14,7 +14,6 @@ export function AuthFlow() {
   const [code, setCode] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [companyNationalId, setCompanyNationalId] = useState("");
-  const [companyContactNationalId, setCompanyContactNationalId] = useState("");
   const [companyContactFullName, setCompanyContactFullName] = useState("");
   const [companyContactNationalCode, setCompanyContactNationalCode] = useState("");
   const [requiresRegistration, setRequiresRegistration] = useState(false);
@@ -80,7 +79,6 @@ export function AuthFlow() {
           mode: "user",
           companyName: requiresRegistration ? companyName : undefined,
           companyNationalId: requiresRegistration ? companyNationalId : undefined,
-          companyContactNationalId: requiresRegistration ? companyContactNationalId : undefined,
           companyContactFullName: requiresRegistration ? companyContactFullName : undefined,
           companyContactNationalCode: requiresRegistration ? companyContactNationalCode : undefined,
         }),
@@ -137,13 +135,11 @@ export function AuthFlow() {
         <RegistrationForm
           companyName={companyName}
           companyNationalId={companyNationalId}
-          companyContactNationalId={companyContactNationalId}
           companyContactFullName={companyContactFullName}
           companyContactNationalCode={companyContactNationalCode}
           error={registrationError}
           onCompanyNameChange={setCompanyName}
           onCompanyNationalIdChange={setCompanyNationalId}
-          onCompanyContactNationalIdChange={setCompanyContactNationalId}
           onCompanyContactFullNameChange={setCompanyContactFullName}
           onCompanyContactNationalCodeChange={setCompanyContactNationalCode}
         />

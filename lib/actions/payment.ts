@@ -69,7 +69,7 @@ export async function startPayment() {
   try {
     zarinpal = await requestZarinpalPayment({
       amountToman: PAYMENT_AMOUNT_TOMAN,
-      description: "پرداخت ثبت پرونده سامانه اعتبار سنجی نفت ایران (سانا)",
+      description: "پرداخت ثبت پرونده سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)",
       callbackUrl: `${appUrl}/api/payment/callback?paymentId=${payment.id}`,
       mobile: application.mobile,
     });

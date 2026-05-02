@@ -1,7 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { keepAsciiDigits } from "@/lib/input/digits";
+
+const serviceName = "سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)";
 
 export default function AdminLoginPage() {
   const [mobile, setMobile] = useState("");
@@ -55,7 +58,7 @@ export default function AdminLoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-info" aria-labelledby="admin-auth-info-title">
-        <p className="eyebrow">سامانه اعتبار سنجی نفت ایران (سانا)</p>
+        <p className="eyebrow">{serviceName}</p>
         <h1 id="admin-auth-info-title">ورود امن مدیران برای بررسی پرونده‌ها</h1>
         <p>
           مدیران فعال می‌توانند با شماره موبایل ثبت‌شده وارد پنل شوند، وضعیت پرونده‌ها را بررسی
@@ -82,6 +85,14 @@ export default function AdminLoginPage() {
 
       <section className="auth-panel" aria-labelledby="admin-auth-form-title">
         <div className="auth-panel__header">
+          <Image
+            src="/ioiv-logo.jpeg"
+            alt="نشان صندوق پژوهش و فناوری صنعت نفت"
+            width={206}
+            height={100}
+            className="auth-logo"
+            priority
+          />
           <p className="eyebrow">ورود مدیران سانا</p>
           <h2 id="admin-auth-form-title">
             {otpSent ? "کد تایید را وارد کنید" : "شماره موبایل مدیر را وارد کنید"}

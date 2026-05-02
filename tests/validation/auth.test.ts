@@ -35,7 +35,7 @@ describe("auth validation", () => {
     expect(companyNationalIdSchema.safeParse("abc").success).toBe(false);
   });
 
-  it("requires all registration fields when company national ID is provided", () => {
+  it("requires remaining registration fields when company national ID is provided", () => {
     expect(
       verifyOtpSchema.safeParse({
         mobile: "09123456789",
@@ -52,14 +52,12 @@ describe("auth validation", () => {
         mode: "user",
         companyName: "شرکت نمونه",
         companyNationalId: "۱۲۳۴۵۶۷۸۹۰۱",
-        companyContactNationalId: "۱۰۹۸۷۶۵۴۳۲۱",
         companyContactFullName: "علی رضایی",
         companyContactNationalCode: "۰۰۱۲۳۴۵۶۷۸",
       }).data,
     ).toMatchObject({
       companyName: "شرکت نمونه",
       companyNationalId: "12345678901",
-      companyContactNationalId: "10987654321",
       companyContactFullName: "علی رضایی",
       companyContactNationalCode: "0012345678",
     });

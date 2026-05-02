@@ -55,7 +55,6 @@ export async function listSubmissions(input?: {
               { companyName: { contains: q } },
               { companyNationalId: { contains: q } },
               { companyContactFullName: { contains: q } },
-              { companyContactNationalId: { contains: q } },
               { companyContactNationalCode: { contains: q } },
               { nationalCode: { contains: q } },
             ],

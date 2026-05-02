@@ -50,10 +50,6 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
           <p dir="ltr" className="mt-1 font-semibold">{submission.mobile}</p>
         </div>
         <div>
-          <p className="text-sm text-stone-500">شناسه ملی رابط شرکت</p>
-          <p dir="ltr" className="mt-1 font-semibold">{submission.companyContactNationalId || "-"}</p>
-        </div>
-        <div>
           <p className="text-sm text-stone-500">نام و نام خانوادگی رابط شرکت</p>
           <p className="mt-1 font-semibold">{submission.companyContactFullName || "-"}</p>
         </div>

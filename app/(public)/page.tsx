@@ -1,45 +1,69 @@
+import Image from "next/image";
 import { AuthFlow } from "@/components/auth/AuthFlow";
+
+const serviceName = "سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)";
 
 export default function Home() {
   return (
     <main className="auth-page">
       <section className="auth-info" aria-labelledby="auth-info-title">
-        <p className="eyebrow">سامانه اعتبار سنجی نفت ایران (سانا)</p>
-        <h1 id="auth-info-title">ثبت مدارک شرکت و پیگیری وضعیت پرونده</h1>
-        <p>
-          در این سامانه مدارک مورد نیاز را مرحله به مرحله بارگذاری می‌کنید، وضعیت بررسی را دنبال
-          می‌کنید و پیام‌های کارشناسی را بدون مراجعه حضوری دریافت می‌کنید.
-        </p>
-        <div className="auth-info__steps" aria-label="مراحل اصلی">
-          <div>
-            <span>۱</span>
-            <strong>ورود با موبایل</strong>
-            <small>کد تایید برای شماره شما صادر می‌شود.</small>
-          </div>
-          <div>
-            <span>۲</span>
-            <strong>تکمیل مدارک</strong>
-            <small>اظهارنامه، صورت‌های مالی و گزارش‌ها را ثبت کنید.</small>
-          </div>
-          <div>
-            <span>۳</span>
-            <strong>بررسی و نتیجه</strong>
-            <small>وضعیت پرونده و یادداشت کارشناس را از داشبورد ببینید.</small>
-          </div>
+        <div className="auth-info__media">
+          <Image
+            src="/ioiv-banner.jpg"
+            alt=""
+            width={836}
+            height={471}
+            className="auth-info__banner"
+            priority
+          />
+        </div>
+        <h1 id="auth-info-title">فرایند ارزیابی مالی و اعتباری تامین‌کنندگان</h1>
+        <div className="auth-info__copy">
+          <p>
+            متقاضیان عضویت در تامین‌کنندگان لیست بلند نفت به عنوان یک مرحله از فرایند ارزیابی مورد
+            بررسی مالی و اعتباری قرار خواهند گرفت.
+          </p>
+          <p>
+            این مرحله به عنوان یک شاخص اصلی شرکت‌های توانمند تامین‌کننده برای حضور در لیست بلند
+            وزارت نفت در نظر گرفته شده است. از این رو از شرکت‌های متقاضی درخواست می‌گردد در ارائه
+            کلیه اطلاعات خواسته شده در این فرایند با نهاد اعتبارسنجی همکاری‌های لازم را به عمل
+            آورند.
+          </p>
+          <p>
+            نتیجه گزارش اعتبارسنجی پس از بررسی در سامانه به صورت برخط به وزرات نفت ارسال خواهد
+            گردید و نیازمند پیگیری از سمت شرکت متقاضی نمی‌باشد.
+          </p>
+          <p>
+            همچنین در راستای شفافیت کامل مسیر تعریف شده شرکت‌ها می‌توانند به منظور رفع ابهامات و
+            مشکلات احتمالی با شماره تلفن{" "}
+            <a href="tel:02186122370" dir="ltr">
+              02186122370
+            </a>{" "}
+            داخلی 3 تماس حاصل نمایند.
+          </p>
         </div>
       </section>
 
-      <section className="auth-panel" aria-labelledby="auth-form-title">
-        <div className="auth-panel__header">
-          <p className="eyebrow">ورود متقاضی به سانا</p>
-          <h2 id="auth-form-title">شماره موبایل خود را وارد کنید</h2>
-          <p>
-            اگر قبلا ثبت‌نام کرده باشید وارد داشبورد می‌شوید؛ در غیر این صورت شناسه ملی شرکت را
-            بعد از تایید کد وارد می‌کنید.
-          </p>
-        </div>
-        <AuthFlow />
-      </section>
+      <div className="auth-panel-stack">
+        <p className="auth-panel-stack__service-name">{serviceName}</p>
+        <section className="auth-panel" aria-label="ورود متقاضی به سانا">
+          <div className="auth-panel__header">
+            <Image
+              src="/ioiv-logo.jpeg"
+              alt="نشان صندوق پژوهش و فناوری صنعت نفت"
+              width={206}
+              height={100}
+              className="auth-logo"
+              priority
+            />
+            <p className="auth-panel__intro">
+              اگر قبلا ثبت‌نام کرده باشید وارد داشبورد می‌شوید؛ در غیر این صورت پس از تایید کد،
+              اطلاعات تکمیلی شرکت و رابط دریافت خواهد شد.
+            </p>
+          </div>
+          <AuthFlow />
+        </section>
+      </div>
     </main>
   );
 }

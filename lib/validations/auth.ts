@@ -19,11 +19,6 @@ export const companyNationalIdSchema = z
 const requiredTextSchema = (fieldName: string) =>
   z.string().trim().min(1, `${fieldName} الزامی است`);
 
-export const companyContactNationalIdSchema = z
-  .string()
-  .transform(keepAsciiDigits)
-  .pipe(z.string().regex(/^\d{11}$/, "شناسه ملی رابط شرکت باید ۱۱ رقم باشد"));
-
 export const companyContactNationalCodeSchema = z
   .string()
   .transform(keepAsciiDigits)
@@ -41,7 +36,6 @@ export const verifyOtpSchema = z
     mode: z.enum(["user", "admin"]),
     companyName: requiredTextSchema("نام شرکت").optional(),
     companyNationalId: companyNationalIdSchema.optional(),
-    companyContactNationalId: companyContactNationalIdSchema.optional(),
     companyContactFullName: requiredTextSchema("نام و نام خانوادگی رابط شرکت").optional(),
     companyContactNationalCode: companyContactNationalCodeSchema.optional(),
   })
@@ -53,7 +47,6 @@ export const verifyOtpSchema = z
     const registrationKeys = [
       "companyName",
       "companyNationalId",
-      "companyContactNationalId",
       "companyContactFullName",
       "companyContactNationalCode",
     ] as const;

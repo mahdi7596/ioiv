@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ClipboardList, Files, LayoutDashboard, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
@@ -28,7 +29,15 @@ export function AppShell({ area, eyebrow, title, description, action, children }
     <div className="app-shell">
       <aside className="app-sidebar" aria-label="ناوبری">
         <Link href={area === "admin" ? "/admin" : "/dashboard"} className="app-brand">
-          <span className="app-brand__mark">س</span>
+          <span className="app-brand__mark">
+            <Image
+              src="/ioiv-logo.jpeg"
+              alt="نشان صندوق پژوهش و فناوری صنعت نفت"
+              width={56}
+              height={56}
+              className="app-brand__logo"
+            />
+          </span>
           <span>
             <strong>سانا</strong>
             <small>{area === "admin" ? "پنل مدیریت" : "پنل متقاضی"}</small>
