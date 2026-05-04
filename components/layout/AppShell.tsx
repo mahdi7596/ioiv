@@ -31,7 +31,7 @@ export function AppShell({ area, eyebrow, title, description, action, children }
         <Link href={area === "admin" ? "/admin" : "/dashboard"} className="app-brand">
           <span className="app-brand__mark">
             <Image
-              src="/ioiv-logo.jpeg"
+              src="/ioiv-logo.png"
               alt="نشان صندوق پژوهش و فناوری صنعت نفت"
               width={56}
               height={56}

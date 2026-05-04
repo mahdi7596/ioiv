@@ -31,13 +31,13 @@ export function FileUploadControl({
         {label} {required ? <span className="text-red-600">*</span> : null}
       </label>
       {readOnly ? null : (
-        <p className="field__hint">فرمت مجاز: PDF، Word یا ZIP. حداکثر حجم ۲۰ مگابایت.</p>
+        <p className="field__hint">فرمت مجاز: PDF، Word، ZIP یا Excel. حداکثر حجم ۲۰ مگابایت.</p>
       )}
       <div className="upload-picker">
         <input
           id={id}
           type="file"
-          accept=".pdf,.doc,.docx,.zip"
+          accept=".pdf,.doc,.docx,.zip,.xls,.xlsx,.csv"
           disabled={uploading || readOnly}
           onChange={(event) => {
             const file = event.target.files?.[0];

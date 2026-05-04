@@ -111,6 +111,7 @@ export async function saveApplicationDraft(input: unknown) {
       currentStep: data.currentStep,
       taxDeclarations: data.taxDeclarations,
       financials: data.financials,
+      humanResources: data.humanResources,
       trialBalance: data.trialBalance,
       creditReports: data.creditReports,
     },

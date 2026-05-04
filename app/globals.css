@@ -96,6 +96,11 @@ textarea:focus-visible {
   margin: 0 0 0.35rem;
 }
 
+.text-accent {
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
 .auth-page {
   align-items: center;
   display: grid;
@@ -163,6 +168,27 @@ textarea:focus-visible {
   text-align: right;
 }
 
+.enamad-seal {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.enamad-seal--info {
+  align-self: flex-start;
+  margin-block-start: auto;
+  padding-block-start: 24px;
+}
+
+.enamad-seal img {
+  cursor: pointer;
+  display: block;
+  height: auto;
+  max-height: 110px;
+  max-width: 110px;
+  object-fit: contain;
+}
+
 .auth-panel h2 {
   color: var(--color-text);
   font-size: 1.45rem;
@@ -185,7 +211,7 @@ textarea:focus-visible {
   color: var(--color-on-primary);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 520px;
   min-width: 0;
   padding: 44px;
@@ -204,7 +230,7 @@ textarea:focus-visible {
   display: block;
   height: 100%;
   object-fit: cover;
-  object-position: left center;
+  object-position: left top;
   width: 100%;
 }
 

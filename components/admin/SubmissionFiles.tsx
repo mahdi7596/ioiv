@@ -52,12 +52,17 @@ function pushGroupItem(groups: FileGroup[], key: string, item: FileDisplay) {
   groups.find((group) => group.key === key)?.items.push(item);
 }
 
-function buildGroups(files: UploadedFile[], taxDeclarations: unknown, financials: unknown): FileGroup[] {
+function buildGroups(
+  files: UploadedFile[],
+  taxDeclarations: unknown,
+  financials: unknown,
+): FileGroup[] {
   const taxYears = asYearRows(taxDeclarations);
   const financialYears = asYearRows(financials);
   const groups: FileGroup[] = [
     { key: "taxDeclarations", title: "اظهارنامه‌های مالیاتی", items: [] },
     { key: "financials", title: "صورت‌های مالی حسابرسی‌شده", items: [] },
+    { key: "humanResources", title: "منابع انسانی", items: [] },
     { key: "trialBalance", title: "تراز آزمایشی", items: [] },
     { key: "creditReports", title: "گزارش‌های اعتبارسنجی", items: [] },
     { key: "other", title: "سایر فایل‌ها", items: [] },
@@ -93,6 +98,11 @@ function buildGroups(files: UploadedFile[], taxDeclarations: unknown, financials
       continue;
     }
 
+    if (file.fieldKey === "humanResources.insuranceList") {
+      pushGroupItem(groups, "humanResources", { file, fieldLabel: "لیست بیمه" });
+      continue;
+    }
+
     if (file.fieldKey === "trialBalance.subsidiaryLedger") {
       pushGroupItem(groups, "trialBalance", { file, fieldLabel: "تراز معین" });
       continue;
@@ -123,7 +133,11 @@ function buildGroups(files: UploadedFile[], taxDeclarations: unknown, financials
   return groups.filter((group) => group.items.length > 0);
 }
 
-export function SubmissionFiles({ files, taxDeclarations, financials }: SubmissionFilesProps) {
+export function SubmissionFiles({
+  files,
+  taxDeclarations,
+  financials,
+}: SubmissionFilesProps) {
   const groups = buildGroups(files, taxDeclarations, financials);
 
   if (files.length === 0) {

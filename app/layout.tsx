@@ -21,12 +21,12 @@ const iranyekan = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)",
+  title: "سامانه اعتبار سنجی سانا",
   description: "سامانه ثبت نام، پرداخت و بررسی مدارک سانا",
   icons: {
-    icon: "/ioiv-logo.jpeg",
-    shortcut: "/ioiv-logo.jpeg",
-    apple: "/ioiv-logo.jpeg",
+    icon: "/ioiv-favicon.png",
+    shortcut: "/ioiv-favicon.png",
+    apple: "/ioiv-favicon.png",
   },
 };
 

@@ -10,7 +10,7 @@ const yearFileRowSchema = z.object({
   file: fileRefSchema,
 });
 
-const optionalYearFileRowsSchema = z.preprocess((value) => {
+const filledYearFileRows = (value: unknown) => {
   if (!Array.isArray(value)) return value;
 
   return value.filter((row) => {
@@ -18,12 +18,28 @@ const optionalYearFileRowsSchema = z.preprocess((value) => {
     const candidate = row as { year?: unknown; file?: unknown };
     return Boolean(candidate.year || candidate.file);
   });
-}, z.array(yearFileRowSchema));
+};
+
+const yearFileRowsWithMinimum = (minimum: number, message: string) =>
+  z.preprocess(filledYearFileRows, z.array(yearFileRowSchema).min(minimum, message));
+
+const humanResourcesDraftSchema = z
+  .object({
+    employeeCount: z.number().int().positive("تعداد نیروی انسانی باید بیشتر از صفر باشد").optional(),
+    insuranceList: fileRefSchema.optional(),
+  })
+  .optional();
+
+const humanResourcesFinalSchema = z.object({
+  employeeCount: z.number().int().positive("تعداد نیروی انسانی باید بیشتر از صفر باشد"),
+  insuranceList: fileRefSchema,
+});
 
 export const applicationDraftSchema = z.object({
-  currentStep: z.number().int().min(1).max(5).optional(),
+  currentStep: z.number().int().min(1).max(6).optional(),
   taxDeclarations: z.array(yearFileRowSchema.partial()).optional(),
   financials: z.array(yearFileRowSchema.partial()).optional(),
+  humanResources: humanResourcesDraftSchema,
   trialBalance: z
     .object({
       generalLedger: fileRefSchema.optional(),
@@ -40,10 +56,15 @@ export const applicationDraftSchema = z.object({
 });
 
 export const finalSubmissionSchema = z.object({
-  taxDeclarations: z
-    .array(yearFileRowSchema)
-    .min(3, "حداقل سه سال اظهارنامه مالیاتی الزامی است"),
-  financials: optionalYearFileRowsSchema,
+  taxDeclarations: yearFileRowsWithMinimum(
+    1,
+    "حداقل یک اظهارنامه مالیاتی کامل شامل سال و فایل الزامی است",
+  ),
+  financials: yearFileRowsWithMinimum(
+    1,
+    "حداقل یک صورت مالی حسابرسی شده کامل شامل سال و فایل الزامی است",
+  ),
+  humanResources: humanResourcesFinalSchema,
   trialBalance: z.object({
     generalLedger: fileRefSchema,
     subsidiaryLedger: fileRefSchema,

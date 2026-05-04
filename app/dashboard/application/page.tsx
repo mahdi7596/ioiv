@@ -58,6 +58,7 @@ export default async function ApplicationPage() {
             currentStep: application.currentStep,
             taxDeclarations: arrayOrEmpty(application.taxDeclarations),
             financials: arrayOrEmpty(application.financials),
+            humanResources: objectOrEmpty(application.humanResources),
             trialBalance: objectOrEmpty(application.trialBalance),
             creditReports: objectOrEmpty(application.creditReports),
           } as ApplicationDraft

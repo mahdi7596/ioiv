@@ -84,6 +84,7 @@ model Application {
   currentStep                Int               @default(1)
   taxDeclarations            Json              @default("[]")
   financials                 Json              @default("[]")
+  humanResources             Json              @default("{}")
   trialBalance               Json              @default("{}")
   creditReports              Json              @default("{}")
   adminNote                  String?

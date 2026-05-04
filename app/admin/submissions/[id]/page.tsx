@@ -9,6 +9,14 @@ import { StatusHistoryTimeline } from "@/components/admin/StatusHistoryTimeline"
 import { AppShell } from "@/components/layout/AppShell";
 import { getSubmission } from "@/lib/actions/admin";
 
+function getEmployeeCount(value: unknown) {
+  if (!value || typeof value !== "object") return "-";
+  const employeeCount = (value as { employeeCount?: unknown }).employeeCount;
+  return typeof employeeCount === "number" && Number.isFinite(employeeCount)
+    ? employeeCount.toLocaleString("fa-IR")
+    : "-";
+}
+
 export default async function SubmissionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let submission: Awaited<ReturnType<typeof getSubmission>>;
@@ -68,6 +76,10 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
         <div>
           <p className="text-sm text-stone-500">دوره درخواست</p>
           <p className="mt-1 font-semibold">{submission.applicationRound}</p>
+        </div>
+        <div>
+          <p className="text-sm text-stone-500">تعداد نیروی انسانی</p>
+          <p className="mt-1 font-semibold">{getEmployeeCount(submission.humanResources)}</p>
         </div>
       </section>
 

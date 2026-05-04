@@ -22,6 +22,14 @@ export function FinancialStatementsStep({
 
   return (
     <div className="space-y-5">
+      <p className="credit-report-notice">
+        در صورت نداشتن صورت مالی حسابرسی شده با پشتیبانی تماس حاصل فرمایید{" "}
+        <a href="tel:02186122370" dir="ltr">
+          02186122370
+        </a>{" "}
+        داخلی <span className="text-accent">3</span>
+      </p>
+
       {rows.map((row, index) => {
         const fieldKey = `financials.${index}.file`;
 
@@ -30,12 +38,14 @@ export function FinancialStatementsStep({
             <YearSelect
               id={`financials.${index}.year`}
               value={row.year}
+              required
               disabled={readOnly}
               onChange={(year) => updateRow(index, { ...row, year })}
             />
             <FileUploadControl
               id={fieldKey}
               label="فایل صورت مالی"
+              required
               value={row.file}
               readOnly={readOnly}
               uploading={uploadingKey === fieldKey}

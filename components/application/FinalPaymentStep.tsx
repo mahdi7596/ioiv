@@ -161,7 +161,15 @@ function createFinalReviewChecklist(
   includePaymentConfirmation: boolean,
 ): FinalReviewItem[] {
   const taxMessages = getYearFileMessages(draft.taxDeclarations, true);
-  const financialMessages = getYearFileMessages(draft.financials, false);
+  const financialMessages = getYearFileMessages(draft.financials, true, {
+    minimumMessage: "حداقل یک صورت مالی حسابرسی شده کامل شامل سال و فایل الزامی است.",
+  });
+  const humanResourcesMessages = [
+    draft.humanResources.employeeCount && draft.humanResources.employeeCount > 0
+      ? ""
+      : "تعداد نیروی انسانی را با عدد بیشتر از صفر وارد کنید.",
+    draft.humanResources.insuranceList ? "" : "لیست بیمه را بارگذاری کنید.",
+  ].filter(Boolean);
   const trialBalanceMessages = [
     draft.trialBalance.generalLedger ? "" : "تراز کل را بارگذاری کنید.",
     draft.trialBalance.subsidiaryLedger ? "" : "تراز معین را بارگذاری کنید.",
@@ -180,6 +188,10 @@ function createFinalReviewChecklist(
     {
       label: "صورت‌های مالی حسابرسی شده",
       messages: financialMessages,
+    },
+    {
+      label: "مرحله ی منابع انسانی",
+      messages: humanResourcesMessages,
     },
     {
       label: "تراز کل و معین",
@@ -206,6 +218,7 @@ function createFinalReviewChecklist(
 function getYearFileMessages(
   rows: ApplicationDraft["taxDeclarations"],
   requiredMinimum: boolean,
+  options?: { minimumMessage?: string },
 ) {
   const messages: string[] = [];
   let completeRows = 0;
@@ -225,8 +238,10 @@ function getYearFileMessages(
     }
   });
 
-  if (requiredMinimum && completeRows < 3) {
-    messages.push("حداقل سه اظهارنامه مالیاتی کامل شامل سال و فایل الزامی است.");
+  if (requiredMinimum && completeRows < 1) {
+    messages.push(
+      options?.minimumMessage || "حداقل یک اظهارنامه مالیاتی کامل شامل سال و فایل الزامی است.",
+    );
   }
 
   return messages;

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { AuthFlow } from "@/components/auth/AuthFlow";
 
-const serviceName = "سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)";
+const serviceName = "سامانه اعتبار سنجی سانا";
 
 export default function Home() {
   return (
@@ -30,7 +30,7 @@ export default function Home() {
             آورند.
           </p>
           <p>
-            نتیجه گزارش اعتبارسنجی پس از بررسی در سامانه به صورت برخط به وزرات نفت ارسال خواهد
+            نتیجه گزارش اعتبارسنجی پس از بررسی در سامانه به صورت برخط به وزارت نفت ارسال خواهد
             گردید و نیازمند پیگیری از سمت شرکت متقاضی نمی‌باشد.
           </p>
           <p>
@@ -39,9 +39,23 @@ export default function Home() {
             <a href="tel:02186122370" dir="ltr">
               02186122370
             </a>{" "}
-            داخلی 3 تماس حاصل نمایند.
+            داخلی <span className="text-accent">3</span> تماس حاصل نمایند.
           </p>
         </div>
+        <a
+          className="enamad-seal enamad-seal--info"
+          referrerPolicy="origin"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://trustseal.enamad.ir/?id=460034&Code=2JmpBGjve8PEVhflY0sJnYUKOlmzeLz9"
+        >
+          <img
+            referrerPolicy="origin"
+            src="https://trustseal.enamad.ir/logo.aspx?id=460034&Code=2JmpBGjve8PEVhflY0sJnYUKOlmzeLz9"
+            alt=""
+            data-code="2JmpBGjve8PEVhflY0sJnYUKOlmzeLz9"
+          />
+        </a>
       </section>
 
       <div className="auth-panel-stack">
@@ -49,7 +63,7 @@ export default function Home() {
         <section className="auth-panel" aria-label="ورود متقاضی به سانا">
           <div className="auth-panel__header">
             <Image
-              src="/ioiv-logo.jpeg"
+              src="/ioiv-logo.png"
               alt="نشان صندوق پژوهش و فناوری صنعت نفت"
               width={206}
               height={100}

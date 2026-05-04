@@ -6,6 +6,7 @@ import { showToast } from "@/components/ui/toast";
 import { CreditReportStep } from "./CreditReportStep";
 import { FinalPaymentStep } from "./FinalPaymentStep";
 import { FinancialStatementsStep } from "./FinancialStatementsStep";
+import { HumanResourcesStep } from "./HumanResourcesStep";
 import { StepIndicator } from "./StepIndicator";
 import { TaxDeclarationStep } from "./TaxDeclarationStep";
 import { TrialBalanceStep } from "./TrialBalanceStep";
@@ -14,6 +15,7 @@ import type { ApplicationDraft, FileRef } from "./types";
 const steps = [
   "اظهارنامه مالیاتی",
   "صورت‌های مالی حسابرسی شده",
+  "مرحله ی منابع انسانی",
   "تراز کل و معین",
   "گزارش اعتبارسنجی",
   "تایید نهایی و پرداخت",
@@ -34,7 +36,8 @@ export function ApplicationWizard({
   readOnly,
   hasVerifiedPayment = false,
 }: ApplicationWizardProps) {
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  const boundedInitialStep = Math.min(steps.length, Math.max(1, initialStep));
+  const [currentStep, setCurrentStep] = useState(boundedInitialStep);
   const [draft, setDraft] = useState<ApplicationDraft>(initialDraft);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [uploadingKey, setUploadingKey] = useState<string>();
@@ -121,9 +124,10 @@ export function ApplicationWizard({
         <div className="mt-5">
           {currentStep === 1 ? <TaxDeclarationStep {...stepProps} /> : null}
           {currentStep === 2 ? <FinancialStatementsStep {...stepProps} /> : null}
-          {currentStep === 3 ? <TrialBalanceStep {...stepProps} /> : null}
-          {currentStep === 4 ? <CreditReportStep {...stepProps} /> : null}
-          {currentStep === 5 ? (
+          {currentStep === 3 ? <HumanResourcesStep {...stepProps} /> : null}
+          {currentStep === 4 ? <TrialBalanceStep {...stepProps} /> : null}
+          {currentStep === 5 ? <CreditReportStep {...stepProps} /> : null}
+          {currentStep === 6 ? (
             <FinalPaymentStep
               draft={draft}
               acceptedTerms={acceptedTerms}

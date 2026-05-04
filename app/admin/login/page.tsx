@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { keepAsciiDigits } from "@/lib/input/digits";
 
-const serviceName = "سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)";
+const serviceName = "سامانه اعتبار سنجی سانا";
 
 export default function AdminLoginPage() {
   const [mobile, setMobile] = useState("");
@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
       <section className="auth-panel" aria-labelledby="admin-auth-form-title">
         <div className="auth-panel__header">
           <Image
-            src="/ioiv-logo.jpeg"
+            src="/ioiv-logo.png"
             alt="نشان صندوق پژوهش و فناوری صنعت نفت"
             width={206}
             height={100}

@@ -13,6 +13,11 @@ export type TrialBalanceDraft = {
   subsidiaryLedger?: FileRef;
 };
 
+export type HumanResourcesDraft = {
+  employeeCount?: number;
+  insuranceList?: FileRef;
+};
+
 export type CreditReportsDraft = {
   company?: FileRef;
   ceo?: FileRef;
@@ -23,6 +28,7 @@ export type ApplicationDraft = {
   currentStep: number;
   taxDeclarations: YearFileRow[];
   financials: YearFileRow[];
+  humanResources: HumanResourcesDraft;
   trialBalance: TrialBalanceDraft;
   creditReports: CreditReportsDraft;
 };

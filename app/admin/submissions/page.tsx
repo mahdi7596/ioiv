@@ -47,11 +47,19 @@ export default async function AdminSubmissionsPage({
       <section className="panel export-actions" aria-label="خروجی پرونده‌ها">
         <Link
           className="button export-button"
+          href={`/api/admin/export?${new URLSearchParams({ ...Object.fromEntries(exportQuery), format: "xlsx" }).toString()}`}
+          aria-label="خروجی Excel"
+          title="خروجی Excel"
+        >
+          <Download aria-hidden="true" size={18} strokeWidth={2} />
+          خروجی Excel
+        </Link>
+        <Link
+          className="button button--ghost"
           href={`/api/admin/export?${new URLSearchParams({ ...Object.fromEntries(exportQuery), format: "csv" }).toString()}`}
           aria-label="خروجی CSV"
           title="خروجی CSV"
         >
-          <Download aria-hidden="true" size={18} strokeWidth={2} />
           خروجی CSV
         </Link>
       </section>

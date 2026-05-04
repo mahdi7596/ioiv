@@ -75,6 +75,12 @@ const seedFiles = [
     label: "صورت مالی حسابرسی شده ۱۴۰۲",
   },
   {
+    id: "seed-file-insurance-list",
+    fieldKey: "humanResources.insuranceList",
+    originalName: "insurance-list-1403.xlsx",
+    label: "لیست بیمه ۱۴۰۳",
+  },
+  {
     id: "seed-file-general-ledger",
     fieldKey: "trialBalance.generalLedger",
     originalName: "general-ledger-trial-balance.pdf",
@@ -144,6 +150,10 @@ function demoApplicationData(mobile: string) {
     financials: [
       { year: "1402", file: { fileId: `demo-${mobile}-financial-1402`, name: `financial-${mobile}-1402.pdf` } },
     ],
+    humanResources: {
+      employeeCount: 24,
+      insuranceList: { fileId: `demo-${mobile}-insurance-list`, name: `insurance-list-${mobile}.xlsx` },
+    },
     trialBalance: {
       generalLedger: { fileId: `demo-${mobile}-general-ledger`, name: `general-ledger-${mobile}.pdf` },
       subsidiaryLedger: { fileId: `demo-${mobile}-subsidiary-ledger`, name: `subsidiary-ledger-${mobile}.pdf` },
@@ -226,7 +236,7 @@ async function main() {
       userId: user.id,
       nationalCode,
       status: ApplicationStatus.SUBMITTED,
-      currentStep: 5,
+      currentStep: 6,
       adminNote: null,
       submittedAt: seededAt,
       createdAt: seededAt,
@@ -236,6 +246,10 @@ async function main() {
         { year: "1402", file: fileRefs["seed-file-tax-1402"] },
       ],
       financials: [{ year: "1402", file: fileRefs["seed-file-financial-1402"] }],
+      humanResources: {
+        employeeCount: 24,
+        insuranceList: fileRefs["seed-file-insurance-list"],
+      },
       trialBalance: {
         generalLedger: fileRefs["seed-file-general-ledger"],
         subsidiaryLedger: fileRefs["seed-file-subsidiary-ledger"],
@@ -254,7 +268,7 @@ async function main() {
       nationalCode,
       applicationRound: APPLICATION_ROUND,
       status: ApplicationStatus.SUBMITTED,
-      currentStep: 5,
+      currentStep: 6,
       submittedAt: seededAt,
       createdAt: seededAt,
       taxDeclarations: [
@@ -263,6 +277,10 @@ async function main() {
         { year: "1402", file: fileRefs["seed-file-tax-1402"] },
       ],
       financials: [{ year: "1402", file: fileRefs["seed-file-financial-1402"] }],
+      humanResources: {
+        employeeCount: 24,
+        insuranceList: fileRefs["seed-file-insurance-list"],
+      },
       trialBalance: {
         generalLedger: fileRefs["seed-file-general-ledger"],
         subsidiaryLedger: fileRefs["seed-file-subsidiary-ledger"],
@@ -376,11 +394,12 @@ async function main() {
         userId: demoUser.id,
         nationalCode: demo.nationalCode,
         status: demo.status,
-        currentStep: 5,
+        currentStep: 6,
         adminNote: demo.status === ApplicationStatus.NEEDS_EDIT ? demo.note : null,
         submittedAt: seededAt,
         taxDeclarations: demoData.taxDeclarations,
         financials: demoData.financials,
+        humanResources: demoData.humanResources,
         trialBalance: demoData.trialBalance,
         creditReports: demoData.creditReports,
       },
@@ -392,11 +411,12 @@ async function main() {
         nationalCode: demo.nationalCode,
         applicationRound: APPLICATION_ROUND,
         status: demo.status,
-        currentStep: 5,
+        currentStep: 6,
         adminNote: demo.status === ApplicationStatus.NEEDS_EDIT ? demo.note : null,
         submittedAt: seededAt,
         taxDeclarations: demoData.taxDeclarations,
         financials: demoData.financials,
+        humanResources: demoData.humanResources,
         trialBalance: demoData.trialBalance,
         creditReports: demoData.creditReports,
       },

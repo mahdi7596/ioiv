@@ -29,6 +29,7 @@ export async function startPayment() {
   const validation = finalSubmissionSchema.safeParse({
     taxDeclarations: application.taxDeclarations,
     financials: application.financials,
+    humanResources: application.humanResources,
     trialBalance: application.trialBalance,
     creditReports: application.creditReports,
     acceptedTerms: true,
@@ -69,7 +70,7 @@ export async function startPayment() {
   try {
     zarinpal = await requestZarinpalPayment({
       amountToman: PAYMENT_AMOUNT_TOMAN,
-      description: "پرداخت ثبت پرونده سامانه اعتبارسنجی صندوق پژوهش و فناوری صنعت نفت (سانا)",
+      description: "پرداخت ثبت پرونده سامانه اعتبار سنجی سانا",
       callbackUrl: `${appUrl}/api/payment/callback?paymentId=${payment.id}`,
       mobile: application.mobile,
     });

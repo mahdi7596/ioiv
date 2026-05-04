@@ -3,5 +3,5 @@ import { clearSession } from "@/lib/auth/session";
 
 export async function POST(request: Request) {
   await clearSession();
-  return NextResponse.redirect(new URL("/", request.url), { status: 303 });
+  return NextResponse.redirect(new URL("http://sana.ioiv.ir/", request.url), { status: 303 });
 }
