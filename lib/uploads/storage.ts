@@ -43,12 +43,29 @@ export function validateUploadFile(file: File) {
   }
 }
 
+export function validatePdfUploadFile(file: File) {
+  const extension = path.extname(file.name).toLowerCase();
+
+  if (extension !== ".pdf" || file.type !== "application/pdf") {
+    throw new Error("فقط فایل PDF برای گواهی قابل بارگذاری است");
+  }
+
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    throw new Error("حجم فایل نباید بیشتر از ۲۰ مگابایت باشد");
+  }
+}
+
 export async function storeUploadFile(input: {
   applicationId: string;
   fieldKey: string;
   file: File;
+  pdfOnly?: boolean;
 }): Promise<StoredUpload> {
-  validateUploadFile(input.file);
+  if (input.pdfOnly) {
+    validatePdfUploadFile(input.file);
+  } else {
+    validateUploadFile(input.file);
+  }
 
   const extension = path.extname(input.file.name).toLowerCase();
   const generatedName = `${randomUUID()}${extension}`;

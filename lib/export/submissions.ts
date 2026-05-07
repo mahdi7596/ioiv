@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { ApplicationStatus } from "@prisma/client";
+import { applicationStatusLabels } from "@/components/admin/StatusBadge";
 import { db } from "@/lib/db";
 
 type ExportFilters = {
@@ -83,7 +84,7 @@ export function createSubmissionExportRow(application: SubmissionExportApplicati
   return {
     "تاریخ ایجاد": application.createdAt.toISOString(),
     "تاریخ ارسال": application.submittedAt?.toISOString() || "",
-    "وضعیت": application.status,
+    "وضعیت": applicationStatusLabels[application.status] || application.status,
     "موبایل": application.mobile,
     "نام شرکت": application.companyName || "",
     "شناسه ملی شرکت": application.companyNationalId,

@@ -18,8 +18,11 @@ export default async function AdminPage() {
     { label: "در صف بررسی", value: overview.submitted, href: "/admin/submissions?status=SUBMITTED" },
     { label: "در حال بررسی", value: overview.underReview, href: "/admin/submissions?status=UNDER_REVIEW" },
     { label: "نیازمند اصلاح", value: overview.needsEdit, href: "/admin/submissions?status=NEEDS_EDIT" },
-    { label: "تایید شده", value: overview.accepted, href: "/admin/submissions?status=ACCEPTED" },
-    { label: "رد شده", value: overview.rejected, href: "/admin/submissions?status=REJECTED" },
+    {
+      label: "پایان فرآیند اعتبارسنجی",
+      value: overview.validationCompleted,
+      href: "/admin/submissions?status=VALIDATION_COMPLETED",
+    },
   ];
 
   return (

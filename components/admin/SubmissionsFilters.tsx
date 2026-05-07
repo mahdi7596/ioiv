@@ -78,8 +78,7 @@ export function SubmissionsFilters({
           <option value="SUBMITTED">در صف بررسی</option>
           <option value="UNDER_REVIEW">در حال بررسی</option>
           <option value="NEEDS_EDIT">نیازمند اصلاح</option>
-          <option value="ACCEPTED">تایید شده</option>
-          <option value="REJECTED">رد شده</option>
+          <option value="VALIDATION_COMPLETED">پایان فرآیند اعتبارسنجی</option>
         </select>
       </div>
       <div className="field">

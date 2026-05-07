@@ -7,8 +7,7 @@ describe("application status transitions", () => {
     expect(getAllowedNextApplicationStatuses("SUBMITTED")).toEqual([
       "UNDER_REVIEW",
       "NEEDS_EDIT",
-      "ACCEPTED",
-      "REJECTED",
+      "VALIDATION_COMPLETED",
     ]);
   });
 
@@ -18,5 +17,12 @@ describe("application status transitions", () => {
 
   it("allows resubmitted needs-edit applications to return to review", () => {
     expect(getAllowedNextApplicationStatuses("NEEDS_EDIT")).toEqual(["UNDER_REVIEW"]);
+  });
+
+  it("allows under-review applications to be sent back or completed", () => {
+    expect(getAllowedNextApplicationStatuses("UNDER_REVIEW")).toEqual([
+      "NEEDS_EDIT",
+      "VALIDATION_COMPLETED",
+    ]);
   });
 });

@@ -26,20 +26,21 @@ export function TaxDeclarationStep({
     <div className="space-y-5">
       {rows.map((row, index) => {
         const fieldKey = `taxDeclarations.${index}.file`;
+        const isRequiredRow = index === 0;
 
         return (
           <div className="form-row" key={index}>
             <YearSelect
               id={`taxDeclarations.${index}.year`}
               value={row.year}
-              required
+              required={isRequiredRow}
               disabled={readOnly}
               onChange={(year) => updateRow(index, { ...row, year })}
             />
             <FileUploadControl
               id={fieldKey}
               label="فایل اظهارنامه"
-              required
+              required={isRequiredRow}
               value={row.file}
               readOnly={readOnly}
               uploading={uploadingKey === fieldKey}

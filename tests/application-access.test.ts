@@ -8,8 +8,7 @@ describe("application access", () => {
       ApplicationStatus.PENDING_PAYMENT,
       ApplicationStatus.SUBMITTED,
       ApplicationStatus.UNDER_REVIEW,
-      ApplicationStatus.REJECTED,
-      ApplicationStatus.ACCEPTED,
+      ApplicationStatus.VALIDATION_COMPLETED,
     ]) {
       expect(getApplicationAccess(status)).toEqual({ canView: true, canEdit: false });
     }

@@ -1,14 +1,15 @@
 "use server";
 
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
+import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { getAllowedNextApplicationStatuses } from "@/lib/application/status-transitions";
-import { validateStatusChangeConfirmation } from "@/lib/application/status-change-validation";
 import { logger, maskMobile } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
 import { createStatusChangeSmsMessage } from "@/lib/sms/messages";
+import { storeUploadFile } from "@/lib/uploads/storage";
 import { ActionError } from "./auth";
 
 async function requireActiveAdmin() {
@@ -24,16 +25,15 @@ async function requireActiveAdmin() {
 
 export async function getAdminOverview() {
   await requireActiveAdmin();
-  const [total, submitted, underReview, needsEdit, accepted, rejected] = await Promise.all([
+  const [total, submitted, underReview, needsEdit, validationCompleted] = await Promise.all([
     db.application.count(),
     db.application.count({ where: { status: ApplicationStatus.SUBMITTED } }),
     db.application.count({ where: { status: ApplicationStatus.UNDER_REVIEW } }),
     db.application.count({ where: { status: ApplicationStatus.NEEDS_EDIT } }),
-    db.application.count({ where: { status: ApplicationStatus.ACCEPTED } }),
-    db.application.count({ where: { status: ApplicationStatus.REJECTED } }),
+    db.application.count({ where: { status: ApplicationStatus.VALIDATION_COMPLETED } }),
   ]);
 
-  return { total, submitted, underReview, needsEdit, accepted, rejected };
+  return { total, submitted, underReview, needsEdit, validationCompleted };
 }
 
 export async function listSubmissions(input?: {
@@ -87,7 +87,7 @@ export async function changeSubmissionStatus(formData: FormData) {
   const applicationId = String(formData.get("applicationId") || "");
   const nextStatus = String(formData.get("status") || "") as ApplicationStatus;
   const note = String(formData.get("note") || "").trim();
-  const rejectionCompanyNationalId = String(formData.get("rejectionCompanyNationalId") || "");
+  const certificate = formData.get("certificate");
   const application = await db.application.findUnique({ where: { id: applicationId } });
 
   if (!application || !Object.values(ApplicationStatus).includes(nextStatus)) {
@@ -100,17 +100,12 @@ export async function changeSubmissionStatus(formData: FormData) {
     throw new ActionError("این تغییر وضعیت مجاز نیست");
   }
 
-  const confirmation = validateStatusChangeConfirmation({
-    nextStatus,
-    companyNationalId: application.companyNationalId,
-    rejectionCompanyNationalId,
-  });
+  const certificateRecord =
+    nextStatus === ApplicationStatus.VALIDATION_COMPLETED
+      ? await storeValidationCertificate(application.id, certificate)
+      : null;
 
-  if (!confirmation.valid) {
-    throw new ActionError(confirmation.message);
-  }
-
-  await db.$transaction([
+  const operations: Prisma.PrismaPromise<unknown>[] = [
     db.application.update({
       where: { id: application.id },
       data: {
@@ -127,9 +122,27 @@ export async function changeSubmissionStatus(formData: FormData) {
         note: note || undefined,
       },
     }),
-  ]);
+  ];
 
-  await sendSms(createStatusChangeSmsMessage(application.mobile));
+  if (certificateRecord) {
+    operations.push(
+      db.applicationFile.create({
+        data: certificateRecord,
+      }),
+    );
+  }
+
+  await db.$transaction(operations);
+
+  try {
+    await sendSms(createStatusChangeSmsMessage(application.mobile));
+  } catch (error) {
+    logger.error("submission_status_sms_failed", error, {
+      applicationId: application.id,
+      newStatus: nextStatus,
+      mobile: maskMobile(application.mobile),
+    });
+  }
 
   logger.info("submission_status_changed", {
     applicationId: application.id,
@@ -138,9 +151,69 @@ export async function changeSubmissionStatus(formData: FormData) {
     adminId: admin.id,
     mobile: maskMobile(application.mobile),
     hasNote: Boolean(note),
+    hasCertificate: Boolean(certificateRecord),
   });
 
   revalidatePath("/admin");
   revalidatePath("/admin/submissions");
   revalidatePath(`/admin/submissions/${application.id}`);
+  revalidatePath("/dashboard");
+}
+
+async function storeValidationCertificate(applicationId: string, file: FormDataEntryValue | null) {
+  if (!(file instanceof File) || file.size === 0) {
+    throw new ActionError("برای پایان فرآیند اعتبارسنجی باید فایل PDF گواهی را بارگذاری کنید");
+  }
+
+  try {
+    const stored = await storeUploadFile({
+      applicationId,
+      fieldKey: VALIDATION_CERTIFICATE_FIELD_KEY,
+      file,
+      pdfOnly: true,
+    });
+
+    return {
+      applicationId,
+      fieldKey: VALIDATION_CERTIFICATE_FIELD_KEY,
+      originalName: stored.originalName,
+      mimeType: stored.mimeType,
+      size: stored.size,
+      storagePath: stored.storagePath,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "بارگذاری گواهی ناموفق بود";
+    throw new ActionError(message);
+  }
+}
+
+export async function replaceValidationCertificate(formData: FormData) {
+  const admin = await requireActiveAdmin();
+  const applicationId = String(formData.get("applicationId") || "");
+  const certificate = formData.get("certificate");
+  const application = await db.application.findUnique({ where: { id: applicationId } });
+
+  if (!application) {
+    throw new ActionError("پرونده پیدا نشد", 404);
+  }
+
+  if (application.status !== ApplicationStatus.VALIDATION_COMPLETED) {
+    throw new ActionError("تعویض گواهی فقط پس از پایان فرآیند اعتبارسنجی امکان‌پذیر است");
+  }
+
+  const certificateRecord = await storeValidationCertificate(application.id, certificate);
+
+  await db.applicationFile.create({
+    data: certificateRecord,
+  });
+
+  logger.info("validation_certificate_replaced", {
+    applicationId: application.id,
+    adminId: admin.id,
+    mobile: maskMobile(application.mobile),
+  });
+
+  revalidatePath("/admin/submissions");
+  revalidatePath(`/admin/submissions/${application.id}`);
+  revalidatePath("/dashboard");
 }

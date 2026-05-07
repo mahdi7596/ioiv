@@ -3,6 +3,7 @@
 import { PaymentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
+import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { canEditApplication } from "@/lib/application/status";
 import { applicationDraftSchema } from "@/lib/validations/application";
 import { APPLICATION_ROUND } from "@/lib/validations/shared";
@@ -19,6 +20,11 @@ export async function getCurrentUserApplication() {
         orderBy: { createdAt: "desc" },
         include: {
           payments: { orderBy: { createdAt: "desc" }, take: 1 },
+          files: {
+            where: { fieldKey: VALIDATION_CERTIFICATE_FIELD_KEY },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
         },
       },
     },

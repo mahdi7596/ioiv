@@ -18,6 +18,18 @@ Verified on May 2, 2026:
 - File upload works.
 - Uploaded files are recorded in PostgreSQL and stored physically on the Docker upload volume.
 
+Payment gateway implementation completed on May 7, 2026:
+
+- Zarinpal payment initiation uses the existing fixed payment amount and existing payment statuses.
+- The existing status model is preserved: application statuses track form/review workflow, payment statuses track gateway result.
+- Successful Zarinpal verification moves payment to `VERIFIED` and application to `SUBMITTED`.
+- Failed or cancelled active payments move payment to `FAILED` and return the application to editable `DRAFT`.
+- Duplicate callbacks for already verified payments are idempotent and do not duplicate history or downgrade state.
+- SMS notification failures after verification are logged without changing verified payment/application state.
+- Users now return from the bank page to `/payment/return`, see a success/failure message, and are redirected to `/dashboard`.
+- Automated coverage was added for payment status relationships, Zarinpal adapter behavior, payment start, callback verification, and return-page rendering.
+- Verified locally with `npm test`, `npm run lint`, and `npm run build`.
+
 ## Access Rules
 
 Use L2TP when connecting to the private server IP:
@@ -140,7 +152,7 @@ POSTGRES_PASSWORD=...
 
 UPLOAD_DIR=/app/uploads
 
-ZARINPAL_MERCHANT_ID=...
+ZARINPAL_MERCHANT_ID=260c2494-c9f1-434b-af18-03b51b88cec2
 ZARINPAL_SANDBOX=false
 
 GHASEDAK_API_KEY=...
@@ -156,6 +168,37 @@ SEED_DEMO_DATA=false
 ```
 
 Do not commit real secrets. Use `.env.production.example` for examples only.
+
+Important: the real merchant ID is not committed into application source code. Set it on
+the server environment:
+
+```env
+ZARINPAL_MERCHANT_ID=260c2494-c9f1-434b-af18-03b51b88cec2
+ZARINPAL_SANDBOX=false
+APP_URL=https://sana.ioiv.ir
+```
+
+The callback sent to Zarinpal is built from `APP_URL`, so an incorrect value will send
+users back to the wrong host after the bank page.
+
+Server follow-up: confirm `/data/apps/sana/.env` contains the same production payment
+values. The local development `.env` may use `APP_URL=http://localhost:3000`; the server
+must use `APP_URL=https://sana.ioiv.ir`.
+
+Check the current server values without printing unrelated secrets:
+
+```bash
+cd /data/apps/sana
+grep -E '^(APP_URL|ZARINPAL_MERCHANT_ID|ZARINPAL_SANDBOX)=' .env
+```
+
+Expected production output:
+
+```env
+APP_URL=https://sana.ioiv.ir
+ZARINPAL_MERCHANT_ID=260c2494-c9f1-434b-af18-03b51b88cec2
+ZARINPAL_SANDBOX=false
+```
 
 Check required env keys on the server:
 

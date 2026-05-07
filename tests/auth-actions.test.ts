@@ -105,12 +105,31 @@ describe("auth actions", () => {
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
 
-  it("does not reveal whether an admin mobile exists when requesting an OTP", async () => {
+  it("rejects admin OTP requests for mobiles outside the active admin list", async () => {
     mocks.db.admin.findUnique.mockResolvedValue(null);
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).resolves.toEqual({ next: "otp" });
+    ).rejects.toMatchObject<ActionError>({
+      status: 403,
+      message: "دسترسی مدیریت برای این شماره فعال نیست",
+    });
+    expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
+    expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+
+  it("rejects admin OTP requests for inactive admin mobiles", async () => {
+    mocks.db.admin.findUnique.mockResolvedValue({
+      id: "admin-1",
+      active: false,
+    });
+
+    await expect(
+      requestOtp({ mobile: "09123456789", mode: "admin" }),
+    ).rejects.toMatchObject<ActionError>({
+      status: 403,
+      message: "دسترسی مدیریت برای این شماره فعال نیست",
+    });
     expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateUploadFile } from "@/lib/uploads/storage";
+import { validatePdfUploadFile, validateUploadFile } from "@/lib/uploads/storage";
 
 describe("upload validation", () => {
   it("allows Excel insurance-list style uploads", () => {
@@ -16,5 +16,21 @@ describe("upload validation", () => {
     });
 
     expect(() => validateUploadFile(file)).not.toThrow();
+  });
+
+  it("allows PDF validation certificates", () => {
+    const file = new File(["certificate"], "certificate.pdf", {
+      type: "application/pdf",
+    });
+
+    expect(() => validatePdfUploadFile(file)).not.toThrow();
+  });
+
+  it("rejects non-PDF validation certificates", () => {
+    const file = new File(["certificate"], "certificate.docx", {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+
+    expect(() => validatePdfUploadFile(file)).toThrow("فقط فایل PDF برای گواهی قابل بارگذاری است");
   });
 });
