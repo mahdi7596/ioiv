@@ -27,6 +27,7 @@ describe("payment and application status relationship", () => {
   it("keeps only draft and needs-edit editable while admin review starts after submission", () => {
     expect(getApplicationAccess(ApplicationStatus.DRAFT).canEdit).toBe(true);
     expect(getApplicationAccess(ApplicationStatus.PENDING_PAYMENT).canEdit).toBe(false);
+    expect(getApplicationAccess(ApplicationStatus.PENDING_PAYMENT).canRetryPayment).toBe(true);
     expect(getApplicationAccess(ApplicationStatus.SUBMITTED).canEdit).toBe(false);
     expect(getApplicationAccess(ApplicationStatus.UNDER_REVIEW).canEdit).toBe(false);
     expect(getApplicationAccess(ApplicationStatus.NEEDS_EDIT).canEdit).toBe(true);

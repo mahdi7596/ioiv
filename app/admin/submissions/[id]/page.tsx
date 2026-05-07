@@ -8,16 +8,12 @@ import { StatusChangeForm } from "@/components/admin/StatusChangeForm";
 import { StatusHistoryTimeline } from "@/components/admin/StatusHistoryTimeline";
 import { ValidationCertificatePanel } from "@/components/admin/ValidationCertificatePanel";
 import { AppShell } from "@/components/layout/AppShell";
+import {
+  formatEmployeeCount,
+  humanResourcesEmployeeCountLabel,
+} from "@/lib/admin/humanResources";
 import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { getSubmission } from "@/lib/actions/admin";
-
-function getEmployeeCount(value: unknown) {
-  if (!value || typeof value !== "object") return "-";
-  const employeeCount = (value as { employeeCount?: unknown }).employeeCount;
-  return typeof employeeCount === "number" && Number.isFinite(employeeCount)
-    ? employeeCount.toLocaleString("fa-IR")
-    : "-";
-}
 
 export default async function SubmissionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -84,13 +80,18 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
           <p className="mt-1 font-semibold">{submission.applicationRound}</p>
         </div>
         <div>
-          <p className="text-sm text-stone-500">تعداد نیروی انسانی</p>
-          <p className="mt-1 font-semibold">{getEmployeeCount(submission.humanResources)}</p>
+          <p className="text-sm text-stone-500">{humanResourcesEmployeeCountLabel}</p>
+          <p className="mt-1 font-semibold">{formatEmployeeCount(submission.humanResources)}</p>
         </div>
       </section>
 
       <section className="panel">
         <h2 className="text-xl font-bold text-stone-950">فایل های آپلود شده</h2>
+        <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+          <p className="text-sm text-stone-500">منابع انسانی</p>
+          <p className="mt-2 text-sm text-stone-500">{humanResourcesEmployeeCountLabel}</p>
+          <p className="mt-1 font-semibold">{formatEmployeeCount(submission.humanResources)}</p>
+        </div>
         <SubmissionFiles
           files={submission.files.filter((file) => file.fieldKey !== VALIDATION_CERTIFICATE_FIELD_KEY)}
           taxDeclarations={submission.taxDeclarations}

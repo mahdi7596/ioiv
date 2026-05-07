@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
     payment: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -55,6 +56,7 @@ describe("payment action", () => {
     mocks.db.application.findFirst.mockResolvedValue(completeApplication());
     mocks.db.payment.create.mockResolvedValue({ id: "pay_1" });
     mocks.db.payment.update.mockResolvedValue({ id: "pay_1" });
+    mocks.db.payment.updateMany.mockResolvedValue({ count: 1 });
     mocks.db.application.update.mockResolvedValue({ id: "app_1" });
     mocks.db.$transaction.mockImplementation(async (operations) => operations);
     mocks.requestZarinpalPayment.mockResolvedValue({
@@ -138,5 +140,77 @@ describe("payment action", () => {
     });
     expect(mocks.db.payment.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
+  });
+
+  it("retries a pending payment by failing previous initiated attempts and creating a fresh request", async () => {
+    mocks.db.application.findFirst.mockResolvedValue(
+      completeApplication({
+        status: ApplicationStatus.PENDING_PAYMENT,
+        payments: [{ id: "old_pay", status: PaymentStatus.INITIATED }],
+      }),
+    );
+    const { startPayment } = await import("@/lib/actions/payment");
+
+    await expect(startPayment()).resolves.toEqual({
+      redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_1",
+    });
+
+    expect(mocks.db.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        applicationId: "app_1",
+        status: PaymentStatus.INITIATED,
+      },
+      data: {
+        status: PaymentStatus.FAILED,
+        rawData: { reason: "payment_retry_started" },
+      },
+    });
+    expect(mocks.db.payment.create).toHaveBeenCalledWith({
+      data: {
+        applicationId: "app_1",
+        amountToman: PAYMENT_AMOUNT_TOMAN,
+        status: PaymentStatus.INITIATED,
+      },
+    });
+  });
+
+  it("does not create another payment when a verified payment already exists", async () => {
+    mocks.db.application.findFirst.mockResolvedValue(
+      completeApplication({
+        status: ApplicationStatus.SUBMITTED,
+        payments: [{ id: "verified_1", status: PaymentStatus.VERIFIED }],
+      }),
+    );
+    const { startPayment } = await import("@/lib/actions/payment");
+
+    await expect(startPayment()).rejects.toThrow("پرداخت قبلاً ثبت شده است");
+
+    expect(mocks.db.payment.create).not.toHaveBeenCalled();
+    expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
+  });
+
+  it("returns a pending-payment retry to draft when the fresh gateway request fails", async () => {
+    mocks.db.application.findFirst.mockResolvedValue(
+      completeApplication({
+        status: ApplicationStatus.PENDING_PAYMENT,
+        payments: [{ id: "old_pay", status: PaymentStatus.INITIATED }],
+      }),
+    );
+    mocks.requestZarinpalPayment.mockRejectedValue(new Error("provider down"));
+    const { startPayment } = await import("@/lib/actions/payment");
+
+    await expect(startPayment()).rejects.toThrow("provider down");
+
+    expect(mocks.db.payment.update).toHaveBeenCalledWith({
+      where: { id: "pay_1" },
+      data: {
+        status: PaymentStatus.FAILED,
+        rawData: { error: "provider down" },
+      },
+    });
+    expect(mocks.db.application.update).toHaveBeenCalledWith({
+      where: { id: "app_1" },
+      data: { status: ApplicationStatus.DRAFT },
+    });
   });
 });
