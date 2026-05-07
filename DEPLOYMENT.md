@@ -30,6 +30,20 @@ Payment gateway implementation completed on May 7, 2026:
 - Automated coverage was added for payment status relationships, Zarinpal adapter behavior, payment start, callback verification, and return-page rendering.
 - Verified locally with `npm test`, `npm run lint`, and `npm run build`.
 
+Production redeploy and reset verified on May 7, 2026:
+
+- Latest source was uploaded to `/data/apps/sana`.
+- The production `.env` was updated to the live Zarinpal values:
+  `APP_URL=https://sana.ioiv.ir`, `ZARINPAL_MERCHANT_ID=260c2494-c9f1-434b-af18-03b51b88cec2`,
+  and `ZARINPAL_SANDBOX=false`.
+- A fresh Linux AMD64 Prisma engine export was generated locally and uploaded because
+  the previous `prisma-engine-export.tar.gz` was older than the current schema.
+- The app image was rebuilt with the offline Prisma export, restarted, and verified healthy.
+- Migration `20260507120000_replace_final_statuses_with_validation_completed` was applied by the app entrypoint.
+- The production database was backed up, then reset for fresh testing; admins were reseeded.
+- Final reset check showed `3` admins and `0` users, applications, payments, uploaded-file records,
+  status histories, and OTPs.
+
 ## Access Rules
 
 Use L2TP when connecting to the private server IP:
@@ -57,6 +71,16 @@ cd /data/apps/sana
 ```
 
 If Docker Compose says `no configuration file provided: not found`, the shell is not in `/data/apps/sana`.
+
+SSH sessions may occasionally print messages such as:
+
+```text
+channel 21: open failed: connect failed: open failed
+mm_receive_fd: recvmsg: expected received 1 got 0
+```
+
+These are SSH multiplexing or forwarding noise when the actual command still runs and prints its result.
+If commands stop running, reconnect to `administrator@192.168.50.109` and continue from `/data/apps/sana`.
 
 ## Public Routing
 
@@ -271,6 +295,19 @@ prisma-engine-export/@prisma
 
 This is needed because the server cannot reliably download Prisma binaries from `binaries.prisma.sh`.
 
+The build step in `Dockerfile` must use the checked-in offline export:
+
+```dockerfile
+RUN rm -rf node_modules/.prisma node_modules/@prisma \
+  && cp -R prisma-engine-export/.prisma node_modules/.prisma \
+  && cp -R prisma-engine-export/@prisma node_modules/@prisma \
+  && npm run build
+```
+
+If a server build tries to run `npx prisma generate`, the server may fail while contacting
+`binaries.prisma.sh`. Update the local `Dockerfile` before uploading, otherwise rsync can overwrite
+the server-side offline-build fix.
+
 The export must contain Linux musl OpenSSL 3 files:
 
 ```text
@@ -333,6 +370,11 @@ ls -lh prisma-engine-export.tar.gz
 
 The archive is expected to be roughly 50-55 MB.
 
+On Apple Silicon, `docker create` can warn that the requested image platform is `linux/amd64`
+while the host is `linux/arm64/v8`. That warning is expected for this export workflow because the
+server is AMD64. The important check is that the extracted files include the Linux musl OpenSSL 3
+`schema-engine` and `libquery_engine` files.
+
 Upload it to the server:
 
 ```bash
@@ -351,6 +393,16 @@ find prisma-engine-export -type f | grep -E 'schema-engine|libquery_engine' | he
 ```
 
 The `LIBARCHIVE.xattr.com.apple.provenance` tar warnings are from macOS extended attributes and can be ignored.
+
+Before rebuilding after schema changes, compare the schema and export timestamps:
+
+```bash
+stat -c '%y %n' prisma/schema.prisma prisma-engine-export.tar.gz
+```
+
+If `prisma/schema.prisma` is newer than `prisma-engine-export.tar.gz`, regenerate and upload the
+Prisma export before running `docker compose build app`. A stale export can cause build-time type
+errors, missing Prisma enum exports, or runtime client/schema mismatches.
 
 ## Deploy Code Changes
 
@@ -400,6 +452,26 @@ docker compose ps
 docker compose logs --tail=80 app
 ```
 
+Important: `docker compose build app` only builds a new image. It does not replace the running
+container. Confirm `docker compose ps` after `docker compose up -d`; the app container `CREATED`
+age should be recent, and health should become `healthy`.
+
+If the build fails with a TypeScript error involving a property that exists locally, check for a
+stale or partially uploaded source file on the server. Example from May 7, 2026:
+
+```bash
+grep -R "pdfOnly" -n lib app components tests
+grep -R "function storeUploadFile\|storeUploadFile" -n lib/uploads lib/actions/admin.ts
+```
+
+Then upload the missing file directly, for example:
+
+```bash
+rsync -az --progress \
+  lib/uploads/storage.ts \
+  administrator@192.168.50.109:/data/apps/sana/lib/uploads/storage.ts
+```
+
 ## Database
 
 List tables:
@@ -445,6 +517,55 @@ Seed initial admins:
 ```bash
 docker compose exec app npm run db:seed
 ```
+
+Reset production data for a fresh test cycle:
+
+1. Back up the database first:
+
+```bash
+cd /data/apps/sana
+mkdir -p /data/backups/sana
+
+docker compose exec -T postgres pg_dump -U postgres -d sana -Fc > /data/backups/sana/sana-before-reset-$(date +%Y%m%d-%H%M%S).dump
+```
+
+2. Clear test/user data while keeping schema and migrations:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+TRUNCATE TABLE
+  "ApplicationFile",
+  "StatusHistory",
+  "Payment",
+  "Application",
+  "OtpCode",
+  "User"
+RESTART IDENTITY CASCADE;
+'
+```
+
+3. Reseed admins:
+
+```bash
+docker compose exec app npm run db:seed
+```
+
+4. Verify the reset:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+select
+  (select count(*) from "Admin") as admins,
+  (select count(*) from "User") as users,
+  (select count(*) from "Application") as applications,
+  (select count(*) from "Payment") as payments,
+  (select count(*) from "ApplicationFile") as files,
+  (select count(*) from "StatusHistory") as histories,
+  (select count(*) from "OtpCode") as otps;
+'
+```
+
+Expected fresh-test state after seeding is `3` admins and zero rows for the other listed tables.
 
 ## Uploads
 
