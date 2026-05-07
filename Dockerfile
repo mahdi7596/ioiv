@@ -21,7 +21,10 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npx prisma generate && npm run build
+RUN rm -rf node_modules/.prisma node_modules/@prisma \
+  && cp -R prisma-engine-export/.prisma node_modules/.prisma \
+  && cp -R prisma-engine-export/@prisma node_modules/@prisma \
+  && npm run build
 
 FROM base AS runner
 

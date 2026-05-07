@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/toast";
 import { getAllowedNextApplicationStatuses } from "@/lib/application/status-transitions";
-import { changeSubmissionStatus } from "@/lib/actions/admin";
 import { applicationStatusLabels } from "./StatusBadge";
 
 const noTransitionMessages: Record<string, string> = {
@@ -175,7 +174,16 @@ export function StatusChangeForm({
 
                   startTransition(async () => {
                     try {
-                      await changeSubmissionStatus(confirmedFormData);
+                      const response = await fetch("/api/admin/submissions/status", {
+                        method: "POST",
+                        body: confirmedFormData,
+                      });
+
+                      if (!response.ok) {
+                        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+                        throw new Error(data?.error || "تغییر وضعیت ناموفق بود");
+                      }
+
                       setMessage("وضعیت ذخیره شد");
                       setIsExpanded(false);
                       setIsConfirming(false);
