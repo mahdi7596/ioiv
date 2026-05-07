@@ -18,7 +18,7 @@ describe("StatusHistoryTimeline", () => {
           {
             id: "history-2",
             previousStatus: "SUBMITTED",
-            newStatus: "ACCEPTED",
+            newStatus: "VALIDATION_COMPLETED",
             note: null,
             createdAt: new Date("2026-04-29T09:00:00.000Z"),
           },

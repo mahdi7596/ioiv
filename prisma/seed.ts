@@ -17,6 +17,7 @@ const applicationId = "seed-app-09108119122-1403";
 const userId = "seed-user-09108119122";
 const paymentId = "seed-payment-09108119122-verified";
 const defaultAdminMobiles = ["09390649614", "09127670204", "09132974595"];
+const validationCertificateFieldKey = "validationCertificate";
 
 const demoSubmissions = [
   {
@@ -44,8 +45,8 @@ const demoSubmissions = [
     mobile: "09108119126",
     companyNationalId: "14000000126",
     nationalCode: "0011111126",
-    status: ApplicationStatus.ACCEPTED,
-    note: "پرونده آزمایشی پذیرفته شده؛ مناسب برای مشاهده وضعیت نهایی بدون تغییر.",
+    status: ApplicationStatus.VALIDATION_COMPLETED,
+    note: "فرآیند اعتبارسنجی این پرونده آزمایشی به پایان رسیده و گواهی PDF برای دانلود ثبت شده است.",
   },
 ] as const;
 
@@ -126,6 +127,33 @@ async function ensureSeedUpload(targetApplicationId: string, file: (typeof seedF
     "%PDF-1.4",
     `% Seed placeholder: ${file.label}`,
     `Mobile: ${applicantMobile}`,
+    "1 0 obj << /Type /Catalog >> endobj",
+    "trailer << /Root 1 0 R >>",
+    "%%EOF",
+    "",
+  ].join("\n");
+
+  await mkdir(path.dirname(storagePath), { recursive: true });
+  await writeFile(storagePath, body, "utf8");
+
+  return {
+    storagePath,
+    size: Buffer.byteLength(body),
+  };
+}
+
+async function ensureSeedPdfUpload(input: {
+  applicationId: string;
+  fieldKey: string;
+  originalName: string;
+  label: string;
+  mobile: string;
+}) {
+  const storagePath = seededStoragePath(input.applicationId, input.fieldKey, input.originalName);
+  const body = [
+    "%PDF-1.4",
+    `% Seed placeholder: ${input.label}`,
+    `Mobile: ${input.mobile}`,
     "1 0 obj << /Type /Catalog >> endobj",
     "trailer << /Root 1 0 R >>",
     "%%EOF",
@@ -469,6 +497,39 @@ async function main() {
         note: demo.note,
       },
     });
+
+    if (demo.status === ApplicationStatus.VALIDATION_COMPLETED) {
+      const certificateId = `seed-file-${demo.mobile}-validation-certificate`;
+      const certificateName = `validation-certificate-${demo.mobile}.pdf`;
+      const stored = await ensureSeedPdfUpload({
+        applicationId: demoApplication.id,
+        fieldKey: validationCertificateFieldKey,
+        originalName: certificateName,
+        label: "گواهی پایان فرآیند اعتبارسنجی",
+        mobile: demo.mobile,
+      });
+
+      await prisma.applicationFile.upsert({
+        where: { id: certificateId },
+        update: {
+          applicationId: demoApplication.id,
+          fieldKey: validationCertificateFieldKey,
+          originalName: certificateName,
+          mimeType: "application/pdf",
+          size: stored.size,
+          storagePath: stored.storagePath,
+        },
+        create: {
+          id: certificateId,
+          applicationId: demoApplication.id,
+          fieldKey: validationCertificateFieldKey,
+          originalName: certificateName,
+          mimeType: "application/pdf",
+          size: stored.size,
+          storagePath: stored.storagePath,
+        },
+      });
+    }
   }
 }
 

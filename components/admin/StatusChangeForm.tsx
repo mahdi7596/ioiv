@@ -10,18 +10,15 @@ import { applicationStatusLabels } from "./StatusBadge";
 const noTransitionMessages: Record<string, string> = {
   DRAFT: "این پرونده هنوز برای بررسی مدیریتی ارسال نشده است. پس از تکمیل ارسال و پرداخت، امکان تغییر وضعیت فعال می‌شود.",
   PENDING_PAYMENT: "این پرونده در انتظار پرداخت است. پس از تایید پرداخت، امکان تغییر وضعیت مدیریتی فعال می‌شود.",
-  ACCEPTED: "این پرونده تایید شده و وضعیت دیگری برای آن قابل انتخاب نیست.",
-  REJECTED: "این پرونده رد شده و وضعیت دیگری برای آن قابل انتخاب نیست.",
+  VALIDATION_COMPLETED: "فرآیند اعتبارسنجی این پرونده به پایان رسیده و وضعیت دیگری برای آن قابل انتخاب نیست.",
 };
 
 export function StatusChangeForm({
   applicationId,
   currentStatus,
-  companyNationalId,
 }: {
   applicationId: string;
   currentStatus: string;
-  companyNationalId: string;
 }) {
   const options = getAllowedNextApplicationStatuses(currentStatus);
   const router = useRouter();
@@ -30,15 +27,13 @@ export function StatusChangeForm({
   const [isConfirming, setIsConfirming] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<FormData>();
   const [selectedStatus, setSelectedStatus] = useState<string>(options[0] || "");
-  const [rejectionCompanyNationalId, setRejectionCompanyNationalId] = useState("");
   const [isPending, startTransition] = useTransition();
   const noTransitionMessage =
     noTransitionMessages[currentStatus] || "در وضعیت فعلی امکان تغییر وضعیت وجود ندارد.";
   const selectedStatusLabel = applicationStatusLabels[selectedStatus] || selectedStatus;
-  const isFinalDecision = selectedStatus === "ACCEPTED" || selectedStatus === "REJECTED";
-  const requiresRejectionConfirmation = selectedStatus === "REJECTED";
-  const canConfirm =
-    !requiresRejectionConfirmation || rejectionCompanyNationalId.trim() === companyNationalId;
+  const isFinalDecision = selectedStatus === "VALIDATION_COMPLETED";
+  const certificate = pendingFormData?.get("certificate");
+  const canConfirm = !isFinalDecision || (certificate instanceof File && certificate.size > 0);
 
   if (options.length === 0) {
     return (
@@ -59,7 +54,6 @@ export function StatusChangeForm({
 
         setSelectedStatus(formStatus);
         setPendingFormData(formData);
-        setRejectionCompanyNationalId("");
         setIsConfirming(true);
       }}
     >
@@ -98,6 +92,24 @@ export function StatusChangeForm({
               ))}
             </select>
           </div>
+          {selectedStatus === "VALIDATION_COMPLETED" ? (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-stone-800" htmlFor="validation-certificate">
+                فایل PDF گواهی
+              </label>
+              <input
+                id="validation-certificate"
+                name="certificate"
+                type="file"
+                accept="application/pdf,.pdf"
+                required
+                className="w-full rounded-md border border-stone-300 px-3 py-2"
+              />
+              <p className="text-xs text-stone-500">
+                برای پایان فرآیند اعتبارسنجی، بارگذاری فایل PDF گواهی الزامی است.
+              </p>
+            </div>
+          ) : null}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-stone-800">توضیح مدیر برای کاربر</label>
             <textarea
@@ -144,29 +156,10 @@ export function StatusChangeForm({
               </p>
               {isFinalDecision ? (
                 <p className="status-confirm-modal__warning">
-                  بعد از تغییر وضعیت به {selectedStatus === "ACCEPTED" ? "تایید شده" : "رد شده"} راه برگشتی در سامانه وجود ندارد.
+                  بعد از تغییر وضعیت به پایان فرآیند اعتبارسنجی، پرونده برای کاربر قابل ویرایش نیست.
                 </p>
               ) : null}
             </div>
-            {requiresRejectionConfirmation ? (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-stone-800">
-                  برای رد پرونده، شناسه ملی ثبت شده را وارد کنید
-                </label>
-                <input
-                  name="rejectionCompanyNationalId"
-                  value={rejectionCompanyNationalId}
-                  onChange={(event) => setRejectionCompanyNationalId(event.target.value)}
-                  className="w-full rounded-md border border-stone-300 px-3 py-2"
-                  inputMode="numeric"
-                  dir="ltr"
-                  placeholder={companyNationalId}
-                />
-                <p className="text-xs text-stone-500">
-                  شناسه ملی ثبت شده: <span dir="ltr">{companyNationalId}</span>
-                </p>
-              </div>
-            ) : null}
             <div className="status-change-panel__actions">
               <button
                 type="button"
@@ -179,7 +172,6 @@ export function StatusChangeForm({
                   pendingFormData.forEach((value, key) => {
                     confirmedFormData.append(key, value);
                   });
-                  confirmedFormData.set("rejectionCompanyNationalId", rejectionCompanyNationalId);
 
                   startTransition(async () => {
                     try {
@@ -207,7 +199,6 @@ export function StatusChangeForm({
                 onClick={() => {
                   setIsConfirming(false);
                   setPendingFormData(undefined);
-                  setRejectionCompanyNationalId("");
                 }}
               >
                 بازگشت

@@ -79,6 +79,13 @@ export async function startPayment() {
       applicationId: application.id,
       paymentId: payment.id,
     });
+    await db.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: PaymentStatus.FAILED,
+        rawData: { error: error instanceof Error ? error.message : "payment request failed" },
+      },
+    });
     throw error;
   }
 

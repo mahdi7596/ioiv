@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { DashboardEvaluationNotice } from "@/components/dashboard/DashboardEvaluationNotice";
+import { ValidationCertificateDownload } from "@/components/dashboard/ValidationCertificateDownload";
 import { AppShell } from "@/components/layout/AppShell";
 import { canEditApplication } from "@/lib/application/status";
 import { getCurrentUserApplication } from "@/lib/actions/application";
@@ -14,8 +15,7 @@ const statusGuidance: Record<string, string> = {
   SUBMITTED: "پرداخت موفق بوده و پرونده در صف بررسی مدیریت قرار دارد.",
   UNDER_REVIEW: "تیم مدیریت در حال بررسی مدارک شماست.",
   NEEDS_EDIT: "پرونده نیازمند اصلاح است. یادداشت مدیریت را بررسی کنید و موارد خواسته شده را اصلاح کنید.",
-  REJECTED: "پرونده رد شده است. برای پیگیری، یادداشت مدیریت یا پشتیبانی را بررسی کنید.",
-  ACCEPTED: "پرونده تایید شده و نیازی به اقدام بیشتر نیست.",
+  VALIDATION_COMPLETED: "فرآیند اعتبارسنجی پرونده به پایان رسیده است.",
 };
 
 export default async function DashboardPage() {
@@ -29,6 +29,7 @@ export default async function DashboardPage() {
 
   const { application } = data;
   const latestPayment = application?.payments[0];
+  const validationCertificate = application?.files[0];
   const editable = application ? canEditApplication(application.status) : true;
   const hasActiveEditRequest = application?.status === "NEEDS_EDIT";
 
@@ -121,6 +122,8 @@ export default async function DashboardPage() {
                 </div>
               </article>
             ) : null}
+
+            <ValidationCertificateDownload certificate={validationCertificate} />
 
             <Link
               href="/dashboard/application"

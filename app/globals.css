@@ -202,6 +202,54 @@ textarea:focus-visible {
   margin-block-end: 0;
 }
 
+.payment-return-page {
+  grid-template-columns: minmax(320px, 480px);
+}
+
+.payment-return-panel {
+  align-items: center;
+  display: grid;
+  gap: 22px;
+  justify-items: center;
+  text-align: center;
+}
+
+.payment-return-panel__icon {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  height: 76px;
+  justify-content: center;
+  width: 76px;
+}
+
+.payment-return-panel__icon[data-state="success"] {
+  background: rgb(20 122 74 / 0.11);
+  color: var(--color-success);
+}
+
+.payment-return-panel__icon[data-state="failed"] {
+  background: rgb(194 65 53 / 0.11);
+  color: var(--color-danger);
+}
+
+.payment-return-panel__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.payment-return-panel h1 {
+  color: var(--color-text);
+  font-size: 1.35rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.payment-return-panel p {
+  margin: 0;
+  max-width: 34rem;
+}
+
 .auth-info {
   align-self: stretch;
   background:

@@ -1,15 +1,20 @@
 const ZARINPAL_PRODUCTION_URL = "https://payment.zarinpal.com";
 const ZARINPAL_SANDBOX_URL = "https://sandbox.zarinpal.com";
+const ZARINPAL_MERCHANT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getBaseUrl() {
   return process.env.ZARINPAL_SANDBOX === "true" ? ZARINPAL_SANDBOX_URL : ZARINPAL_PRODUCTION_URL;
 }
 
 function getMerchantId() {
-  const merchantId = process.env.ZARINPAL_MERCHANT_ID;
+  const merchantId = process.env.ZARINPAL_MERCHANT_ID?.trim();
 
   if (!merchantId) {
     throw new Error("ZARINPAL_MERCHANT_ID is required");
+  }
+
+  if (!ZARINPAL_MERCHANT_ID_PATTERN.test(merchantId)) {
+    throw new Error("ZARINPAL_MERCHANT_ID must be a valid UUID");
   }
 
   return merchantId;
@@ -23,11 +28,45 @@ async function postZarinpal<T>(path: string, body: Record<string, unknown>) {
   });
   const payload = await response.json();
 
-  if (!response.ok || payload.errors?.length) {
-    throw new Error(`Zarinpal request failed: ${JSON.stringify(payload.errors || payload)}`);
+  if (!response.ok || hasZarinpalErrors(payload.errors)) {
+    throw new Error(`Zarinpal request failed: ${JSON.stringify(sanitizeZarinpalError(payload.errors || payload))}`);
   }
 
   return payload.data as T;
+}
+
+function sanitizeZarinpalError(errorPayload: unknown): unknown {
+  if (Array.isArray(errorPayload)) {
+    return errorPayload.map(sanitizeZarinpalError);
+  }
+
+  if (errorPayload && typeof errorPayload === "object") {
+    const source = errorPayload as Record<string, unknown>;
+
+    return {
+      code: source.code,
+      message: source.message,
+      validations: source.validations,
+    };
+  }
+
+  return errorPayload;
+}
+
+function hasZarinpalErrors(errors: unknown) {
+  if (!errors) {
+    return false;
+  }
+
+  if (Array.isArray(errors)) {
+    return errors.length > 0;
+  }
+
+  if (typeof errors === "object") {
+    return Object.keys(errors).length > 0;
+  }
+
+  return Boolean(errors);
 }
 
 export async function requestZarinpalPayment(input: {

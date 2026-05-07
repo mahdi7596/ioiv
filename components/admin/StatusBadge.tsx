@@ -4,8 +4,7 @@ export const applicationStatusLabels: Record<string, string> = {
   SUBMITTED: "در صف بررسی",
   UNDER_REVIEW: "در حال بررسی",
   NEEDS_EDIT: "نیازمند اصلاح",
-  REJECTED: "رد شده",
-  ACCEPTED: "تایید شده",
+  VALIDATION_COMPLETED: "پایان فرآیند اعتبارسنجی",
 };
 
 export const applicationStatusVariants: Record<string, string> = {
@@ -14,8 +13,7 @@ export const applicationStatusVariants: Record<string, string> = {
   SUBMITTED: "info",
   UNDER_REVIEW: "review",
   NEEDS_EDIT: "attention",
-  REJECTED: "danger",
-  ACCEPTED: "success",
+  VALIDATION_COMPLETED: "success",
 };
 
 export function StatusBadge({ status }: { status: string }) {

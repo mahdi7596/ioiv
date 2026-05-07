@@ -11,8 +11,7 @@ describe("status labels", () => {
       SUBMITTED: "در صف بررسی",
       UNDER_REVIEW: "در حال بررسی",
       NEEDS_EDIT: "نیازمند اصلاح",
-      ACCEPTED: "تایید شده",
-      REJECTED: "رد شده",
+      VALIDATION_COMPLETED: "پایان فرآیند اعتبارسنجی",
     });
   });
 

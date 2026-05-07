@@ -6,7 +6,9 @@ import { SubmissionFiles } from "@/components/admin/SubmissionFiles";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { StatusChangeForm } from "@/components/admin/StatusChangeForm";
 import { StatusHistoryTimeline } from "@/components/admin/StatusHistoryTimeline";
+import { ValidationCertificatePanel } from "@/components/admin/ValidationCertificatePanel";
 import { AppShell } from "@/components/layout/AppShell";
+import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { getSubmission } from "@/lib/actions/admin";
 
 function getEmployeeCount(value: unknown) {
@@ -28,6 +30,10 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
   }
 
   if (!submission) notFound();
+
+  const validationCertificate = submission.files.find(
+    (file) => file.fieldKey === VALIDATION_CERTIFICATE_FIELD_KEY,
+  );
 
   return (
     <AppShell
@@ -86,11 +92,17 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
       <section className="panel">
         <h2 className="text-xl font-bold text-stone-950">فایل های آپلود شده</h2>
         <SubmissionFiles
-          files={submission.files}
+          files={submission.files.filter((file) => file.fieldKey !== VALIDATION_CERTIFICATE_FIELD_KEY)}
           taxDeclarations={submission.taxDeclarations}
           financials={submission.financials}
         />
       </section>
+
+      <ValidationCertificatePanel
+        applicationId={submission.id}
+        currentStatus={submission.status}
+        certificate={validationCertificate}
+      />
 
       <section className="panel">
         <h2 className="text-xl font-bold text-stone-950">سوابق وضعیت</h2>
@@ -100,7 +112,6 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
       <StatusChangeForm
         applicationId={submission.id}
         currentStatus={submission.status}
-        companyNationalId={submission.companyNationalId}
       />
       </div>
     </AppShell>

@@ -38,6 +38,7 @@ describe("submission export", () => {
       files,
     });
 
+    expect(row["وضعیت"]).toBe("در صف بررسی");
     expect(row["تعداد نیروی انسانی"]).toBe(12);
     expect(row["لیست بیمه بارگذاری شده"]).toBe("بله");
     expect(row["اظهارنامه مالیاتی تکمیل است"]).toBe("بله");

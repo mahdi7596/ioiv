@@ -78,10 +78,10 @@ export async function requestOtp(input: unknown): Promise<{ next: "otp" | "regis
     const admin = await db.admin.findUnique({ where: { mobile } });
 
     if (!admin?.active) {
-      logger.warn("otp_request_skipped_inactive_admin", {
+      logger.warn("otp_request_rejected_inactive_admin", {
         mobile: maskMobile(mobile),
       });
-      return { next: "otp" };
+      throw new ActionError("دسترسی مدیریت برای این شماره فعال نیست", 403);
     }
   }
 

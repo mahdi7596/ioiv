@@ -24,8 +24,7 @@ enum ApplicationStatus {
   SUBMITTED
   UNDER_REVIEW
   NEEDS_EDIT
-  REJECTED
-  ACCEPTED
+  VALIDATION_COMPLETED
 }
 
 enum PaymentStatus {
