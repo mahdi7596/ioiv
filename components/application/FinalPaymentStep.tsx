@@ -10,7 +10,9 @@ type FinalPaymentStepProps = {
   draft: ApplicationDraft;
   acceptedTerms: boolean;
   readOnly?: boolean;
+  canRetryPayment?: boolean;
   hasVerifiedPayment?: boolean;
+  latestPaymentStatus?: string;
   onAcceptedTermsChange: (accepted: boolean) => void;
 };
 
@@ -18,14 +20,20 @@ export function FinalPaymentStep({
   draft,
   acceptedTerms,
   readOnly,
+  canRetryPayment = false,
   hasVerifiedPayment = false,
+  latestPaymentStatus,
   onAcceptedTermsChange,
 }: FinalPaymentStepProps) {
   const termsRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string>();
   const [isPending, startTransition] = useTransition();
-  const requiresPaymentConfirmation = !hasVerifiedPayment;
-  const effectiveAcceptedTerms = hasVerifiedPayment || acceptedTerms;
+  const canRetryIncompletePayment =
+    canRetryPayment && latestPaymentStatus === "INITIATED" && !hasVerifiedPayment;
+  const allowPaymentAction = !readOnly || canRetryIncompletePayment;
+  const requiresPaymentConfirmation = !hasVerifiedPayment && !canRetryIncompletePayment;
+  const effectiveAcceptedTerms =
+    hasVerifiedPayment || canRetryIncompletePayment || acceptedTerms;
   const checklist = createFinalReviewChecklist(
     draft,
     effectiveAcceptedTerms,
@@ -37,17 +45,22 @@ export function FinalPaymentStep({
     ...draft,
     acceptedTerms: effectiveAcceptedTerms,
   });
-  const isPaymentReady = validation.success && !hasChecklistErrors && acceptedTerms;
+  const isPaymentReady = validation.success && !hasChecklistErrors && effectiveAcceptedTerms;
   const canStartPayment =
-    validation.success && !hasChecklistErrors && effectiveAcceptedTerms && !isPending && !readOnly;
+    validation.success && !hasChecklistErrors && effectiveAcceptedTerms && !isPending && allowPaymentAction;
 
   return (
     <div className="space-y-5">
       <div className="final-review" aria-live="polite">
-        {readOnly ? (
+        {readOnly && !canRetryIncompletePayment ? (
           <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
             پرونده ثبت نهایی شده است. تا زمانی که مدیر وضعیت را به نیازمند اصلاح تغییر ندهد، امکان
             تغییر اطلاعات یا پرداخت دوباره وجود ندارد.
+          </div>
+        ) : canRetryIncompletePayment ? (
+          <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
+            پرونده در انتظار نتیجه درگاه است. اگر پرداخت را کامل نکرده‌اید یا از درگاه خارج
+            شده‌اید، می‌توانید دوباره به درگاه پرداخت بروید.
           </div>
         ) : hasVerifiedPayment && !errorItems.length ? (
           <div className="final-review__notice final-review__notice--success" role="status">
@@ -80,7 +93,7 @@ export function FinalPaymentStep({
         )}
       </div>
 
-      {readOnly || hasVerifiedPayment ? null : (
+      {readOnly || hasVerifiedPayment || canRetryIncompletePayment ? null : (
         <label
           className="payment-acknowledgement"
           data-invalid={!acceptedTerms ? "true" : undefined}
@@ -96,17 +109,19 @@ export function FinalPaymentStep({
         </label>
       )}
 
-      {readOnly || hasVerifiedPayment ? null : !isPaymentReady ? (
+      {(readOnly && !canRetryIncompletePayment) || hasVerifiedPayment ? null : !isPaymentReady ? (
         <div className="final-review__notice" role="status">
           برای فعال شدن پرداخت، موارد قرمز بالا را تکمیل کنید و تایید پرداخت غیرقابل استرداد را بزنید.
         </div>
       ) : (
         <div className="final-review__notice final-review__notice--success" role="status">
-          همه موارد تکمیل است و پرداخت آماده شروع است.
+          {canRetryIncompletePayment
+            ? "پرداخت آماده تلاش دوباره است."
+            : "همه موارد تکمیل است و پرداخت آماده شروع است."}
         </div>
       )}
 
-      {readOnly ? null : (
+      {!allowPaymentAction ? null : (
         <button
           type="button"
           onClick={() => {
@@ -140,7 +155,9 @@ export function FinalPaymentStep({
         >
           {isPending
             ? "در حال ارسال..."
-            : hasVerifiedPayment
+            : canRetryIncompletePayment
+              ? "تلاش دوباره برای پرداخت"
+              : hasVerifiedPayment
               ? "ارسال اصلاحات"
               : "پرداخت و ارسال نهایی"}
         </button>

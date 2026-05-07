@@ -19,7 +19,12 @@ export async function startPayment() {
   const application = await db.application.findFirst({
     where: { userId: session.subjectId },
     orderBy: { createdAt: "desc" },
-    include: { payments: { where: { status: PaymentStatus.VERIFIED } } },
+    include: {
+      payments: {
+        where: { status: { in: [PaymentStatus.INITIATED, PaymentStatus.VERIFIED] } },
+        orderBy: { createdAt: "desc" },
+      },
+    },
   });
 
   if (!application) {
@@ -39,7 +44,11 @@ export async function startPayment() {
     throw new ActionError("مدارک الزامی پیش از پرداخت کامل نیست");
   }
 
-  if (application.payments.length > 0 && application.status === ApplicationStatus.NEEDS_EDIT) {
+  const hasVerifiedPayment = application.payments.some(
+    (payment) => payment.status === PaymentStatus.VERIFIED,
+  );
+
+  if (hasVerifiedPayment && application.status === ApplicationStatus.NEEDS_EDIT) {
     await db.application.update({
       where: { id: application.id },
       data: { status: ApplicationStatus.SUBMITTED },
@@ -48,6 +57,23 @@ export async function startPayment() {
       applicationId: application.id,
     });
     return { redirectTo: "/dashboard" };
+  }
+
+  if (hasVerifiedPayment) {
+    throw new ActionError("پرداخت قبلاً ثبت شده است");
+  }
+
+  if (application.status === ApplicationStatus.PENDING_PAYMENT) {
+    await db.payment.updateMany({
+      where: {
+        applicationId: application.id,
+        status: PaymentStatus.INITIATED,
+      },
+      data: {
+        status: PaymentStatus.FAILED,
+        rawData: { reason: "payment_retry_started" },
+      },
+    });
   }
 
   const appUrl = process.env.APP_URL || "http://localhost:3000";
@@ -86,6 +112,12 @@ export async function startPayment() {
         rawData: { error: error instanceof Error ? error.message : "payment request failed" },
       },
     });
+    if (application.status === ApplicationStatus.PENDING_PAYMENT) {
+      await db.application.update({
+        where: { id: application.id },
+        data: { status: ApplicationStatus.DRAFT },
+      });
+    }
     throw error;
   }
 

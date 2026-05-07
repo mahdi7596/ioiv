@@ -63,9 +63,8 @@ export async function createOrGetDraftApplication() {
     },
     include: {
       payments: {
-        where: { status: PaymentStatus.VERIFIED },
+        where: { status: { in: [PaymentStatus.INITIATED, PaymentStatus.VERIFIED] } },
         orderBy: { createdAt: "desc" },
-        take: 1,
       },
     },
   });
@@ -87,9 +86,8 @@ export async function createOrGetDraftApplication() {
     },
     include: {
       payments: {
-        where: { status: PaymentStatus.VERIFIED },
+        where: { status: { in: [PaymentStatus.INITIATED, PaymentStatus.VERIFIED] } },
         orderBy: { createdAt: "desc" },
-        take: 1,
       },
     },
   });

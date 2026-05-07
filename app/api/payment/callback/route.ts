@@ -6,7 +6,9 @@ import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
 import { notifyAdminOfSubmission, notifyUserOfSubmission } from "@/lib/actions/payment";
 import { logger } from "@/lib/logger";
 
-type PaymentWithApplication = Prisma.PaymentGetPayload<{ include: { application: true } }>;
+type PaymentWithApplication = Prisma.PaymentGetPayload<{
+  include: { application: { include: { payments: true } } };
+}>;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -25,7 +27,7 @@ export async function GET(request: Request) {
 
   const payment = await db.payment.findUnique({
     where: { id: paymentId },
-    include: { application: true },
+    include: { application: { include: { payments: true } } },
   });
 
   if (!payment || payment.authority !== authority) {
@@ -152,7 +154,7 @@ async function markActivePaymentFailed(
     }),
   ];
 
-  if (payment.application.status === ApplicationStatus.PENDING_PAYMENT) {
+  if (isActivePendingPayment(payment)) {
     operations.push(
       db.application.update({
         where: { id: payment.applicationId },
@@ -162,4 +164,21 @@ async function markActivePaymentFailed(
   }
 
   await db.$transaction(operations);
+}
+
+function isActivePendingPayment(payment: PaymentWithApplication) {
+  if (payment.application.status !== ApplicationStatus.PENDING_PAYMENT) {
+    return false;
+  }
+
+  const relatedPayments = payment.application.payments || [];
+  const hasVerifiedPayment = relatedPayments.some(
+    (candidate) => candidate.status === PaymentStatus.VERIFIED,
+  );
+  const hasNewerInitiatedPayment = relatedPayments.some(
+    (candidate) =>
+      candidate.id !== payment.id && candidate.status === PaymentStatus.INITIATED,
+  );
+
+  return !hasVerifiedPayment && !hasNewerInitiatedPayment;
 }

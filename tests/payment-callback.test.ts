@@ -199,4 +199,53 @@ describe("payment callback route", () => {
 
     expect(mocks.db.application.update).not.toHaveBeenCalled();
   });
+
+  it("does not return the application to draft for an old failed callback after a retry started", async () => {
+    mocks.db.payment.findUnique.mockResolvedValue(
+      payment({
+        id: "old_pay",
+        application: {
+          id: "app_1",
+          mobile: "09123456789",
+          status: ApplicationStatus.PENDING_PAYMENT,
+          payments: [{ id: "new_pay", status: PaymentStatus.INITIATED }],
+        },
+      }),
+    );
+
+    await expectRedirect(
+      "https://sana.ioiv.ir/api/payment/callback?paymentId=old_pay&Authority=authority_1&Status=NOK",
+      "/payment/return?status=failed&paymentId=old_pay",
+    );
+
+    expect(mocks.db.payment.update).toHaveBeenCalledWith({
+      where: { id: "old_pay" },
+      data: {
+        status: PaymentStatus.FAILED,
+        rawData: { status: "NOK", reason: "callback_not_ok" },
+      },
+    });
+    expect(mocks.db.application.update).not.toHaveBeenCalled();
+  });
+
+  it("does not return the application to draft for an old failed callback after another payment was verified", async () => {
+    mocks.db.payment.findUnique.mockResolvedValue(
+      payment({
+        id: "old_pay",
+        application: {
+          id: "app_1",
+          mobile: "09123456789",
+          status: ApplicationStatus.PENDING_PAYMENT,
+          payments: [{ id: "verified_pay", status: PaymentStatus.VERIFIED }],
+        },
+      }),
+    );
+
+    await expectRedirect(
+      "https://sana.ioiv.ir/api/payment/callback?paymentId=old_pay&Authority=authority_1&Status=NOK",
+      "/payment/return?status=failed&paymentId=old_pay",
+    );
+
+    expect(mocks.db.application.update).not.toHaveBeenCalled();
+  });
 });

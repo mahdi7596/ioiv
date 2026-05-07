@@ -25,7 +25,8 @@ export default async function ApplicationPage() {
   }
 
   const access = getApplicationAccess(application.status);
-  const hasVerifiedPayment = application.payments.length > 0;
+  const hasVerifiedPayment = application.payments.some((payment) => payment.status === "VERIFIED");
+  const latestPaymentStatus = application.payments[0]?.status;
 
   if (!access.canView) {
     redirect("/dashboard");
@@ -52,7 +53,9 @@ export default async function ApplicationPage() {
         applicationId={application.id}
         initialStep={application.currentStep}
         readOnly={!access.canEdit}
+        canRetryPayment={access.canRetryPayment && !hasVerifiedPayment}
         hasVerifiedPayment={hasVerifiedPayment}
+        latestPaymentStatus={latestPaymentStatus}
         initialDraft={
           {
             currentStep: application.currentStep,
