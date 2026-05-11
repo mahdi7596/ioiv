@@ -38,6 +38,7 @@ function completeApplication(overrides: Record<string, unknown> = {}) {
     id: "app_1",
     mobile: "09123456789",
     status: ApplicationStatus.DRAFT,
+    currentStep: 6,
     taxDeclarations: [{ year: "1402", file }],
     financials: [{ year: "1402", file }],
     humanResources: { employeeCount: 10, insuranceList: file },
@@ -68,10 +69,18 @@ describe("payment action", () => {
   it("starts payment only after server-side final validation passes", async () => {
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).resolves.toEqual({
+    await expect(startPayment(completeApplication())).resolves.toEqual({
+      ok: true,
       redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_1",
     });
 
+    expect(mocks.db.application.update).toHaveBeenCalledWith({
+      where: { id: "app_1" },
+      data: expect.objectContaining({
+        taxDeclarations: [{ year: "1402", file: { fileId: "file_1", name: "doc.pdf" } }],
+        financials: [{ year: "1402", file: { fileId: "file_1", name: "doc.pdf" } }],
+      }),
+    });
     expect(mocks.db.payment.create).toHaveBeenCalledWith({
       data: {
         applicationId: "app_1",
@@ -102,7 +111,14 @@ describe("payment action", () => {
     );
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).rejects.toThrow("مدارک الزامی پیش از پرداخت کامل نیست");
+    await expect(
+      startPayment(
+        completeApplication({ trialBalance: { generalLedger: { fileId: "file_1", name: "doc.pdf" } } }),
+      ),
+    ).resolves.toEqual({
+      ok: false,
+      message: "مدارک الزامی پیش از پرداخت کامل نیست",
+    });
     expect(mocks.db.payment.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
   });
@@ -111,7 +127,10 @@ describe("payment action", () => {
     mocks.requestZarinpalPayment.mockRejectedValue(new Error("provider down"));
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).rejects.toThrow("provider down");
+    await expect(startPayment(completeApplication())).resolves.toEqual({
+      ok: false,
+      message: "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.",
+    });
 
     expect(mocks.db.payment.update).toHaveBeenCalledWith({
       where: { id: "pay_1" },
@@ -120,7 +139,10 @@ describe("payment action", () => {
         rawData: { error: "provider down" },
       },
     });
-    expect(mocks.db.application.update).not.toHaveBeenCalled();
+    expect(mocks.db.application.update).not.toHaveBeenCalledWith({
+      where: { id: "app_1" },
+      data: { status: ApplicationStatus.DRAFT },
+    });
   });
 
   it("submits corrections without repayment when a needs-edit application already has verified payment", async () => {
@@ -132,11 +154,14 @@ describe("payment action", () => {
     );
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).resolves.toEqual({ redirectTo: "/dashboard" });
+    await expect(startPayment(completeApplication())).resolves.toEqual({
+      ok: true,
+      redirectTo: "/dashboard",
+    });
 
     expect(mocks.db.application.update).toHaveBeenCalledWith({
       where: { id: "app_1" },
-      data: { status: ApplicationStatus.SUBMITTED },
+      data: expect.objectContaining({ status: ApplicationStatus.SUBMITTED }),
     });
     expect(mocks.db.payment.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
@@ -151,7 +176,8 @@ describe("payment action", () => {
     );
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).resolves.toEqual({
+    await expect(startPayment(completeApplication())).resolves.toEqual({
+      ok: true,
       redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_1",
     });
 
@@ -183,7 +209,10 @@ describe("payment action", () => {
     );
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).rejects.toThrow("پرداخت قبلاً ثبت شده است");
+    await expect(startPayment(completeApplication())).resolves.toEqual({
+      ok: false,
+      message: "پرداخت قبلاً ثبت شده است",
+    });
 
     expect(mocks.db.payment.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
@@ -199,7 +228,10 @@ describe("payment action", () => {
     mocks.requestZarinpalPayment.mockRejectedValue(new Error("provider down"));
     const { startPayment } = await import("@/lib/actions/payment");
 
-    await expect(startPayment()).rejects.toThrow("provider down");
+    await expect(startPayment(completeApplication())).resolves.toEqual({
+      ok: false,
+      message: "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.",
+    });
 
     expect(mocks.db.payment.update).toHaveBeenCalledWith({
       where: { id: "pay_1" },

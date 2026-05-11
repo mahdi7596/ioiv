@@ -139,6 +139,8 @@ export function ApplicationWizard({
               canRetryPayment={canRetryPayment}
               hasVerifiedPayment={hasVerifiedPayment}
               latestPaymentStatus={latestPaymentStatus}
+              isSavingDraft={isPending}
+              isUploading={Boolean(uploadingKey)}
               onAcceptedTermsChange={setAcceptedTerms}
             />
           ) : null}
