@@ -13,6 +13,8 @@ type FinalPaymentStepProps = {
   canRetryPayment?: boolean;
   hasVerifiedPayment?: boolean;
   latestPaymentStatus?: string;
+  isSavingDraft?: boolean;
+  isUploading?: boolean;
   onAcceptedTermsChange: (accepted: boolean) => void;
 };
 
@@ -23,6 +25,8 @@ export function FinalPaymentStep({
   canRetryPayment = false,
   hasVerifiedPayment = false,
   latestPaymentStatus,
+  isSavingDraft = false,
+  isUploading = false,
   onAcceptedTermsChange,
 }: FinalPaymentStepProps) {
   const termsRef = useRef<HTMLInputElement>(null);
@@ -45,9 +49,20 @@ export function FinalPaymentStep({
     ...draft,
     acceptedTerms: effectiveAcceptedTerms,
   });
+  const blockingWorkMessage = isUploading
+    ? "در حال بارگذاری فایل، لطفاً چند لحظه صبر کنید."
+    : isSavingDraft
+      ? "در حال ذخیره اطلاعات، لطفاً چند لحظه صبر کنید."
+      : undefined;
+  const hasBlockingWork = Boolean(blockingWorkMessage);
   const isPaymentReady = validation.success && !hasChecklistErrors && effectiveAcceptedTerms;
   const canStartPayment =
-    validation.success && !hasChecklistErrors && effectiveAcceptedTerms && !isPending && allowPaymentAction;
+    validation.success &&
+    !hasChecklistErrors &&
+    effectiveAcceptedTerms &&
+    !isPending &&
+    !hasBlockingWork &&
+    allowPaymentAction;
 
   return (
     <div className="space-y-5">
@@ -109,7 +124,11 @@ export function FinalPaymentStep({
         </label>
       )}
 
-      {(readOnly && !canRetryIncompletePayment) || hasVerifiedPayment ? null : !isPaymentReady ? (
+      {(readOnly && !canRetryIncompletePayment) || hasVerifiedPayment ? null : blockingWorkMessage ? (
+        <div className="final-review__notice" role="status">
+          {blockingWorkMessage}
+        </div>
+      ) : !isPaymentReady ? (
         <div className="final-review__notice" role="status">
           برای فعال شدن پرداخت، موارد قرمز بالا را تکمیل کنید و تایید پرداخت غیرقابل استرداد را بزنید.
         </div>
@@ -141,7 +160,12 @@ export function FinalPaymentStep({
                   type: "info",
                   message: hasVerifiedPayment ? "در حال ارسال اصلاحات" : "در حال انتقال به پرداخت",
                 });
-                const result = await startPayment();
+                const result = await startPayment(draft);
+                if (!result.ok) {
+                  setMessage(result.message);
+                  showToast({ type: "error", message: result.message });
+                  return;
+                }
                 window.location.assign(result.redirectTo);
               } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "شروع پرداخت ناموفق بود";

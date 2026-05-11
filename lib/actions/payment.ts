@@ -9,12 +9,18 @@ import {
   createAdminSubmissionSmsMessage,
   createSubmissionReceivedSmsMessage,
 } from "@/lib/sms/messages";
-import { finalSubmissionSchema } from "@/lib/validations/application";
+import { applicationDraftSchema, finalSubmissionSchema } from "@/lib/validations/application";
 import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
 import { requestZarinpalPayment } from "@/lib/payments/zarinpal";
-import { ActionError } from "./auth";
 
-export async function startPayment() {
+type PaymentStartResult =
+  | { ok: true; redirectTo: string }
+  | { ok: false; message: string };
+
+const PAYMENT_START_FAILED_MESSAGE = "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.";
+const PAYMENT_VALIDATION_FAILED_MESSAGE = "مدارک الزامی پیش از پرداخت کامل نیست";
+
+export async function startPayment(input: unknown): Promise<PaymentStartResult> {
   const session = await requireSession("user");
   const application = await db.application.findFirst({
     where: { userId: session.subjectId },
@@ -28,21 +34,40 @@ export async function startPayment() {
   });
 
   if (!application) {
-    throw new ActionError("پرونده‌ای برای پرداخت پیدا نشد", 404);
+    return { ok: false, message: "پرونده‌ای برای پرداخت پیدا نشد" };
   }
 
+  const draft = applicationDraftSchema.safeParse(input);
+
+  if (!draft.success) {
+    return {
+      ok: false,
+      message: draft.error.issues[0]?.message || PAYMENT_VALIDATION_FAILED_MESSAGE,
+    };
+  }
+
+  const draftData = draft.data;
   const validation = finalSubmissionSchema.safeParse({
-    taxDeclarations: application.taxDeclarations,
-    financials: application.financials,
-    humanResources: application.humanResources,
-    trialBalance: application.trialBalance,
-    creditReports: application.creditReports,
+    taxDeclarations: draftData.taxDeclarations,
+    financials: draftData.financials,
+    humanResources: draftData.humanResources,
+    trialBalance: draftData.trialBalance,
+    creditReports: draftData.creditReports,
     acceptedTerms: true,
   });
 
   if (!validation.success) {
-    throw new ActionError("مدارک الزامی پیش از پرداخت کامل نیست");
+    return { ok: false, message: PAYMENT_VALIDATION_FAILED_MESSAGE };
   }
+
+  const persistedDraft = {
+    currentStep: draftData.currentStep ?? application.currentStep,
+    taxDeclarations: validation.data.taxDeclarations,
+    financials: validation.data.financials,
+    humanResources: validation.data.humanResources,
+    trialBalance: validation.data.trialBalance,
+    creditReports: validation.data.creditReports,
+  };
 
   const hasVerifiedPayment = application.payments.some(
     (payment) => payment.status === PaymentStatus.VERIFIED,
@@ -51,16 +76,19 @@ export async function startPayment() {
   if (hasVerifiedPayment && application.status === ApplicationStatus.NEEDS_EDIT) {
     await db.application.update({
       where: { id: application.id },
-      data: { status: ApplicationStatus.SUBMITTED },
+      data: {
+        ...persistedDraft,
+        status: ApplicationStatus.SUBMITTED,
+      },
     });
     logger.info("application_resubmitted_without_payment", {
       applicationId: application.id,
     });
-    return { redirectTo: "/dashboard" };
+    return { ok: true, redirectTo: "/dashboard" };
   }
 
   if (hasVerifiedPayment) {
-    throw new ActionError("پرداخت قبلاً ثبت شده است");
+    return { ok: false, message: "پرداخت قبلاً ثبت شده است" };
   }
 
   if (application.status === ApplicationStatus.PENDING_PAYMENT) {
@@ -75,6 +103,11 @@ export async function startPayment() {
       },
     });
   }
+
+  await db.application.update({
+    where: { id: application.id },
+    data: persistedDraft,
+  });
 
   const appUrl = process.env.APP_URL || "http://localhost:3000";
   const payment = await db.payment.create({
@@ -118,7 +151,7 @@ export async function startPayment() {
         data: { status: ApplicationStatus.DRAFT },
       });
     }
-    throw error;
+    return { ok: false, message: PAYMENT_START_FAILED_MESSAGE };
   }
 
   await db.$transaction([
@@ -137,7 +170,7 @@ export async function startPayment() {
     paymentId: payment.id,
   });
 
-  return { redirectTo: zarinpal.paymentUrl };
+  return { ok: true, redirectTo: zarinpal.paymentUrl };
 }
 
 export async function notifyAdminOfSubmission(applicationId: string) {

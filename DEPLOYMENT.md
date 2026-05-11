@@ -30,6 +30,18 @@ Payment gateway implementation completed on May 7, 2026:
 - Automated coverage was added for payment status relationships, Zarinpal adapter behavior, payment start, callback verification, and return-page rendering.
 - Verified locally with `npm test`, `npm run lint`, and `npm run build`.
 
+Atomic payment-start fix deployment check:
+
+- After uploading the latest source to `/data/apps/sana`, rebuild and restart the app:
+  `docker compose build app && docker compose up -d`.
+- Confirm the app is healthy with `docker compose ps`.
+- Confirm startup has no new errors with `docker compose logs --tail=100 app`.
+- After a payment test, inspect payment handoff logs:
+  `docker compose logs --tail=300 app | grep -E 'payment_start_failed|payment_start_succeeded|payment_start_requested'`.
+- A successful first-click handoff should log `payment_start_requested` followed by
+  `payment_start_succeeded`; expected validation/provider failures should remain on the
+  application page instead of rendering a production Server Components digest error.
+
 Production redeploy and reset verified on May 7, 2026:
 
 - Latest source was uploaded to `/data/apps/sana`.
