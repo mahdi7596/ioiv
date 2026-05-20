@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import { hasAdminPermission } from "@/lib/admin/permissions";
 import { logger } from "@/lib/logger";
 
 export async function GET(_request: Request, context: RouteContext<"/api/files/[id]">) {
@@ -31,7 +32,7 @@ export async function GET(_request: Request, context: RouteContext<"/api/files/[
     if (session.kind === "admin") {
       const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
 
-      if (!admin?.active) {
+      if (!admin?.active || !hasAdminPermission(admin.role, "downloadSubmissionFiles")) {
         return Response.json({ error: "Forbidden" }, { status: 403 });
       }
     }
