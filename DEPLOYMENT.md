@@ -530,6 +530,138 @@ Seed initial admins:
 docker compose exec app npm run db:seed
 ```
 
+## Entry Viewer Admin Role Rollout
+
+Use this checklist when deploying the `ENTRY_VIEWER` admin role for mobile `09362116801`.
+This role can view admin entries but cannot download files, export submissions, change statuses,
+write status notes, upload certificates, or replace certificates.
+
+Do not insert the new admin row before the production migration has run. PostgreSQL must know the
+`ENTRY_VIEWER` enum value first.
+
+1. Confirm the server path and current state:
+
+```bash
+cd /data/apps/sana
+git rev-parse --short HEAD || true
+docker compose ps
+```
+
+2. Create a timestamped backup directory outside the app release directory:
+
+```bash
+mkdir -p /data/backups/sana/entry-viewer-$(date +%Y%m%d-%H%M%S)
+BACKUP_DIR=$(ls -td /data/backups/sana/entry-viewer-* | head -n 1)
+echo "$BACKUP_DIR"
+```
+
+3. Take a full custom-format PostgreSQL backup before uploading or migrating:
+
+```bash
+docker compose exec -T postgres pg_dump -U postgres -d sana -Fc > "$BACKUP_DIR/sana-before-entry-viewer.dump"
+```
+
+4. Optionally take a plain SQL backup for quick inspection:
+
+```bash
+docker compose exec -T postgres pg_dump -U postgres -d sana > "$BACKUP_DIR/sana-before-entry-viewer.sql"
+```
+
+5. Verify the backups exist and are non-empty:
+
+```bash
+ls -lh "$BACKUP_DIR"
+test -s "$BACKUP_DIR/sana-before-entry-viewer.dump" && echo "custom backup OK"
+test -s "$BACKUP_DIR/sana-before-entry-viewer.sql" && echo "sql backup OK"
+```
+
+6. If possible, copy the backup directory off the server before continuing.
+
+7. Deploy the tested code using the normal source upload/rebuild steps in this runbook. Because the
+Prisma schema changes, regenerate and upload the Prisma engine export before rebuilding if the export
+is older than `prisma/schema.prisma`.
+
+8. Confirm the migration ran and the enum value exists:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+select enumlabel
+from pg_enum
+where enumtypid = '"'"'"UserRole"'"'"'::regtype
+order by enumsortorder;
+'
+```
+
+Expected output includes:
+
+```text
+ENTRY_VIEWER
+```
+
+9. Verify existing admins still exist before adding the viewer:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+select mobile, role, active
+from "Admin"
+order by mobile;
+'
+```
+
+10. Insert or update the viewer admin row after the enum exists:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+INSERT INTO "Admin" ("id", "name", "mobile", "role", "active", "createdAt", "updatedAt")
+VALUES (
+  '"'"'admin-viewer-09362116801'"'"',
+  '"'"'مشاهده‌گر پرونده‌ها'"'"',
+  '"'"'09362116801'"'"',
+  '"'"'ENTRY_VIEWER'"'"',
+  true,
+  NOW(),
+  NOW()
+)
+ON CONFLICT ("mobile") DO UPDATE
+SET
+  "name" = EXCLUDED."name",
+  "role" = '"'"'ENTRY_VIEWER'"'"',
+  "active" = true,
+  "updatedAt" = NOW();
+'
+```
+
+11. Verify the viewer row:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+select mobile, role, active
+from "Admin"
+where mobile = '"'"'09362116801'"'"';
+'
+```
+
+12. Test production behavior:
+
+- Existing `ADMIN` or `SUPER_ADMIN` can still log in and use normal admin actions.
+- Mobile `09362116801` can log in through `/admin/login`.
+- Mobile `09362116801` can open `/admin`, `/admin/submissions`, and a submission detail page.
+- Mobile `09362116801` cannot see export buttons, file download buttons, status-change controls, or certificate replacement controls.
+- Direct requests from mobile `09362116801` to file download, export, status-change, and certificate replacement endpoints are forbidden.
+
+13. If an issue appears after adding the row, deactivate the viewer first:
+
+```bash
+docker compose exec postgres psql -U postgres -d sana -c '
+UPDATE "Admin"
+SET "active" = false, "updatedAt" = NOW()
+WHERE mobile = '"'"'09362116801'"'"';
+'
+```
+
+Then roll back application code if needed. Do not attempt to remove the `ENTRY_VIEWER` enum value
+during incident response.
+
 Reset production data for a fresh test cycle:
 
 1. Back up the database first:
