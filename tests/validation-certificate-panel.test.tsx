@@ -35,4 +35,25 @@ describe("ValidationCertificatePanel", () => {
     expect(markup).toContain("هنوز گواهی برای این پرونده ثبت نشده است");
     expect(markup).not.toContain("تعویض فایل PDF گواهی");
   });
+
+  it("hides certificate actions when permissions deny them", () => {
+    const markup = renderToStaticMarkup(
+      <ValidationCertificatePanel
+        applicationId="app-1"
+        currentStatus="VALIDATION_COMPLETED"
+        certificate={{
+          id: "file-1",
+          originalName: "certificate.pdf",
+          size: 2048,
+          createdAt: new Date("2026-05-07T00:00:00.000Z"),
+        }}
+        canDownload={false}
+        canReplace={false}
+      />,
+    );
+
+    expect(markup).toContain("certificate.pdf");
+    expect(markup).not.toContain("/api/files/file-1");
+    expect(markup).not.toContain("تعویض فایل PDF گواهی");
+  });
 });

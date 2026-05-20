@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { db } from "@/lib/db";
@@ -51,9 +52,10 @@ function context(id = "file-1") {
 
 describe("protected file route", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(readFile).mockResolvedValue(Buffer.from("test"));
     vi.mocked(db.applicationFile.findUnique).mockResolvedValue(fileRecord);
-    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: true });
+    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: true, role: UserRole.ADMIN });
   });
 
   it("allows the owning user to download a validation certificate", async () => {
@@ -75,10 +77,23 @@ describe("protected file route", () => {
 
   it("rejects inactive admins downloading a validation certificate", async () => {
     vi.mocked(getSession).mockResolvedValue({ kind: "admin", subjectId: "admin-1" });
-    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: false });
+    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: false, role: UserRole.ADMIN });
 
     const response = await GET(new Request("http://test.local/api/files/file-1"), context());
 
     expect(response.status).toBe(403);
+  });
+
+  it("rejects entry viewer admins downloading a validation certificate", async () => {
+    vi.mocked(getSession).mockResolvedValue({ kind: "admin", subjectId: "admin-1" });
+    vi.mocked(db.admin.findUnique).mockResolvedValue({
+      active: true,
+      role: UserRole.ENTRY_VIEWER,
+    });
+
+    const response = await GET(new Request("http://test.local/api/files/file-1"), context());
+
+    expect(response.status).toBe(403);
+    expect(readFile).not.toHaveBeenCalled();
   });
 });
