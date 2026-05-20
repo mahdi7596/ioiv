@@ -11,6 +11,7 @@ enum UserRole {
   USER
   ADMIN
   SUPER_ADMIN
+  ENTRY_VIEWER
 }
 
 enum OtpPurpose {
