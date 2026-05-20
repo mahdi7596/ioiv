@@ -20,14 +20,18 @@ export function ValidationCertificatePanel({
   applicationId,
   currentStatus,
   certificate,
+  canDownload = true,
+  canReplace = true,
 }: {
   applicationId: string;
   currentStatus: string;
   certificate?: ValidationCertificateFile;
+  canDownload?: boolean;
+  canReplace?: boolean;
 }) {
   const [message, setMessage] = useState<string>();
   const [isPending, startTransition] = useTransition();
-  const canReplace = currentStatus === "VALIDATION_COMPLETED";
+  const canReplaceCertificate = canReplace && currentStatus === "VALIDATION_COMPLETED";
 
   return (
     <section className="panel space-y-4" aria-label="گواهی پایان فرآیند اعتبارسنجی">
@@ -53,20 +57,22 @@ export function ValidationCertificatePanel({
               <span>{certificate.createdAt.toLocaleDateString("fa-IR")}</span>
             </div>
           </div>
-          <a
-            className="button button--ghost"
-            href={`/api/files/${certificate.id}`}
-            aria-label={`دانلود ${certificate.originalName}`}
-          >
-            <Download aria-hidden="true" size={17} strokeWidth={2} />
-            دانلود
-          </a>
+          {canDownload ? (
+            <a
+              className="button button--ghost"
+              href={`/api/files/${certificate.id}`}
+              aria-label={`دانلود ${certificate.originalName}`}
+            >
+              <Download aria-hidden="true" size={17} strokeWidth={2} />
+              دانلود
+            </a>
+          ) : null}
         </article>
       ) : (
         <p className="empty-state">هنوز گواهی برای این پرونده ثبت نشده است.</p>
       )}
 
-      {canReplace ? (
+      {canReplaceCertificate ? (
         <form
           className="space-y-3"
           onSubmit={(event) => {

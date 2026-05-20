@@ -12,6 +12,7 @@ type SubmissionFilesProps = {
   files: UploadedFile[];
   taxDeclarations: unknown;
   financials: unknown;
+  canDownload?: boolean;
 };
 
 type FileDisplay = {
@@ -137,6 +138,7 @@ export function SubmissionFiles({
   files,
   taxDeclarations,
   financials,
+  canDownload = true,
 }: SubmissionFilesProps) {
   const groups = buildGroups(files, taxDeclarations, financials);
 
@@ -175,14 +177,16 @@ export function SubmissionFiles({
                     {item.rawFieldKey ? <span dir="ltr">{item.rawFieldKey}</span> : null}
                   </div>
                 </div>
-                <a
-                  className="button button--ghost"
-                  href={`/api/files/${item.file.id}`}
-                  aria-label={`دانلود ${item.file.originalName}`}
-                >
-                  <Download aria-hidden="true" size={17} strokeWidth={2} />
-                  دانلود
-                </a>
+                {canDownload ? (
+                  <a
+                    className="button button--ghost"
+                    href={`/api/files/${item.file.id}`}
+                    aria-label={`دانلود ${item.file.originalName}`}
+                  >
+                    <Download aria-hidden="true" size={17} strokeWidth={2} />
+                    دانلود
+                  </a>
+                ) : null}
               </article>
             ))}
           </div>

@@ -13,14 +13,18 @@ import {
   humanResourcesEmployeeCountLabel,
 } from "@/lib/admin/humanResources";
 import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
-import { getSubmission } from "@/lib/actions/admin";
+import { getCurrentAdminPermissions, getSubmission } from "@/lib/actions/admin";
 
 export default async function SubmissionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let submission: Awaited<ReturnType<typeof getSubmission>>;
+  let permissions: Awaited<ReturnType<typeof getCurrentAdminPermissions>>;
 
   try {
-    submission = await getSubmission(id);
+    [submission, permissions] = await Promise.all([
+      getSubmission(id),
+      getCurrentAdminPermissions(),
+    ]);
   } catch {
     redirect("/admin/login");
   }
@@ -96,6 +100,7 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
           files={submission.files.filter((file) => file.fieldKey !== VALIDATION_CERTIFICATE_FIELD_KEY)}
           taxDeclarations={submission.taxDeclarations}
           financials={submission.financials}
+          canDownload={permissions.downloadSubmissionFiles}
         />
       </section>
 
@@ -103,6 +108,8 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
         applicationId={submission.id}
         currentStatus={submission.status}
         certificate={validationCertificate}
+        canDownload={permissions.downloadSubmissionFiles}
+        canReplace={permissions.manageValidationCertificates}
       />
 
       <section className="panel">
@@ -110,10 +117,12 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
         <StatusHistoryTimeline items={submission.history} />
       </section>
 
-      <StatusChangeForm
-        applicationId={submission.id}
-        currentStatus={submission.status}
-      />
+      {permissions.changeSubmissionStatus ? (
+        <StatusChangeForm
+          applicationId={submission.id}
+          currentStatus={submission.status}
+        />
+      ) : null}
       </div>
     </AppShell>
   );
