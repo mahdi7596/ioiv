@@ -1,4 +1,4 @@
-import { OtpPurpose } from "@prisma/client";
+import { OtpPurpose, UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActionError, requestOtp, verifyOtp } from "@/lib/actions/auth";
 
@@ -51,6 +51,7 @@ describe("auth actions", () => {
     mocks.db.admin.findUnique.mockResolvedValue({
       id: "admin-1",
       active: true,
+      role: UserRole.ADMIN,
     });
     mocks.db.user.findUnique.mockResolvedValue(null);
     mocks.db.user.create.mockResolvedValue({ id: "user-1" });
@@ -122,6 +123,7 @@ describe("auth actions", () => {
     mocks.db.admin.findUnique.mockResolvedValue({
       id: "admin-1",
       active: false,
+      role: UserRole.ENTRY_VIEWER,
     });
 
     await expect(
@@ -132,6 +134,20 @@ describe("auth actions", () => {
     });
     expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
     expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+
+  it("allows active entry viewer admins to request an admin OTP", async () => {
+    mocks.db.admin.findUnique.mockResolvedValue({
+      id: "admin-1",
+      active: true,
+      role: UserRole.ENTRY_VIEWER,
+    });
+
+    await expect(requestOtp({ mobile: "09362116801", mode: "admin" })).resolves.toEqual({
+      next: "otp",
+    });
+    expect(mocks.db.otpCode.create).toHaveBeenCalledOnce();
+    expect(mocks.sendSms).toHaveBeenCalledOnce();
   });
 
   it("does not reveal whether a user mobile is already registered when requesting an OTP", async () => {
