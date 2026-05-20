@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
+import { hasAdminPermission } from "@/lib/admin/permissions";
 import { logger } from "@/lib/logger";
 import {
   createSubmissionsCsv,
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
 
     const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
 
-    if (!admin?.active) {
+    if (!admin?.active || !hasAdminPermission(admin.role, "exportSubmissions")) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 

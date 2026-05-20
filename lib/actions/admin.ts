@@ -4,6 +4,11 @@ import { ApplicationStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
+import {
+  getAdminPermissions,
+  hasAdminPermission,
+  type AdminPermission,
+} from "@/lib/admin/permissions";
 import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { getAllowedNextApplicationStatuses } from "@/lib/application/status-transitions";
 import { logger, maskMobile } from "@/lib/logger";
@@ -12,7 +17,7 @@ import { createStatusChangeSmsMessage } from "@/lib/sms/messages";
 import { storeUploadFile } from "@/lib/uploads/storage";
 import { ActionError } from "./auth";
 
-async function requireActiveAdmin() {
+async function requireActiveAdmin(permission: AdminPermission = "viewAdminPanel") {
   const session = await requireSession("admin");
   const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
 
@@ -20,11 +25,21 @@ async function requireActiveAdmin() {
     throw new ActionError("دسترسی مدیریت فعال نیست", 403);
   }
 
+  if (!hasAdminPermission(admin.role, permission)) {
+    throw new ActionError("برای این عملیات دسترسی لازم را ندارید", 403);
+  }
+
   return admin;
 }
 
+export async function getCurrentAdminPermissions() {
+  const admin = await requireActiveAdmin("viewAdminPanel");
+
+  return getAdminPermissions(admin.role);
+}
+
 export async function getAdminOverview() {
-  await requireActiveAdmin();
+  await requireActiveAdmin("viewAdminPanel");
   const [total, submitted, underReview, needsEdit, validationCompleted] = await Promise.all([
     db.application.count(),
     db.application.count({ where: { status: ApplicationStatus.SUBMITTED } }),
@@ -41,7 +56,7 @@ export async function listSubmissions(input?: {
   status?: string;
   sort?: string;
 }) {
-  await requireActiveAdmin();
+  await requireActiveAdmin("viewEntries");
   const q = input?.q?.trim();
   const status = input?.status as ApplicationStatus | undefined;
 
@@ -69,7 +84,7 @@ export async function listSubmissions(input?: {
 }
 
 export async function getSubmission(id: string) {
-  await requireActiveAdmin();
+  await requireActiveAdmin("viewEntries");
 
   return db.application.findUnique({
     where: { id },
@@ -83,7 +98,7 @@ export async function getSubmission(id: string) {
 }
 
 export async function changeSubmissionStatus(formData: FormData) {
-  const admin = await requireActiveAdmin();
+  const admin = await requireActiveAdmin("changeSubmissionStatus");
   const applicationId = String(formData.get("applicationId") || "");
   const nextStatus = String(formData.get("status") || "") as ApplicationStatus;
   const note = String(formData.get("note") || "").trim();
@@ -188,7 +203,7 @@ async function storeValidationCertificate(applicationId: string, file: FormDataE
 }
 
 export async function replaceValidationCertificate(formData: FormData) {
-  const admin = await requireActiveAdmin();
+  const admin = await requireActiveAdmin("manageValidationCertificates");
   const applicationId = String(formData.get("applicationId") || "");
   const certificate = formData.get("certificate");
   const application = await db.application.findUnique({ where: { id: applicationId } });
