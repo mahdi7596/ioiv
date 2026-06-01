@@ -29,9 +29,17 @@ describe("auth validation", () => {
     expect(otpSchema.safeParse("12345").success).toBe(false);
   });
 
-  it("requires company national ID digits", () => {
+  it("accepts 10 or 11 digit company national IDs", () => {
+    expect(companyNationalIdSchema.safeParse("1234567890").success).toBe(true);
     expect(companyNationalIdSchema.safeParse("12345678901").success).toBe(true);
     expect(companyNationalIdSchema.safeParse("۱۲۳۴۵۶۷۸۹۰۱").data).toBe("12345678901");
+    expect(companyNationalIdSchema.safeParse("۱۲۳۴۵۶۷۸۹۰").data).toBe("1234567890");
+    expect(companyNationalIdSchema.safeParse("١٢٣٤٥٦٧٨٩٠").data).toBe("1234567890");
+  });
+
+  it("rejects short, long, and non-digit company national IDs", () => {
+    expect(companyNationalIdSchema.safeParse("123456789").success).toBe(false);
+    expect(companyNationalIdSchema.safeParse("123456789012").success).toBe(false);
     expect(companyNationalIdSchema.safeParse("abc").success).toBe(false);
   });
 

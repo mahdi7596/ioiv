@@ -238,8 +238,8 @@ function createFinalReviewChecklist(
     draft.humanResources.insuranceList ? "" : "لیست بیمه را بارگذاری کنید.",
   ].filter(Boolean);
   const trialBalanceMessages = [
-    draft.trialBalance.generalLedger ? "" : "تراز کل را بارگذاری کنید.",
-    draft.trialBalance.subsidiaryLedger ? "" : "تراز معین را بارگذاری کنید.",
+    draft.trialBalance.generalLedger ? "" : "تراز کل سال 1404 را بارگذاری کنید.",
+    draft.trialBalance.subsidiaryLedger ? "" : "تراز معین سال 1404 را بارگذاری کنید.",
   ].filter(Boolean);
   const creditReportMessages = [
     draft.creditReports.company ? "" : "گزارش اعتبارسنجی شرکت را بارگذاری کنید.",
@@ -261,7 +261,7 @@ function createFinalReviewChecklist(
       messages: humanResourcesMessages,
     },
     {
-      label: "تراز کل و معین",
+      label: "تراز کل و معین سال 1404",
       messages: trialBalanceMessages,
     },
     {

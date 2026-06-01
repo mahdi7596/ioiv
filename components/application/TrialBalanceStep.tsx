@@ -16,7 +16,7 @@ export function TrialBalanceStep({
     <div className="grid gap-5 sm:grid-cols-2">
       <FileUploadControl
         id="trialBalance.generalLedger"
-        label="تراز کل"
+        label="تراز کل سال 1404"
         required
         value={draft.trialBalance.generalLedger}
         readOnly={readOnly}
@@ -35,7 +35,7 @@ export function TrialBalanceStep({
       />
       <FileUploadControl
         id="trialBalance.subsidiaryLedger"
-        label="تراز معین"
+        label="تراز معین سال 1404"
         required
         value={draft.trialBalance.subsidiaryLedger}
         readOnly={readOnly}

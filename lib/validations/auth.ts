@@ -14,7 +14,7 @@ export const otpSchema = z
 export const companyNationalIdSchema = z
   .string()
   .transform(keepAsciiDigits)
-  .pipe(z.string().regex(/^\d{11}$/, "شناسه ملی شرکت باید ۱۱ رقم باشد"));
+  .pipe(z.string().regex(/^\d{10,11}$/, "شناسه ملی شرکت باید ۱۰ یا ۱۱ رقم باشد"));
 
 const requiredTextSchema = (fieldName: string) =>
   z.string().trim().min(1, `${fieldName} الزامی است`);

@@ -108,7 +108,7 @@ export function createSubmissionExportRow(application: SubmissionExportApplicati
     "تعداد فایل صورت مالی حسابرسی شده": application.files.filter((file) =>
       file.fieldKey.startsWith("financials"),
     ).length,
-    "تراز کل و معین تکمیل است": application.files.some((file) =>
+    "تراز کل و معین سال 1404 تکمیل است": application.files.some((file) =>
       file.fieldKey.startsWith("trialBalance.generalLedger"),
     ) && application.files.some((file) => file.fieldKey.startsWith("trialBalance.subsidiaryLedger"))
       ? "بله"

@@ -13,11 +13,12 @@ describe("logger", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
+    vi.stubEnv("NODE_ENV", originalEnv);
   });
 
   test("emits structured production info logs", () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     logger.info("otp_requested", {
       mobile: maskMobile("09123456789"),

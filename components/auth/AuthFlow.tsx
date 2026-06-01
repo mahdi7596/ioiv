@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { showToast } from "@/components/ui/toast";
 import { MobileEntryForm } from "./MobileEntryForm";
 import { OtpForm } from "./OtpForm";
-import { RegistrationForm } from "./RegistrationForm";
+import { RegistrationForm, getCompanyNationalIdInlineError } from "./RegistrationForm";
 
 type Step = "mobile" | "otp";
 
@@ -21,6 +21,9 @@ export function AuthFlow() {
   const [error, setError] = useState<string>();
   const [registrationError, setRegistrationError] = useState<string>();
   const [secondsRemaining, setSecondsRemaining] = useState(0);
+  const companyNationalIdInlineError = requiresRegistration
+    ? getCompanyNationalIdInlineError(companyNationalId)
+    : undefined;
 
   useEffect(() => {
     if (secondsRemaining <= 0) {
@@ -65,6 +68,11 @@ export function AuthFlow() {
   }
 
   async function verifyOtp() {
+    if (companyNationalIdInlineError) {
+      setRegistrationError(companyNationalIdInlineError);
+      return;
+    }
+
     setLoading(true);
     setError(undefined);
     setRegistrationError(undefined);
@@ -123,6 +131,7 @@ export function AuthFlow() {
         canResend={secondsRemaining === 0}
         secondsRemaining={secondsRemaining}
         showRegistration={requiresRegistration}
+        canSubmit={!companyNationalIdInlineError}
         onCodeChange={setCode}
         onSubmit={verifyOtp}
         onResend={requestOtp}
@@ -138,6 +147,7 @@ export function AuthFlow() {
           companyContactFullName={companyContactFullName}
           companyContactNationalCode={companyContactNationalCode}
           error={registrationError}
+          companyNationalIdError={companyNationalIdInlineError}
           onCompanyNameChange={setCompanyName}
           onCompanyNationalIdChange={setCompanyNationalId}
           onCompanyContactFullNameChange={setCompanyContactFullName}

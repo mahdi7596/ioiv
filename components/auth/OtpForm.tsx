@@ -7,6 +7,7 @@ type OtpFormProps = {
   error?: string;
   loading?: boolean;
   canResend?: boolean;
+  canSubmit?: boolean;
   secondsRemaining: number;
   showRegistration?: boolean;
   children?: React.ReactNode;
@@ -21,6 +22,7 @@ export function OtpForm({
   error,
   loading,
   canResend,
+  canSubmit = true,
   secondsRemaining,
   showRegistration,
   children,
@@ -60,7 +62,7 @@ export function OtpForm({
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !canSubmit}
         className="button button--primary w-full"
       >
         {loading ? "در حال بررسی..." : "ورود به سامانه"}
