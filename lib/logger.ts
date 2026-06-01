@@ -23,11 +23,17 @@ function sanitize(value: unknown): unknown {
 
 function serializeError(error: unknown) {
   if (error instanceof Error) {
-    return {
+    const serialized: LogMetadata = {
       name: error.name,
       message: error.message,
       stack: error.stack,
     };
+
+    if ("cause" in error && error.cause !== undefined) {
+      serialized.cause = serializeError(error.cause);
+    }
+
+    return serialized;
   }
 
   return { message: String(error) };

@@ -1,6 +1,7 @@
 const ZARINPAL_PRODUCTION_URL = "https://payment.zarinpal.com";
 const ZARINPAL_SANDBOX_URL = "https://sandbox.zarinpal.com";
 const ZARINPAL_MERCHANT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ZARINPAL_NETWORK_RETRY_DELAYS_MS = [300, 900];
 
 function getBaseUrl() {
   return process.env.ZARINPAL_SANDBOX === "true" ? ZARINPAL_SANDBOX_URL : ZARINPAL_PRODUCTION_URL;
@@ -21,7 +22,7 @@ function getMerchantId() {
 }
 
 async function postZarinpal<T>(path: string, body: Record<string, unknown>) {
-  const response = await fetch(`${getBaseUrl()}${path}`, {
+  const response = await fetchWithNetworkRetry(`${getBaseUrl()}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -33,6 +34,34 @@ async function postZarinpal<T>(path: string, body: Record<string, unknown>) {
   }
 
   return payload.data as T;
+}
+
+async function fetchWithNetworkRetry(input: string, init: RequestInit) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= ZARINPAL_NETWORK_RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      return await fetch(input, init);
+    } catch (error) {
+      lastError = error;
+
+      if (!isTransientFetchError(error) || attempt === ZARINPAL_NETWORK_RETRY_DELAYS_MS.length) {
+        throw error;
+      }
+
+      await wait(ZARINPAL_NETWORK_RETRY_DELAYS_MS[attempt]);
+    }
+  }
+
+  throw lastError;
+}
+
+function isTransientFetchError(error: unknown) {
+  return error instanceof TypeError && error.message === "fetch failed";
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function sanitizeZarinpalError(errorPayload: unknown): unknown {

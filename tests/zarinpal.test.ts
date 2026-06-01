@@ -57,6 +57,31 @@ describe("zarinpal payment adapter", () => {
     });
   });
 
+  it("retries a transient fetch failure before returning the payment authority", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { authority: "A000000000000000000000000000000123456" } }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    const { requestZarinpalPayment } = await import("@/lib/payments/zarinpal");
+
+    await expect(
+      requestZarinpalPayment({
+        amountToman: 3000000,
+        description: "ثبت پرونده",
+        callbackUrl: "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1",
+        mobile: "09123456789",
+      }),
+    ).resolves.toEqual({
+      authority: "A000000000000000000000000000000123456",
+      paymentUrl: "https://sandbox.zarinpal.com/pg/StartPay/A000000000000000000000000000000123456",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("verifies production payments and returns the reference id", async () => {
     process.env.ZARINPAL_SANDBOX = "false";
     const fetchMock = vi.fn().mockResolvedValue({
