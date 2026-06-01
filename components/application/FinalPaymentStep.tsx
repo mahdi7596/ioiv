@@ -31,6 +31,7 @@ export function FinalPaymentStep({
 }: FinalPaymentStepProps) {
   const termsRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string>();
+  const [isPaymentLocked, setIsPaymentLocked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const canRetryIncompletePayment =
     canRetryPayment && latestPaymentStatus === "INITIATED" && !hasVerifiedPayment;
@@ -61,11 +62,13 @@ export function FinalPaymentStep({
     !hasChecklistErrors &&
     effectiveAcceptedTerms &&
     !isPending &&
+    !isPaymentLocked &&
     !hasBlockingWork &&
     allowPaymentAction;
 
   return (
     <div className="space-y-5">
+      <PaymentInteractionLock active={isPaymentLocked} />
       <div className="final-review" aria-live="polite">
         {readOnly && !canRetryIncompletePayment ? (
           <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
@@ -154,6 +157,7 @@ export function FinalPaymentStep({
               return;
             }
 
+            setIsPaymentLocked(true);
             startTransition(async () => {
               try {
                 showToast({
@@ -162,12 +166,14 @@ export function FinalPaymentStep({
                 });
                 const result = await startPayment(draft);
                 if (!result.ok) {
+                  setIsPaymentLocked(false);
                   setMessage(result.message);
                   showToast({ type: "error", message: result.message });
                   return;
                 }
                 window.location.assign(result.redirectTo);
               } catch (error) {
+                setIsPaymentLocked(false);
                 const errorMessage = error instanceof Error ? error.message : "شروع پرداخت ناموفق بود";
                 setMessage(errorMessage);
                 showToast({ type: "error", message: errorMessage });
@@ -187,6 +193,26 @@ export function FinalPaymentStep({
         </button>
       )}
       {message ? <p className="final-review__form-error">{message}</p> : null}
+    </div>
+  );
+}
+
+export function PaymentInteractionLock({ active }: { active: boolean }) {
+  if (!active) {
+    return null;
+  }
+
+  return (
+    <div
+      className="payment-interaction-lock"
+      role="dialog"
+      aria-modal="true"
+      aria-live="assertive"
+    >
+      <div className="payment-interaction-lock__panel">
+        <span className="payment-interaction-lock__spinner" aria-hidden="true" />
+        <p>در حال انتقال به درگاه پرداخت</p>
+      </div>
     </div>
   );
 }

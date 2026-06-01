@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { FinalPaymentStep } from "@/components/application/FinalPaymentStep";
+import { FinalPaymentStep, PaymentInteractionLock } from "@/components/application/FinalPaymentStep";
 import type { ApplicationDraft } from "@/components/application/types";
 
 vi.mock("@/lib/actions/payment", () => ({
@@ -46,5 +46,13 @@ describe("FinalPaymentStep", () => {
 
     expect(markup).toContain("disabled=\"\"");
     expect(markup).toContain("در حال بارگذاری فایل");
+  });
+
+  it("renders a full-screen lock while payment handoff is in progress", () => {
+    const markup = renderToStaticMarkup(<PaymentInteractionLock active />);
+
+    expect(markup).toContain("payment-interaction-lock");
+    expect(markup).toContain("aria-modal=\"true\"");
+    expect(markup).toContain("در حال انتقال به درگاه پرداخت");
   });
 });

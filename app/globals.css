@@ -1470,6 +1470,48 @@ textarea:focus-visible {
   padding: 14px;
 }
 
+.payment-interaction-lock {
+  align-items: center;
+  background: rgb(15 23 42 / 0.42);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 200;
+}
+
+.payment-interaction-lock__panel {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-text);
+  display: flex;
+  gap: 12px;
+  min-height: 56px;
+  padding: 14px 18px;
+}
+
+.payment-interaction-lock__panel p {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.payment-interaction-lock__spinner {
+  animation: payment-lock-spin 780ms linear infinite;
+  border: 3px solid rgb(242 126 35 / 0.22);
+  border-block-start-color: var(--color-secondary);
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 24px;
+  width: 24px;
+}
+
 .progress-bar {
   background: var(--color-surface-muted);
   border-radius: 999px;
@@ -1704,6 +1746,12 @@ textarea:focus-visible {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes payment-lock-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

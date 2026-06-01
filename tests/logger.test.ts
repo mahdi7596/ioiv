@@ -54,4 +54,30 @@ describe("logger", () => {
       }),
     );
   });
+
+  test("includes nested error causes for network failures", () => {
+    const error = new Error("fetch failed", {
+      cause: new Error("connect ETIMEDOUT"),
+    });
+    error.stack = "stack trace";
+
+    logger.error("payment_start_failed", error);
+
+    const payload = JSON.parse(vi.mocked(console.error).mock.calls[0][0] as string);
+
+    expect(payload).toMatchObject({
+      level: "error",
+      event: "payment_start_failed",
+      error: {
+        name: "Error",
+        message: "fetch failed",
+        stack: "stack trace",
+        cause: {
+          name: "Error",
+          message: "connect ETIMEDOUT",
+        },
+      },
+    });
+    expect(payload.error.cause.stack).toEqual(expect.any(String));
+  });
 });
