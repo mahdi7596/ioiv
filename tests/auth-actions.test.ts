@@ -1,6 +1,6 @@
 import { OtpPurpose, UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ActionError, requestOtp, verifyOtp } from "@/lib/actions/auth";
+import { requestOtp, verifyOtp } from "@/lib/actions/auth";
 
 const mocks = vi.hoisted(() => ({
   db: {
@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
     },
     otpCode: {
@@ -54,6 +55,7 @@ describe("auth actions", () => {
       role: UserRole.ADMIN,
     });
     mocks.db.user.findUnique.mockResolvedValue(null);
+    mocks.db.user.findFirst.mockResolvedValue(null);
     mocks.db.user.create.mockResolvedValue({ id: "user-1" });
     mocks.db.otpCode.findFirst.mockResolvedValue(null);
     mocks.db.otpCode.count.mockResolvedValue(0);
@@ -88,7 +90,7 @@ describe("auth actions", () => {
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).rejects.toMatchObject<ActionError>({ status: 429 });
+    ).rejects.toMatchObject({ status: 429 });
     expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
@@ -101,7 +103,7 @@ describe("auth actions", () => {
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).rejects.toMatchObject<ActionError>({ status: 429 });
+    ).rejects.toMatchObject({ status: 429 });
     expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
@@ -111,7 +113,7 @@ describe("auth actions", () => {
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).rejects.toMatchObject<ActionError>({
+    ).rejects.toMatchObject({
       status: 403,
       message: "دسترسی مدیریت برای این شماره فعال نیست",
     });
@@ -128,7 +130,7 @@ describe("auth actions", () => {
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).rejects.toMatchObject<ActionError>({
+    ).rejects.toMatchObject({
       status: 403,
       message: "دسترسی مدیریت برای این شماره فعال نیست",
     });
@@ -183,6 +185,64 @@ describe("auth actions", () => {
         companyContactFullName: "علی رضایی",
         companyContactNationalCode: "0012345678",
       },
+    });
+  });
+
+  it("rejects registration when the company national ID already belongs to another user", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({
+      id: "otp-1",
+      codeHash: "hashed-otp",
+    });
+    mocks.db.user.findUnique.mockResolvedValueOnce(null);
+    mocks.db.user.findFirst.mockResolvedValueOnce({ id: "existing-user" });
+
+    await expect(
+      verifyOtp({
+        mobile: "09123456789",
+        code: "1234",
+        mode: "user",
+        companyName: "شرکت نمونه",
+        companyNationalId: "۱۲۳۴۵۶۷۸۹۰۱",
+        companyContactFullName: "علی رضایی",
+        companyContactNationalCode: "0012345678",
+      }),
+    ).rejects.toMatchObject({
+      status: 409,
+      message: "این شناسه ملی شرکت قبلاً ثبت شده است",
+    });
+
+    expect(mocks.db.user.findFirst).toHaveBeenCalledWith({
+      where: { companyNationalId: "12345678901" },
+      select: { id: true },
+    });
+    expect(mocks.db.user.create).not.toHaveBeenCalled();
+  });
+
+  it("converts company national ID unique constraint failures to a duplicate registration error", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({
+      id: "otp-1",
+      codeHash: "hashed-otp",
+    });
+    mocks.db.user.findUnique.mockResolvedValueOnce(null);
+    mocks.db.user.findFirst.mockResolvedValueOnce(null);
+    mocks.db.user.create.mockRejectedValue({
+      code: "P2002",
+      meta: { target: ["companyNationalId"] },
+    });
+
+    await expect(
+      verifyOtp({
+        mobile: "09123456789",
+        code: "1234",
+        mode: "user",
+        companyName: "شرکت نمونه",
+        companyNationalId: "12345678901",
+        companyContactFullName: "علی رضایی",
+        companyContactNationalCode: "0012345678",
+      }),
+    ).rejects.toMatchObject({
+      status: 409,
+      message: "این شناسه ملی شرکت قبلاً ثبت شده است",
     });
   });
 });

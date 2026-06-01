@@ -43,6 +43,7 @@ describe("submission export", () => {
     expect(row["لیست بیمه بارگذاری شده"]).toBe("بله");
     expect(row["اظهارنامه مالیاتی تکمیل است"]).toBe("بله");
     expect(row["صورت مالی حسابرسی شده تکمیل است"]).toBe("بله");
+    expect(row["تراز کل و معین سال 1404 تکمیل است"]).toBe("بله");
   });
 
   it("creates CSV with UTF-8 BOM for Excel", () => {

@@ -64,7 +64,7 @@ function buildGroups(
     { key: "taxDeclarations", title: "اظهارنامه‌های مالیاتی", items: [] },
     { key: "financials", title: "صورت‌های مالی حسابرسی‌شده", items: [] },
     { key: "humanResources", title: "منابع انسانی", items: [] },
-    { key: "trialBalance", title: "تراز آزمایشی", items: [] },
+    { key: "trialBalance", title: "تراز آزمایشی سال 1404", items: [] },
     { key: "creditReports", title: "گزارش‌های اعتبارسنجی", items: [] },
     { key: "other", title: "سایر فایل‌ها", items: [] },
   ];
@@ -95,7 +95,7 @@ function buildGroups(
     }
 
     if (file.fieldKey === "trialBalance.generalLedger") {
-      pushGroupItem(groups, "trialBalance", { file, fieldLabel: "تراز کل" });
+      pushGroupItem(groups, "trialBalance", { file, fieldLabel: "تراز کل سال 1404" });
       continue;
     }
 
@@ -105,7 +105,7 @@ function buildGroups(
     }
 
     if (file.fieldKey === "trialBalance.subsidiaryLedger") {
-      pushGroupItem(groups, "trialBalance", { file, fieldLabel: "تراز معین" });
+      pushGroupItem(groups, "trialBalance", { file, fieldLabel: "تراز معین سال 1404" });
       continue;
     }
 

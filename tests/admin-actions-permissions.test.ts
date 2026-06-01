@@ -1,6 +1,5 @@
 import { ApplicationStatus, UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ActionError } from "@/lib/actions/auth";
 
 const mocks = vi.hoisted(() => ({
   requireSession: vi.fn(),
@@ -112,7 +111,7 @@ describe("admin action permissions", () => {
   it("rejects entry viewer status changes before loading the application", async () => {
     const { changeSubmissionStatus } = await import("@/lib/actions/admin");
 
-    await expect(changeSubmissionStatus(statusFormData())).rejects.toMatchObject<ActionError>({
+    await expect(changeSubmissionStatus(statusFormData())).rejects.toMatchObject({
       status: 403,
     });
     expect(mocks.db.application.findUnique).not.toHaveBeenCalled();
@@ -125,7 +124,7 @@ describe("admin action permissions", () => {
     const formData = new FormData();
     formData.set("applicationId", "app-1");
 
-    await expect(replaceValidationCertificate(formData)).rejects.toMatchObject<ActionError>({
+    await expect(replaceValidationCertificate(formData)).rejects.toMatchObject({
       status: 403,
     });
     expect(mocks.db.application.findUnique).not.toHaveBeenCalled();

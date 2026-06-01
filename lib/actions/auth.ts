@@ -12,6 +12,7 @@ const OTP_TTL_MS = 2 * 60 * 1000;
 const OTP_REQUEST_COOLDOWN_MS = 90 * 1000;
 const OTP_REQUEST_WINDOW_MS = 60 * 60 * 1000;
 const OTP_MAX_REQUESTS_PER_WINDOW = 5;
+const DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE = "این شناسه ملی شرکت قبلاً ثبت شده است";
 
 export class ActionError extends Error {
   constructor(
@@ -28,6 +29,21 @@ function otpPurposeForMode(mode: "user" | "admin") {
 
 function generateOtp() {
   return randomInt(1000, 10000).toString();
+}
+
+function isCompanyNationalIdUniqueError(error: unknown) {
+  if (!error || typeof error !== "object" || !("code" in error)) {
+    return false;
+  }
+
+  const candidate = error as { code?: unknown; meta?: { target?: unknown } };
+  const target = candidate.meta?.target;
+  return (
+    candidate.code === "P2002" &&
+    (Array.isArray(target)
+      ? target.includes("companyNationalId")
+      : target === "User_companyNationalId_key")
+  );
 }
 
 async function enforceOtpRequestLimits(mobile: string, purpose: OtpPurpose, now: Date) {
@@ -203,17 +219,35 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
     return { next: "register" };
   }
 
-  const user =
-    existingUser ??
-    (await db.user.create({
-      data: {
-        mobile,
-        companyName,
-        companyNationalId,
-        companyContactFullName,
-        companyContactNationalCode,
-      },
-    }));
+  let user = existingUser;
+
+  if (!user) {
+    const duplicateNationalId = await db.user.findFirst({
+      where: { companyNationalId },
+      select: { id: true },
+    });
+
+    if (duplicateNationalId) {
+      throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
+    }
+
+    try {
+      user = await db.user.create({
+        data: {
+          mobile,
+          companyName,
+          companyNationalId,
+          companyContactFullName,
+          companyContactNationalCode,
+        },
+      });
+    } catch (error) {
+      if (isCompanyNationalIdUniqueError(error)) {
+        throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
+      }
+      throw error;
+    }
+  }
 
   await db.otpCode.update({
     where: { id: otp.id },

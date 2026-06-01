@@ -85,13 +85,13 @@ const seedFiles = [
     id: "seed-file-general-ledger",
     fieldKey: "trialBalance.generalLedger",
     originalName: "general-ledger-trial-balance.pdf",
-    label: "تراز کل",
+    label: "تراز کل سال 1404",
   },
   {
     id: "seed-file-subsidiary-ledger",
     fieldKey: "trialBalance.subsidiaryLedger",
     originalName: "subsidiary-ledger-trial-balance.pdf",
-    label: "تراز معین",
+    label: "تراز معین سال 1404",
   },
   {
     id: "seed-file-credit-company",
