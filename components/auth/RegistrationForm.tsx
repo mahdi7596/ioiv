@@ -2,7 +2,7 @@
 
 import { keepAsciiDigits } from "@/lib/input/digits";
 
-const COMPANY_NATIONAL_ID_LENGTH_ERROR = "شناسه ملی شرکت باید ۱۰ یا ۱۱ رقم باشد";
+const COMPANY_NATIONAL_ID_LENGTH_ERROR = "شناسه ملی شرکت باید ۱۱ رقم باشد";
 
 type RegistrationFormProps = {
   companyName: string;
@@ -24,7 +24,7 @@ export function getCompanyNationalIdInlineError(value: string) {
     return undefined;
   }
 
-  return /^\d{10,11}$/.test(digits) ? undefined : COMPANY_NATIONAL_ID_LENGTH_ERROR;
+  return /^\d{11}$/.test(digits) ? undefined : COMPANY_NATIONAL_ID_LENGTH_ERROR;
 }
 
 export function RegistrationForm({

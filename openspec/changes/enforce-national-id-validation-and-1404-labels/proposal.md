@@ -5,7 +5,7 @@ Applicants can currently register with repeated or incorrectly sized `شناسه
 ## What Changes
 
 - Add registration-time validation that rejects duplicate `شناسه ملی` values before a new registration is created.
-- Validate `شناسه ملی` length on the frontend and backend, allowing only 10 or 11 digits and showing an inline frontend error when the value is shorter or longer.
+- Validate `شناسه ملی` length on the frontend and backend, allowing only 11 digits and showing an inline frontend error when the value is shorter or longer.
 - Normalize national ID input to digits-only before validating uniqueness and length, so formatted values cannot bypass duplicate detection.
 - Update the `تراز کل و معین` user-facing labels/copy to explicitly mention year `1404`.
 - Preserve existing registration and application flows except for the new validation failures.
@@ -13,7 +13,7 @@ Applicants can currently register with repeated or incorrectly sized `شناسه
 ## Capabilities
 
 ### New Capabilities
-- `national-id-registration-validation`: Covers registration-time uniqueness and 10/11 digit validation for `شناسه ملی`.
+- `national-id-registration-validation`: Covers registration-time uniqueness and 11-digit validation for `شناسه ملی`.
 - `application-1404-document-labels`: Covers 1404 year labeling for `تراز کل و معین` document intake.
 
 ### Modified Capabilities
