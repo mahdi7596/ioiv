@@ -231,6 +231,15 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
       throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
     }
 
+    const duplicateApplicationNationalId = await db.application.findFirst({
+      where: { companyNationalId },
+      select: { id: true },
+    });
+
+    if (duplicateApplicationNationalId) {
+      throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
+    }
+
     try {
       user = await db.user.create({
         data: {

@@ -64,7 +64,7 @@ function buildGroups(
     { key: "taxDeclarations", title: "اظهارنامه‌های مالیاتی", items: [] },
     { key: "financials", title: "صورت‌های مالی حسابرسی‌شده", items: [] },
     { key: "humanResources", title: "منابع انسانی", items: [] },
-    { key: "trialBalance", title: "تراز آزمایشی سال 1404", items: [] },
+    { key: "trialBalance", title: "تراز کل و معین سال 1404", items: [] },
     { key: "creditReports", title: "گزارش‌های اعتبارسنجی", items: [] },
     { key: "other", title: "سایر فایل‌ها", items: [] },
   ];

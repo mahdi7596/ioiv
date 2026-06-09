@@ -5,16 +5,17 @@
 
 ## 2. National ID Validation
 
-- [x] 2.1 Update `companyNationalIdSchema` to normalize digits and accept exactly 10 or 11 digits with a Persian validation message.
+- [x] 2.1 Update `companyNationalIdSchema` to normalize digits and accept exactly 11 digits with a Persian validation message.
 - [x] 2.2 Update registration form state handling so users can enter/paste more than 11 digits and see the too-long inline error instead of silently clipping input.
-- [x] 2.3 Show an inline frontend error next to `شناسه ملی شرکت` when the normalized value has fewer than 10 or more than 11 digits.
+- [x] 2.3 Show an inline frontend error next to `شناسه ملی شرکت` when the normalized value is fewer or more than 11 digits.
 - [x] 2.4 Block registration submission on the frontend while the national ID length is invalid.
-- [x] 2.5 Add or update validation tests for 10-digit, 11-digit, short, long, and Persian/Arabic-digit national ID inputs.
+- [x] 2.5 Add or update validation tests for 11-digit, short, long, and Persian/Arabic-digit national ID inputs.
 
 ## 3. National ID Uniqueness
 
 - [x] 3.1 Add a normalized duplicate lookup before creating a new user during OTP verification registration.
 - [x] 3.2 Return a Persian duplicate-national-ID error when another user already has the submitted `شناسه ملی شرکت`.
+- [x] 3.2.1 Return the same Persian duplicate-national-ID error when an existing application already has the submitted `شناسه ملی شرکت`.
 - [x] 3.3 Add a Prisma/database migration that enforces uniqueness for non-null `User.companyNationalId` after duplicate production data is resolved.
 - [x] 3.4 Catch database unique-constraint failures during registration and convert them to the same Persian duplicate-national-ID error.
 - [x] 3.5 Add auth action tests covering duplicate lookup and concurrent/constraint-level duplicate rejection.

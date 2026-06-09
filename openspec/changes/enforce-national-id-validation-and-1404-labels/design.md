@@ -1,15 +1,15 @@
 ## Context
 
-The application is a Persian RTL Next.js App Router system with OTP-based user registration, Prisma/PostgreSQL persistence, and an application wizard for document upload and payment. Registration currently stores `User.companyNationalId`, but uniqueness is not guaranteed at the database level and duplicate values have already been observed. Validation currently normalizes Persian/Arabic digits to ASCII digits, but the company national ID rule is exactly 11 digits while the new business rule accepts 10 or 11 digits.
+The application is a Persian RTL Next.js App Router system with OTP-based user registration, Prisma/PostgreSQL persistence, and an application wizard for document upload and payment. Registration currently stores `User.companyNationalId`, but uniqueness is not guaranteed at the database level and duplicate values have already been observed. Validation currently normalizes Persian/Arabic digits to ASCII digits, and the company national ID rule is exactly 11 digits.
 
 The `تراز کل و معین` document step currently labels the required uploads as `تراز کل` and `تراز معین`. The client wants this section to explicitly ask for year `1404`.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Accept only 10- or 11-digit `شناسه ملی شرکت` values after digit normalization.
-- Show immediate inline frontend validation for national IDs shorter than 10 digits or longer than 11 digits.
-- Reject registration when the normalized national ID already belongs to another user.
+- Accept only 11-digit `شناسه ملی شرکت` values after digit normalization.
+- Show immediate inline frontend validation for national IDs shorter or longer than 11 digits.
+- Reject registration when the normalized national ID already belongs to another user or existing application record.
 - Add a database-level uniqueness guard after existing duplicate records are reviewed or cleaned up.
 - Update trial-balance user-facing labels/copy to mention `1404`.
 
@@ -43,12 +43,12 @@ The `تراز کل و معین` document step currently labels the required uplo
 
 - Existing duplicate `companyNationalId` rows block a unique index migration -> run a duplicate report before migration and resolve duplicates deliberately.
 - Concurrent registration attempts could still race before the unique index is deployed -> catch database unique violations and return the same Persian duplicate error.
-- Allowing both 10 and 11 digits may accept values that are not official company IDs -> this follows the client request and avoids adding unrequested checksum rules.
+- Enforcing only 11 digits may reject older 10-digit test data -> this follows the current business rule and avoids ambiguous company identities.
 - Clipping the frontend input at 11 digits hides the "too long" error -> allow typing/pasting longer values long enough to show the inline validation message, while still normalizing to digits.
 
 ## Migration Plan
 
-1. Add/update validation tests for 10-, 11-, short-, long-, Persian-digit, and duplicate national ID cases.
+1. Add/update validation tests for 11-digit, short, long, Persian-digit, and duplicate national ID cases.
 2. Add a duplicate detection query for current `User.companyNationalId` values and review production duplicates before applying the unique index.
 3. Update registration validation and duplicate checks.
 4. Add the database uniqueness constraint or migration once duplicates are resolved.
