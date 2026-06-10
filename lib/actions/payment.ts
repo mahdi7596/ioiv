@@ -10,15 +10,13 @@ import {
   createSubmissionReceivedSmsMessage,
 } from "@/lib/sms/messages";
 import { applicationDraftSchema, finalSubmissionSchema } from "@/lib/validations/application";
-import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
-import { requestZarinpalPayment } from "@/lib/payments/zarinpal";
 
 type PaymentStartResult =
   | { ok: true; redirectTo: string }
   | { ok: false; message: string };
 
-const PAYMENT_START_FAILED_MESSAGE = "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.";
 const PAYMENT_VALIDATION_FAILED_MESSAGE = "مدارک الزامی پیش از پرداخت کامل نیست";
+const PAYMENT_DISABLED_MESSAGE = "پرداخت برای پرونده‌های پرداخت‌نشده در حال حاضر غیرفعال است";
 
 export async function startPayment(input: unknown): Promise<PaymentStartResult> {
   const session = await requireSession("user");
@@ -91,86 +89,10 @@ export async function startPayment(input: unknown): Promise<PaymentStartResult> 
     return { ok: false, message: "پرداخت قبلاً ثبت شده است" };
   }
 
-  if (application.status === ApplicationStatus.PENDING_PAYMENT) {
-    await db.payment.updateMany({
-      where: {
-        applicationId: application.id,
-        status: PaymentStatus.INITIATED,
-      },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { reason: "payment_retry_started" },
-      },
-    });
-  }
-
-  await db.application.update({
-    where: { id: application.id },
-    data: persistedDraft,
-  });
-
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
-  const payment = await db.payment.create({
-    data: {
-      applicationId: application.id,
-      amountToman: PAYMENT_AMOUNT_TOMAN,
-      status: PaymentStatus.INITIATED,
-    },
-  });
-
-  logger.info("payment_start_requested", {
+  logger.info("payment_start_rejected_disabled", {
     applicationId: application.id,
-    paymentId: payment.id,
-    amountToman: PAYMENT_AMOUNT_TOMAN,
   });
-
-  let zarinpal: { authority: string; paymentUrl: string };
-
-  try {
-    zarinpal = await requestZarinpalPayment({
-      amountToman: PAYMENT_AMOUNT_TOMAN,
-      description: "پرداخت ثبت پرونده سامانه اعتبار سنجی سانا",
-      callbackUrl: `${appUrl}/api/payment/callback?paymentId=${payment.id}`,
-      mobile: application.mobile,
-    });
-  } catch (error) {
-    logger.error("payment_start_failed", error, {
-      applicationId: application.id,
-      paymentId: payment.id,
-    });
-    await db.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { error: error instanceof Error ? error.message : "payment request failed" },
-      },
-    });
-    if (application.status === ApplicationStatus.PENDING_PAYMENT) {
-      await db.application.update({
-        where: { id: application.id },
-        data: { status: ApplicationStatus.DRAFT },
-      });
-    }
-    return { ok: false, message: PAYMENT_START_FAILED_MESSAGE };
-  }
-
-  await db.$transaction([
-    db.application.update({
-      where: { id: application.id },
-      data: { status: ApplicationStatus.PENDING_PAYMENT },
-    }),
-    db.payment.update({
-      where: { id: payment.id },
-      data: { authority: zarinpal.authority },
-    }),
-  ]);
-
-  logger.info("payment_start_succeeded", {
-    applicationId: application.id,
-    paymentId: payment.id,
-  });
-
-  return { ok: true, redirectTo: zarinpal.paymentUrl };
+  return { ok: false, message: PAYMENT_DISABLED_MESSAGE };
 }
 
 export async function notifyAdminOfSubmission(applicationId: string) {

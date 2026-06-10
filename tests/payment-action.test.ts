@@ -1,6 +1,5 @@
 import { ApplicationStatus, PaymentStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
 
 const mocks = vi.hoisted(() => ({
   requireSession: vi.fn(),
@@ -66,43 +65,16 @@ describe("payment action", () => {
     });
   });
 
-  it("starts payment only after server-side final validation passes", async () => {
+  it("does not start a new payment while payments are disabled", async () => {
     const { startPayment } = await import("@/lib/actions/payment");
 
     await expect(startPayment(completeApplication())).resolves.toEqual({
-      ok: true,
-      redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_1",
+      ok: false,
+      message: "پرداخت برای پرونده‌های پرداخت‌نشده در حال حاضر غیرفعال است",
     });
 
-    expect(mocks.db.application.update).toHaveBeenCalledWith({
-      where: { id: "app_1" },
-      data: expect.objectContaining({
-        taxDeclarations: [{ year: "1402", file: { fileId: "file_1", name: "doc.pdf" } }],
-        financials: [{ year: "1402", file: { fileId: "file_1", name: "doc.pdf" } }],
-      }),
-    });
-    expect(mocks.db.payment.create).toHaveBeenCalledWith({
-      data: {
-        applicationId: "app_1",
-        amountToman: PAYMENT_AMOUNT_TOMAN,
-        status: PaymentStatus.INITIATED,
-      },
-    });
-    expect(mocks.requestZarinpalPayment).toHaveBeenCalledWith({
-      amountToman: PAYMENT_AMOUNT_TOMAN,
-      description: "پرداخت ثبت پرونده سامانه اعتبار سنجی سانا",
-      callbackUrl: "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1",
-      mobile: "09123456789",
-    });
-    expect(mocks.db.$transaction).toHaveBeenCalledOnce();
-    expect(mocks.db.application.update).toHaveBeenCalledWith({
-      where: { id: "app_1" },
-      data: { status: ApplicationStatus.PENDING_PAYMENT },
-    });
-    expect(mocks.db.payment.update).toHaveBeenCalledWith({
-      where: { id: "pay_1" },
-      data: { authority: "authority_1" },
-    });
+    expect(mocks.db.payment.create).not.toHaveBeenCalled();
+    expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
   });
 
   it("does not create a payment request when final validation fails", async () => {
@@ -121,28 +93,6 @@ describe("payment action", () => {
     });
     expect(mocks.db.payment.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
-  });
-
-  it("marks the initiated payment failed when Zarinpal request fails without changing application status", async () => {
-    mocks.requestZarinpalPayment.mockRejectedValue(new Error("provider down"));
-    const { startPayment } = await import("@/lib/actions/payment");
-
-    await expect(startPayment(completeApplication())).resolves.toEqual({
-      ok: false,
-      message: "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.",
-    });
-
-    expect(mocks.db.payment.update).toHaveBeenCalledWith({
-      where: { id: "pay_1" },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { error: "provider down" },
-      },
-    });
-    expect(mocks.db.application.update).not.toHaveBeenCalledWith({
-      where: { id: "app_1" },
-      data: { status: ApplicationStatus.DRAFT },
-    });
   });
 
   it("submits corrections without repayment when a needs-edit application already has verified payment", async () => {
@@ -167,7 +117,7 @@ describe("payment action", () => {
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
   });
 
-  it("retries a pending payment by failing previous initiated attempts and creating a fresh request", async () => {
+  it("does not retry a pending payment while payments are disabled", async () => {
     mocks.db.application.findFirst.mockResolvedValue(
       completeApplication({
         status: ApplicationStatus.PENDING_PAYMENT,
@@ -177,27 +127,13 @@ describe("payment action", () => {
     const { startPayment } = await import("@/lib/actions/payment");
 
     await expect(startPayment(completeApplication())).resolves.toEqual({
-      ok: true,
-      redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_1",
+      ok: false,
+      message: "پرداخت برای پرونده‌های پرداخت‌نشده در حال حاضر غیرفعال است",
     });
 
-    expect(mocks.db.payment.updateMany).toHaveBeenCalledWith({
-      where: {
-        applicationId: "app_1",
-        status: PaymentStatus.INITIATED,
-      },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { reason: "payment_retry_started" },
-      },
-    });
-    expect(mocks.db.payment.create).toHaveBeenCalledWith({
-      data: {
-        applicationId: "app_1",
-        amountToman: PAYMENT_AMOUNT_TOMAN,
-        status: PaymentStatus.INITIATED,
-      },
-    });
+    expect(mocks.db.payment.updateMany).not.toHaveBeenCalled();
+    expect(mocks.db.payment.create).not.toHaveBeenCalled();
+    expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
   });
 
   it("does not create another payment when a verified payment already exists", async () => {
@@ -216,33 +152,5 @@ describe("payment action", () => {
 
     expect(mocks.db.payment.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
-  });
-
-  it("returns a pending-payment retry to draft when the fresh gateway request fails", async () => {
-    mocks.db.application.findFirst.mockResolvedValue(
-      completeApplication({
-        status: ApplicationStatus.PENDING_PAYMENT,
-        payments: [{ id: "old_pay", status: PaymentStatus.INITIATED }],
-      }),
-    );
-    mocks.requestZarinpalPayment.mockRejectedValue(new Error("provider down"));
-    const { startPayment } = await import("@/lib/actions/payment");
-
-    await expect(startPayment(completeApplication())).resolves.toEqual({
-      ok: false,
-      message: "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.",
-    });
-
-    expect(mocks.db.payment.update).toHaveBeenCalledWith({
-      where: { id: "pay_1" },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { error: "provider down" },
-      },
-    });
-    expect(mocks.db.application.update).toHaveBeenCalledWith({
-      where: { id: "app_1" },
-      data: { status: ApplicationStatus.DRAFT },
-    });
   });
 });

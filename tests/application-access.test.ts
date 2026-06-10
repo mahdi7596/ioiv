@@ -17,11 +17,11 @@ describe("application access", () => {
     }
   });
 
-  test("pending payment is viewable and retryable but not document-editable", () => {
+  test("pending payment is viewable but not retryable or document-editable", () => {
     expect(getApplicationAccess(ApplicationStatus.PENDING_PAYMENT)).toEqual({
       canView: true,
       canEdit: false,
-      canRetryPayment: true,
+      canRetryPayment: false,
     });
   });
 

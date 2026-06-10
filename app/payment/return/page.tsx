@@ -23,7 +23,7 @@ export default async function PaymentReturnPage({ searchParams }: PaymentReturnP
           <p>
             {isSuccess
               ? "پرونده شما در صف بررسی قرار گرفت. تا چند لحظه دیگر به داشبورد منتقل می‌شوید."
-              : "پرداخت تایید نشد یا از درگاه خارج شدید. می‌توانید دوباره پرداخت را انجام دهید."}
+              : "پرداخت تایید نشد یا از درگاه خارج شدید. شروع دوباره پرداخت در حال حاضر غیرفعال است."}
           </p>
         </div>
         <Link href="/dashboard" className="button button--primary">

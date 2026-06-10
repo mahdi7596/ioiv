@@ -7,10 +7,7 @@ type OtpFormProps = {
   error?: string;
   loading?: boolean;
   canResend?: boolean;
-  canSubmit?: boolean;
   secondsRemaining: number;
-  showRegistration?: boolean;
-  children?: React.ReactNode;
   onCodeChange: (code: string) => void;
   onSubmit: () => void;
   onResend: () => void;
@@ -22,10 +19,7 @@ export function OtpForm({
   error,
   loading,
   canResend,
-  canSubmit = true,
   secondsRemaining,
-  showRegistration,
-  children,
   onCodeChange,
   onSubmit,
   onResend,
@@ -39,8 +33,6 @@ export function OtpForm({
         onSubmit();
       }}
     >
-      {showRegistration ? children : null}
-
       <div className="field" data-invalid={error ? "true" : undefined}>
         <label htmlFor="otp">
           کد تایید <span className="text-red-600">*</span>
@@ -62,7 +54,7 @@ export function OtpForm({
 
       <button
         type="submit"
-        disabled={loading || !canSubmit}
+        disabled={loading}
         className="button button--primary w-full"
       >
         {loading ? "در حال بررسی..." : "ورود به سامانه"}
