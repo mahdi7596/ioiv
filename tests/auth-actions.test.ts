@@ -163,121 +163,53 @@ describe("auth actions", () => {
     expect(mocks.db.user.findUnique).not.toHaveBeenCalled();
   });
 
-  it("stores required registration fields when creating a user after OTP verification", async () => {
+  it("allows existing users to verify an OTP and log in", async () => {
     mocks.db.otpCode.findFirst.mockResolvedValue({
       id: "otp-1",
       codeHash: "hashed-otp",
     });
+    mocks.db.user.findUnique.mockResolvedValueOnce({ id: "user-1" });
 
     await expect(
       verifyOtp({
         mobile: "09123456789",
         code: "1234",
         mode: "user",
-        companyName: "شرکت نمونه",
-        companyNationalId: "12345678901",
-        companyContactFullName: "علی رضایی",
-        companyContactNationalCode: "0012345678",
       }),
     ).resolves.toEqual({ redirectTo: "/dashboard" });
 
-    expect(mocks.db.user.create).toHaveBeenCalledWith({
-      data: {
+    expect(mocks.createSession).toHaveBeenCalledWith({ subjectId: "user-1", kind: "user" });
+    expect(mocks.db.user.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects OTP verification for unregistered users without creating an account", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({
+      id: "otp-1",
+      codeHash: "hashed-otp",
+    });
+
+    await expect(
+      verifyOtp({
         mobile: "09123456789",
+        code: "1234",
+        mode: "user",
         companyName: "شرکت نمونه",
         companyNationalId: "12345678901",
         companyContactFullName: "علی رضایی",
         companyContactNationalCode: "0012345678",
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      message: "ثبت‌نام شرکت‌های جدید در حال حاضر غیرفعال است",
+    });
+
+    expect(mocks.db.otpCode.update).toHaveBeenCalledWith({
+      where: { id: "otp-1" },
+      data: {
+        consumedAt: new Date("2026-04-29T10:00:00.000Z"),
       },
     });
-  });
-
-  it("rejects registration when the company national ID already belongs to another user", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      id: "otp-1",
-      codeHash: "hashed-otp",
-    });
-    mocks.db.user.findUnique.mockResolvedValueOnce(null);
-    mocks.db.user.findFirst.mockResolvedValueOnce({ id: "existing-user" });
-
-    await expect(
-      verifyOtp({
-        mobile: "09123456789",
-        code: "1234",
-        mode: "user",
-        companyName: "شرکت نمونه",
-        companyNationalId: "۱۲۳۴۵۶۷۸۹۰۱",
-        companyContactFullName: "علی رضایی",
-        companyContactNationalCode: "0012345678",
-      }),
-    ).rejects.toMatchObject({
-      status: 409,
-      message: "این شناسه ملی شرکت قبلاً ثبت شده است",
-    });
-
-    expect(mocks.db.user.findFirst).toHaveBeenCalledWith({
-      where: { companyNationalId: "12345678901" },
-      select: { id: true },
-    });
     expect(mocks.db.user.create).not.toHaveBeenCalled();
-  });
-
-  it("rejects registration when the company national ID already exists in application records", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      id: "otp-1",
-      codeHash: "hashed-otp",
-    });
-    mocks.db.user.findUnique.mockResolvedValueOnce(null);
-    mocks.db.user.findFirst.mockResolvedValueOnce(null);
-    mocks.db.application.findFirst.mockResolvedValueOnce({ id: "existing-application" });
-
-    await expect(
-      verifyOtp({
-        mobile: "09123456789",
-        code: "1234",
-        mode: "user",
-        companyName: "شرکت نمونه",
-        companyNationalId: "12345678901",
-        companyContactFullName: "علی رضایی",
-        companyContactNationalCode: "0012345678",
-      }),
-    ).rejects.toMatchObject({
-      status: 409,
-      message: "این شناسه ملی شرکت قبلاً ثبت شده است",
-    });
-
-    expect(mocks.db.application.findFirst).toHaveBeenCalledWith({
-      where: { companyNationalId: "12345678901" },
-      select: { id: true },
-    });
-    expect(mocks.db.user.create).not.toHaveBeenCalled();
-  });
-
-  it("converts company national ID unique constraint failures to a duplicate registration error", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      id: "otp-1",
-      codeHash: "hashed-otp",
-    });
-    mocks.db.user.findUnique.mockResolvedValueOnce(null);
-    mocks.db.user.findFirst.mockResolvedValueOnce(null);
-    mocks.db.user.create.mockRejectedValue({
-      code: "P2002",
-      meta: { target: ["companyNationalId"] },
-    });
-
-    await expect(
-      verifyOtp({
-        mobile: "09123456789",
-        code: "1234",
-        mode: "user",
-        companyName: "شرکت نمونه",
-        companyNationalId: "12345678901",
-        companyContactFullName: "علی رضایی",
-        companyContactNationalCode: "0012345678",
-      }),
-    ).rejects.toMatchObject({
-      status: 409,
-      message: "این شناسه ملی شرکت قبلاً ثبت شده است",
-    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
   });
 });

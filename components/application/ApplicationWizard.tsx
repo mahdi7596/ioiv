@@ -26,9 +26,7 @@ type ApplicationWizardProps = {
   initialStep: number;
   initialDraft: ApplicationDraft;
   readOnly?: boolean;
-  canRetryPayment?: boolean;
   hasVerifiedPayment?: boolean;
-  latestPaymentStatus?: string;
 };
 
 export function ApplicationWizard({
@@ -36,9 +34,7 @@ export function ApplicationWizard({
   initialStep,
   initialDraft,
   readOnly,
-  canRetryPayment = false,
   hasVerifiedPayment = false,
-  latestPaymentStatus,
 }: ApplicationWizardProps) {
   const boundedInitialStep = Math.min(steps.length, Math.max(1, initialStep));
   const [currentStep, setCurrentStep] = useState(boundedInitialStep);
@@ -136,9 +132,7 @@ export function ApplicationWizard({
               draft={draft}
               acceptedTerms={acceptedTerms}
               readOnly={readOnly}
-              canRetryPayment={canRetryPayment}
               hasVerifiedPayment={hasVerifiedPayment}
-              latestPaymentStatus={latestPaymentStatus}
               isSavingDraft={isPending}
               isUploading={Boolean(uploadingKey)}
               onAcceptedTermsChange={setAcceptedTerms}

@@ -6,13 +6,13 @@ import type { ApplicationDraft } from "./types";
 import { finalSubmissionSchema } from "@/lib/validations/application";
 import { showToast } from "@/components/ui/toast";
 
+const PAYMENT_DISABLED_MESSAGE = "پرداخت برای پرونده‌های پرداخت‌نشده در حال حاضر غیرفعال است";
+
 type FinalPaymentStepProps = {
   draft: ApplicationDraft;
   acceptedTerms: boolean;
   readOnly?: boolean;
-  canRetryPayment?: boolean;
   hasVerifiedPayment?: boolean;
-  latestPaymentStatus?: string;
   isSavingDraft?: boolean;
   isUploading?: boolean;
   onAcceptedTermsChange: (accepted: boolean) => void;
@@ -22,9 +22,7 @@ export function FinalPaymentStep({
   draft,
   acceptedTerms,
   readOnly,
-  canRetryPayment = false,
   hasVerifiedPayment = false,
-  latestPaymentStatus,
   isSavingDraft = false,
   isUploading = false,
   onAcceptedTermsChange,
@@ -33,12 +31,11 @@ export function FinalPaymentStep({
   const [message, setMessage] = useState<string>();
   const [isPaymentLocked, setIsPaymentLocked] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const canRetryIncompletePayment =
-    canRetryPayment && latestPaymentStatus === "INITIATED" && !hasVerifiedPayment;
-  const allowPaymentAction = !readOnly || canRetryIncompletePayment;
-  const requiresPaymentConfirmation = !hasVerifiedPayment && !canRetryIncompletePayment;
+  const paymentsClosedForUnpaid = !hasVerifiedPayment;
+  const allowPaymentAction = !readOnly;
+  const requiresPaymentConfirmation = !paymentsClosedForUnpaid && !hasVerifiedPayment;
   const effectiveAcceptedTerms =
-    hasVerifiedPayment || canRetryIncompletePayment || acceptedTerms;
+    hasVerifiedPayment || paymentsClosedForUnpaid || acceptedTerms;
   const checklist = createFinalReviewChecklist(
     draft,
     effectiveAcceptedTerms,
@@ -56,8 +53,10 @@ export function FinalPaymentStep({
       ? "در حال ذخیره اطلاعات، لطفاً چند لحظه صبر کنید."
       : undefined;
   const hasBlockingWork = Boolean(blockingWorkMessage);
-  const isPaymentReady = validation.success && !hasChecklistErrors && effectiveAcceptedTerms;
+  const isPaymentReady =
+    !paymentsClosedForUnpaid && validation.success && !hasChecklistErrors && effectiveAcceptedTerms;
   const canStartPayment =
+    !paymentsClosedForUnpaid &&
     validation.success &&
     !hasChecklistErrors &&
     effectiveAcceptedTerms &&
@@ -70,15 +69,10 @@ export function FinalPaymentStep({
     <div className="space-y-5">
       <PaymentInteractionLock active={isPaymentLocked} />
       <div className="final-review" aria-live="polite">
-        {readOnly && !canRetryIncompletePayment ? (
+        {readOnly ? (
           <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
             پرونده ثبت نهایی شده است. تا زمانی که مدیر وضعیت را به نیازمند اصلاح تغییر ندهد، امکان
             تغییر اطلاعات یا پرداخت دوباره وجود ندارد.
-          </div>
-        ) : canRetryIncompletePayment ? (
-          <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
-            پرونده در انتظار نتیجه درگاه است. اگر پرداخت را کامل نکرده‌اید یا از درگاه خارج
-            شده‌اید، می‌توانید دوباره به درگاه پرداخت بروید.
           </div>
         ) : hasVerifiedPayment && !errorItems.length ? (
           <div className="final-review__notice final-review__notice--success" role="status">
@@ -102,6 +96,10 @@ export function FinalPaymentStep({
               </ul>
             </section>
           ))
+        ) : paymentsClosedForUnpaid ? (
+          <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
+            {PAYMENT_DISABLED_MESSAGE}
+          </div>
         ) : (
           <div className="final-review__notice final-review__notice--success" role="status">
             {hasVerifiedPayment
@@ -111,7 +109,7 @@ export function FinalPaymentStep({
         )}
       </div>
 
-      {readOnly || hasVerifiedPayment || canRetryIncompletePayment ? null : (
+      {readOnly || hasVerifiedPayment || paymentsClosedForUnpaid ? null : (
         <label
           className="payment-acknowledgement"
           data-invalid={!acceptedTerms ? "true" : undefined}
@@ -127,9 +125,13 @@ export function FinalPaymentStep({
         </label>
       )}
 
-      {(readOnly && !canRetryIncompletePayment) || hasVerifiedPayment ? null : blockingWorkMessage ? (
+      {readOnly ? null : blockingWorkMessage ? (
         <div className="final-review__notice" role="status">
           {blockingWorkMessage}
+        </div>
+      ) : hasVerifiedPayment ? null : paymentsClosedForUnpaid ? (
+        <div className="final-review__notice" role="status">
+          {PAYMENT_DISABLED_MESSAGE}
         </div>
       ) : !isPaymentReady ? (
         <div className="final-review__notice" role="status">
@@ -137,9 +139,7 @@ export function FinalPaymentStep({
         </div>
       ) : (
         <div className="final-review__notice final-review__notice--success" role="status">
-          {canRetryIncompletePayment
-            ? "پرداخت آماده تلاش دوباره است."
-            : "همه موارد تکمیل است و پرداخت آماده شروع است."}
+          همه موارد تکمیل است و پرداخت آماده شروع است.
         </div>
       )}
 
@@ -185,8 +185,8 @@ export function FinalPaymentStep({
         >
           {isPending
             ? "در حال ارسال..."
-            : canRetryIncompletePayment
-              ? "تلاش دوباره برای پرداخت"
+            : paymentsClosedForUnpaid
+              ? "پرداخت غیرفعال است"
               : hasVerifiedPayment
               ? "ارسال اصلاحات"
               : "پرداخت و ارسال نهایی"}

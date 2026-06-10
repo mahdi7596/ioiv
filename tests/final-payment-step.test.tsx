@@ -34,6 +34,13 @@ function renderFinalPaymentStep(overrides: Record<string, unknown> = {}) {
 }
 
 describe("FinalPaymentStep", () => {
+  it("disables the payment button while unpaid payments are closed", () => {
+    const markup = renderFinalPaymentStep();
+
+    expect(markup).toContain("disabled=\"\"");
+    expect(markup).toContain("پرداخت برای پرونده‌های پرداخت‌نشده در حال حاضر غیرفعال است");
+  });
+
   it("disables payment while a draft save is in progress", () => {
     const markup = renderFinalPaymentStep({ isSavingDraft: true });
 

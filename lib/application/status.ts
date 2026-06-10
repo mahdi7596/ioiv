@@ -13,6 +13,6 @@ export function getApplicationAccess(status: ApplicationStatus) {
   return {
     canView: true,
     canEdit: canEditApplication(status),
-    canRetryPayment: status === ApplicationStatus.PENDING_PAYMENT,
+    canRetryPayment: false,
   };
 }

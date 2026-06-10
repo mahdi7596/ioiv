@@ -22,7 +22,7 @@ describe("payment return page", () => {
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("پرداخت ناموفق بود");
-    expect(markup).toContain("می‌توانید دوباره پرداخت را انجام دهید");
+    expect(markup).toContain("شروع دوباره پرداخت در حال حاضر غیرفعال است");
     expect(markup).not.toContain("PAYMENT_RETURNED");
   });
 });
