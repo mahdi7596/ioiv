@@ -1,0 +1,579 @@
+/* ═══════════════════════════════════════════════════
+   Kalan Hesab — Design Tokens
+═══════════════════════════════════════════════════ */
+.kalan-hesab-theme {
+  --kh-gold:       #C89820;
+  --kh-gold-dk:    #A67A10;
+  --kh-gold-lt:    #F0DFA0;
+  --kh-gold-glow:  rgba(200, 152, 32, 0.28);
+  --kh-gold-wash:  rgba(200, 152, 32, 0.10);
+  --kh-bg:         #F8F4EC;
+  --kh-surface:    #FFFFFF;
+  --kh-border:     #E2D5AF;
+  --kh-text:       #1A1208;
+  --kh-text-muted: #6B5C3C;
+  --kh-error:      #C24135;
+}
+
+/* ═══════════════════════════════════════════════════
+   Page shell
+═══════════════════════════════════════════════════ */
+.kh-page {
+  background: var(--kh-bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ═══════════════════════════════════════════════════
+   Hero
+═══════════════════════════════════════════════════ */
+.kh-hero {
+  align-items: center;
+  background: linear-gradient(160deg, #1c1005 0%, #2e1e07 55%, #3e2b0a 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 40px 24px 64px;
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.kh-hero::after {
+  background: linear-gradient(90deg, transparent, var(--kh-gold), transparent);
+  bottom: 0;
+  content: "";
+  height: 1px;
+  left: 0;
+  opacity: 0.35;
+  position: absolute;
+  right: 0;
+}
+
+.kh-logo {
+  border-radius: 10px;
+  height: auto;
+  object-fit: contain;
+}
+
+.kh-hero__h {
+  color: #FEF9E7;
+  font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+  font-weight: 800;
+  line-height: 1.55;
+  margin: 4px 0 0;
+  max-width: 460px;
+}
+
+.kh-hero__sub {
+  color: rgba(254, 249, 231, 0.65);
+  font-size: 0.92rem;
+  line-height: 1.75;
+  margin: 0;
+  max-width: 400px;
+}
+
+.kh-hero__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  justify-content: center;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.kh-hero__badges li {
+  align-items: center;
+  color: var(--kh-gold-lt);
+  display: flex;
+  font-size: 0.82rem;
+  font-weight: 600;
+  gap: 7px;
+}
+
+.kh-hero__badges li::before {
+  background: var(--kh-gold);
+  border-radius: 50%;
+  content: "";
+  flex-shrink: 0;
+  height: 6px;
+  width: 6px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Form card — overlaps hero with negative margin
+═══════════════════════════════════════════════════ */
+.kh-card {
+  align-self: center;
+  background: var(--kh-surface);
+  border-radius: 22px 22px 0 0;
+  box-shadow:
+    0 -1px 0 0 rgba(200, 152, 32, 0.22),
+    0 -6px 32px rgba(0, 0, 0, 0.12);
+  flex: 1;
+  margin-top: -28px;
+  max-width: 600px;
+  padding: 0 24px 64px;
+  position: relative;
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════
+   Step progress indicator
+═══════════════════════════════════════════════════ */
+.kh-steps {
+  align-items: flex-start;
+  display: flex;
+  justify-content: center;
+  padding: 28px 0 24px;
+}
+
+.kh-steps__node {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 9px;
+}
+
+.kh-steps__dot {
+  align-items: center;
+  background: #EDE5CC;
+  border: 2px solid #DDD0A5;
+  border-radius: 50%;
+  color: #9A8860;
+  display: flex;
+  font-size: 0.88rem;
+  font-weight: 700;
+  height: 44px;
+  justify-content: center;
+  transition:
+    background 280ms ease,
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    color 280ms ease;
+  width: 44px;
+}
+
+.kh-steps__node--active .kh-steps__dot {
+  background: var(--kh-gold);
+  border-color: var(--kh-gold);
+  box-shadow:
+    0 0 0 5px var(--kh-gold-wash),
+    0 4px 18px var(--kh-gold-glow);
+  color: #fff;
+}
+
+.kh-steps__node--done .kh-steps__dot {
+  background: var(--kh-gold);
+  border-color: var(--kh-gold);
+  color: #fff;
+}
+
+.kh-steps__lbl {
+  color: #A8926A;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  transition: color 280ms ease, font-weight 150ms ease;
+  white-space: nowrap;
+}
+
+.kh-steps__node--active .kh-steps__lbl {
+  color: var(--kh-gold-dk);
+  font-weight: 700;
+}
+
+/* connecting line sits between the two nodes */
+.kh-steps__track {
+  background: #E0D0A8;
+  flex: 1;
+  height: 2px;
+  margin: 0 10px;
+  margin-bottom: 24px; /* aligns visually with dot centers */
+  max-width: 100px;
+  transition: background 380ms ease;
+}
+
+.kh-steps__track--on {
+  background: var(--kh-gold);
+}
+
+/* ═══════════════════════════════════════════════════
+   Step body
+═══════════════════════════════════════════════════ */
+.kh-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.kh-body__eyebrow {
+  color: var(--kh-gold-dk);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.kh-body__h {
+  color: var(--kh-text);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   Fields
+═══════════════════════════════════════════════════ */
+.kh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kh-lbl {
+  color: var(--kh-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.kh-input {
+  background: var(--kh-surface);
+  border: 1.5px solid var(--kh-border);
+  border-radius: 10px;
+  color: var(--kh-text);
+  font-size: 0.95rem;
+  height: 48px;
+  padding: 0 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+  width: 100%;
+}
+
+.kh-input::placeholder {
+  color: var(--kh-text-muted);
+  opacity: 0.5;
+}
+
+.kh-input:focus {
+  border-color: var(--kh-gold);
+  box-shadow: 0 0 0 3px var(--kh-gold-wash);
+  outline: none;
+}
+
+.kh-field[data-invalid] .kh-input {
+  border-color: var(--kh-error);
+  box-shadow: 0 0 0 3px rgba(194, 65, 53, 0.10);
+}
+
+.kh-input--sm {
+  font-size: 0.875rem;
+  height: 42px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Chip group
+═══════════════════════════════════════════════════ */
+.kh-chips {
+  display: grid;
+  gap: 8px;
+}
+
+.kh-chips--2 { grid-template-columns: repeat(2, 1fr); }
+.kh-chips--4 { grid-template-columns: repeat(4, 1fr); }
+
+.kh-chip {
+  background: #F5F0E4;
+  border: 1.5px solid var(--kh-border);
+  border-radius: 10px;
+  color: var(--kh-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-height: 46px;
+  padding: 10px 8px;
+  text-align: center;
+  transition:
+    background 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease,
+    color 130ms ease;
+}
+
+.kh-chip:hover {
+  background: var(--kh-gold-wash);
+  border-color: var(--kh-gold);
+  color: var(--kh-gold-dk);
+}
+
+.kh-chip--on {
+  background: var(--kh-gold);
+  border-color: var(--kh-gold);
+  box-shadow: 0 2px 14px var(--kh-gold-glow);
+  color: #fff;
+  font-weight: 700;
+}
+
+.kh-chip--on:hover {
+  background: var(--kh-gold-dk);
+  border-color: var(--kh-gold-dk);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════
+   Errors
+═══════════════════════════════════════════════════ */
+.kh-err {
+  color: var(--kh-error);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.kh-err--block {
+  background: rgba(194, 65, 53, 0.07);
+  border: 1px solid rgba(194, 65, 53, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Buttons
+═══════════════════════════════════════════════════ */
+.kh-btn {
+  align-items: center;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  gap: 6px;
+  height: 50px;
+  justify-content: center;
+  padding: 0 20px;
+  transition:
+    background 170ms ease,
+    box-shadow 170ms ease,
+    opacity 170ms ease,
+    transform 100ms ease;
+}
+
+.kh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.kh-btn--primary {
+  background: var(--kh-gold);
+  box-shadow: 0 4px 20px var(--kh-gold-glow);
+  color: #fff;
+  flex: 1;
+}
+
+.kh-btn--primary:hover:not(:disabled) {
+  background: var(--kh-gold-dk);
+  box-shadow: 0 6px 26px var(--kh-gold-glow);
+}
+
+.kh-btn--primary:active:not(:disabled) {
+  box-shadow: 0 2px 10px var(--kh-gold-glow);
+  transform: translateY(1px);
+}
+
+.kh-btn--ghost {
+  background: #F0EAD8;
+  border: 1.5px solid var(--kh-border);
+  color: var(--kh-text-muted);
+}
+
+.kh-btn--ghost:hover:not(:disabled) {
+  background: #E8DFC4;
+  color: var(--kh-text);
+}
+
+.kh-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Spinner
+═══════════════════════════════════════════════════ */
+.kh-spin {
+  animation: kh-spin 700ms linear infinite;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  height: 22px;
+  width: 22px;
+}
+
+@keyframes kh-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════
+   Success screen
+═══════════════════════════════════════════════════ */
+.kh-ok {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.kh-ok__ring {
+  align-items: center;
+  animation: kh-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  background: var(--kh-gold);
+  border-radius: 50%;
+  box-shadow:
+    0 12px 40px var(--kh-gold-glow),
+    0 0 0 12px var(--kh-gold-wash);
+  display: flex;
+  height: 88px;
+  justify-content: center;
+  width: 88px;
+}
+
+.kh-ok__title {
+  animation: step-in 280ms 180ms ease both;
+  color: var(--kh-text);
+  font-size: 1.55rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.kh-ok__body {
+  animation: step-in 280ms 320ms ease both;
+  color: var(--kh-text-muted);
+  font-size: 0.98rem;
+  line-height: 1.85;
+  margin: 0;
+  max-width: 320px;
+}
+
+@keyframes kh-pop {
+  from { opacity: 0; transform: scale(0.35); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════
+   Responsive
+═══════════════════════════════════════════════════ */
+@media (max-width: 540px) {
+  .kh-hero {
+    gap: 12px;
+    padding: 32px 16px 52px;
+  }
+
+  .kh-hero__badges {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .kh-card {
+    border-radius: 18px 18px 0 0;
+    margin-top: -20px;
+    padding: 0 16px 48px;
+  }
+
+  .kh-chips--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kh-body__h {
+    font-size: 1.05rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .kh-card {
+    border-radius: 22px;
+    margin: -36px auto 48px;
+    width: calc(100% - 48px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-in,
+  .kh-ok,
+  .kh-ok__ring,
+  .kh-ok__title,
+  .kh-ok__body {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .kh-chip,
+  .kh-btn,
+  .kh-input,
+  .kh-steps__dot,
+  .kh-steps__lbl,
+  .kh-steps__track {
+    transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   Admin pages (global utility classes still apply)
+═══════════════════════════════════════════════════ */
+.kh-admin-page {
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100vh;
+  padding: 24px 16px 64px;
+}
+
+.kh-admin-header {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 16px;
+  padding-bottom: 16px;
+}
+
+.kh-admin-mobile {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-inline-start: auto;
+}
+
+.kh-admin-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.kh-admin-search {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.kh-admin-search .kh-input {
+  flex: 1;
+}
+
+.kh-admin-table-wrap {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+}
