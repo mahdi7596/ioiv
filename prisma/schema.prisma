@@ -12,11 +12,13 @@ enum UserRole {
   ADMIN
   SUPER_ADMIN
   ENTRY_VIEWER
+  KALAN_HESAB_ADMIN
 }
 
 enum OtpPurpose {
   USER_LOGIN
   ADMIN_LOGIN
+  KALAN_HESAB_VERIFICATION
 }
 
 enum ApplicationStatus {
@@ -139,4 +141,20 @@ model StatusHistory {
   createdAt      DateTime           @default(now())
 
   @@index([applicationId])
+}
+
+model KalanHesabSubmission {
+  id            String   @id @default(cuid())
+  fullName      String
+  companyName   String
+  position      String
+  positionOther String?
+  teamSize      String
+  mainConcern   String
+  concernOther  String?
+  mobile        String
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([mobile])
 }

@@ -39,3 +39,18 @@ export function createAdminSubmissionSmsMessage(to: string, applicationId: strin
     text: `پرونده جدید در ${SERVICE_NAME} ثبت شد: ${applicationId}`,
   };
 }
+
+export function createKalanHesabUserSmsMessage(to: string): SmsMessage {
+  return {
+    to,
+    text: "ضمن تشکر از اعتماد شما، کارشناسان کالان حساب در اولین فرصت با شما تماس خواهند گرفت.",
+    template: process.env.GHASEDAK_KALAN_HESAB_USER_TEMPLATE,
+  };
+}
+
+export function createKalanHesabAdminSmsMessage(to: string, fullName: string): SmsMessage {
+  return {
+    to,
+    text: `فرم جدید در کالان حساب ثبت شد - ${fullName}`,
+  };
+}

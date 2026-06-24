@@ -42,6 +42,7 @@ export const adminRolePermissions: Record<UserRole, AdminPermissions> = {
   [UserRole.ADMIN]: fullAdminPermissions,
   [UserRole.SUPER_ADMIN]: fullAdminPermissions,
   [UserRole.ENTRY_VIEWER]: entryViewerPermissions,
+  [UserRole.KALAN_HESAB_ADMIN]: noAdminPermissions,
 };
 
 export function getAdminPermissions(role: UserRole): AdminPermissions {
