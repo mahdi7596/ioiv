@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./kalan-hesab.css";
 
 export const metadata: Metadata = {
-  title: "کالان حساب",
-  description: "فرم ارزیابی تخصصی کالان حساب",
+  title: "کلان حساب",
+  description: "فرم ارزیابی تخصصی کلان حساب",
   icons: {
     icon: "/kalan-hesab-logo.jpeg",
     shortcut: "/kalan-hesab-logo.jpeg",

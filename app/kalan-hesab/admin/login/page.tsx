@@ -52,8 +52,8 @@ export default function KalanHesabAdminLoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-info" aria-labelledby="kh-admin-info-title">
-        <p className="eyebrow">پنل مدیریت کالان حساب</p>
-        <h1 id="kh-admin-info-title">ورود مدیران کالان حساب</h1>
+        <p className="eyebrow">پنل مدیریت کلان حساب</p>
+        <h1 id="kh-admin-info-title">ورود مدیران کلان حساب</h1>
         <p>
           مدیران فعال می‌توانند با شماره موبایل ثبت‌شده وارد پنل شوند
           و فرم‌های ثبت‌شده توسط متقاضیان را مشاهده کنند.
@@ -62,7 +62,7 @@ export default function KalanHesabAdminLoginPage() {
           <div>
             <span>۱</span>
             <strong>ورود با موبایل مدیر</strong>
-            <small>کد تایید فقط برای مدیران فعال کالان حساب صادر می‌شود.</small>
+            <small>کد تایید فقط برای مدیران فعال کلان حساب صادر می‌شود.</small>
           </div>
           <div>
             <span>۲</span>
@@ -81,7 +81,7 @@ export default function KalanHesabAdminLoginPage() {
         <div className="auth-panel__header">
           <Image
             src="/kalan-hesab-logo.jpeg"
-            alt="کالان حساب"
+            alt="کلان حساب"
             width={160}
             height={80}
             className="auth-logo"
@@ -92,7 +92,7 @@ export default function KalanHesabAdminLoginPage() {
             {otpSent ? "کد تایید را وارد کنید" : "شماره موبایل مدیر را وارد کنید"}
           </h2>
           <p>
-            فقط شماره‌هایی که در فهرست مدیران فعال کالان حساب ثبت شده‌اند
+            فقط شماره‌هایی که در فهرست مدیران فعال کلان حساب ثبت شده‌اند
             می‌توانند وارد پنل شوند.
           </p>
         </div>
