@@ -1,8 +1,5 @@
 import type { SmsMessage } from "./index";
 
-const DEFAULT_OTP_TEMPLATE = "sanaotp";
-const DEFAULT_STATUS_TEMPLATE = "sanastatus";
-const DEFAULT_SUBMITTED_TEMPLATE = "sanasubmitted";
 const DEFAULT_RECIPIENT_LABEL = "کاربر";
 const SERVICE_NAME = "سامانه اعتبار سنجی سانا";
 
@@ -10,7 +7,7 @@ export function createOtpSmsMessage(to: string, code: string): SmsMessage {
   return {
     to,
     text: `سلام، کد ورود شما به ${SERVICE_NAME} ${code}`,
-    template: process.env.GHASEDAK_OTP_TEMPLATE || DEFAULT_OTP_TEMPLATE,
+    template: process.env.MELIPAYAMAK_OTP_BODY_ID,
     params: { code },
   };
 }
@@ -19,7 +16,7 @@ export function createStatusChangeSmsMessage(to: string): SmsMessage {
   return {
     to,
     text: `${DEFAULT_RECIPIENT_LABEL} گرامی، وضعیت پرونده شما در ${SERVICE_NAME} تغییر کرد. برای مشاهده جزئیات وارد پنل شوید.`,
-    template: process.env.GHASEDAK_STATUS_TEMPLATE || DEFAULT_STATUS_TEMPLATE,
+    template: process.env.MELIPAYAMAK_STATUS_BODY_ID,
     params: { recipient: DEFAULT_RECIPIENT_LABEL },
   };
 }
@@ -28,7 +25,7 @@ export function createSubmissionReceivedSmsMessage(to: string): SmsMessage {
   return {
     to,
     text: `${DEFAULT_RECIPIENT_LABEL} گرامی، پرونده شما در ${SERVICE_NAME} با موفقیت ثبت شد و در انتظار بررسی است.`,
-    template: process.env.GHASEDAK_SUBMITTED_TEMPLATE || DEFAULT_SUBMITTED_TEMPLATE,
+    template: process.env.MELIPAYAMAK_SUBMITTED_BODY_ID,
     params: { recipient: DEFAULT_RECIPIENT_LABEL },
   };
 }
@@ -40,17 +37,20 @@ export function createAdminSubmissionSmsMessage(to: string, applicationId: strin
   };
 }
 
-export function createKalanHesabUserSmsMessage(to: string): SmsMessage {
+export function createKalanHesabUserSmsMessage(to: string, fullName: string): SmsMessage {
   return {
     to,
-    text: "ضمن تشکر از اعتماد شما، کارشناسان کالان حساب در اولین فرصت با شما تماس خواهند گرفت.",
-    template: process.env.GHASEDAK_KALAN_HESAB_USER_TEMPLATE,
+    text: `فرهیخته گرامی، ${fullName} ضمن تشکر از اعتماد شما، متخصصان ما در اولین فرصت با شما تماس خواهند گرفت.`,
+    template: process.env.MELIPAYAMAK_KALAN_HESAB_USER_BODY_ID,
+    params: { name: fullName },
   };
 }
 
 export function createKalanHesabAdminSmsMessage(to: string, fullName: string): SmsMessage {
   return {
     to,
-    text: `فرم جدید در کالان حساب ثبت شد - ${fullName}`,
+    text: `${fullName} فرم جدید ارسال نمود.`,
+    template: process.env.MELIPAYAMAK_KALAN_HESAB_ADMIN_BODY_ID,
+    params: { name: fullName },
   };
 }

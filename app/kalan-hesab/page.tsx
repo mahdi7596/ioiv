@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { z } from "zod";
 
@@ -86,7 +86,26 @@ export default function KalanHesabPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    if (!submitted) return;
+    const interval = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(interval);
+          window.location.href = "https://kalanhesab.com/";
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [submitted]);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+
+  const [persianHint, setPersianHint] = useState(false);
+  const persianHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [step1ShakeCount, setStep1ShakeCount] = useState(0);
   const [step2ShakeCount, setStep2ShakeCount] = useState(0);
@@ -187,6 +206,9 @@ export default function KalanHesabPage() {
             <br />
             کلان حساب
           </p>
+          <p className="kh-ok__redirect">
+            در {countdown.toLocaleString("fa-IR")} ثانیه به سایت اصلی منتقل می‌شوید
+          </p>
         </div>
       </div>
     );
@@ -197,10 +219,10 @@ export default function KalanHesabPage() {
       {/* ── Hero ── */}
       <header className="kh-hero">
         <Image
-          src="/kalan-hesab-logo.jpeg"
+          src="/kalanhesab/kalan-hesab-main-logo.png"
           alt="کلان حساب"
-          width={130}
-          height={65}
+          width={220}
+          height={80}
           className="kh-logo"
           priority
         />
@@ -273,13 +295,22 @@ export default function KalanHesabPage() {
                 placeholder="علی رضایی"
                 value={fullName}
                 onChange={(e) => {
-                  const v = e.target.value.replace(/[^؀-ۿ ]/g, "");
+                  const raw = e.target.value;
+                  if (/[^؀-ۿ ]/.test(raw)) {
+                    setPersianHint(true);
+                    if (persianHintTimer.current) clearTimeout(persianHintTimer.current);
+                    persianHintTimer.current = setTimeout(() => setPersianHint(false), 3000);
+                  }
+                  const v = raw.replace(/[^؀-ۿ ]/g, "");
                   setFullName(v);
                   if (formErrors.fullName)
                     setFormErrors((prev) => ({ ...prev, fullName: undefined }));
                 }}
               />
               {formErrors.fullName && <p className="kh-err">{formErrors.fullName}</p>}
+              {persianHint && !formErrors.fullName && (
+                <p className="kh-hint">نام و نام خانوادگی فقط با حروف فارسی قابل ثبت است</p>
+              )}
             </div>
 
             <div

@@ -27,7 +27,7 @@ const schema = z.object({
   mobile: mobileSchema,
 });
 
-const ADMIN_NUMBERS = ["09390649614"] as const;
+const ADMIN_NUMBERS = ["09224872163"] as const;
 
 export async function POST(request: Request) {
   try {
@@ -46,15 +46,19 @@ export async function POST(request: Request) {
       },
     });
 
-    await sendSms(createKalanHesabUserSmsMessage(data.mobile));
-    for (const number of ADMIN_NUMBERS) {
-      await sendSms(createKalanHesabAdminSmsMessage(number, data.fullName));
-    }
-
     logger.info("kalan_hesab_submission_created", {
       submissionId: submission.id,
       mobile: maskMobile(data.mobile),
     });
+
+    sendSms(createKalanHesabUserSmsMessage(data.mobile, data.fullName)).catch((err) =>
+      logger.error("kalan_hesab_user_sms_failed", err),
+    );
+    for (const number of ADMIN_NUMBERS) {
+      sendSms(createKalanHesabAdminSmsMessage(number, data.fullName)).catch((err) =>
+        logger.error("kalan_hesab_admin_sms_failed", err),
+      );
+    }
 
     return Response.json({ ok: true });
   } catch (error) {
