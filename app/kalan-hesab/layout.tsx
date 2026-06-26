@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: "کلان حساب",
   description: "فرم ارزیابی تخصصی کلان حساب",
   icons: {
-    icon: "/kalan-hesab-logo.jpeg",
-    shortcut: "/kalan-hesab-logo.jpeg",
-    apple: "/kalan-hesab-logo.jpeg",
+    icon: "/kalanhesab/kalan-hesab-only-logo.png",
+    shortcut: "/kalanhesab/kalan-hesab-only-logo.png",
+    apple: "/kalanhesab/kalan-hesab-only-logo.png",
   },
 };
 
