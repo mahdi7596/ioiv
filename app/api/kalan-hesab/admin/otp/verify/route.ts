@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       mobile: maskMobile(mobile),
     });
 
-    return Response.json({ redirectTo: "/kalan-hesab/admin" });
+    return Response.json({ redirectTo: "/admin" });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json({ error: "اطلاعات ورودی نامعتبر است" }, { status: 400 });

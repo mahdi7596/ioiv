@@ -3,5 +3,5 @@ import { clearSession } from "@/lib/auth/session";
 
 export async function POST(request: Request) {
   await clearSession();
-  return NextResponse.redirect(new URL("/kalan-hesab/admin/login", request.url), { status: 303 });
+  return NextResponse.redirect(new URL("/admin/login", request.url), { status: 303 });
 }

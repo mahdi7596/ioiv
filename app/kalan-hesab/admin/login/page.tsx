@@ -41,7 +41,7 @@ export default function KalanHesabAdminLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "ورود ناموفق بود");
-      window.location.assign(data.redirectTo || "/kalan-hesab/admin");
+      window.location.assign(data.redirectTo || "/admin");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "خطا رخ داد");
     } finally {
