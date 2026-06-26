@@ -85,6 +85,15 @@ export default function KalanHesabPage() {
   const [submitError, setSubmitError] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
+  const [step1ShakeCount, setStep1ShakeCount] = useState(0);
+  const [step2ShakeCount, setStep2ShakeCount] = useState(0);
+
+  // Alternating classes let React restart the animation even on repeated rapid clicks
+  function shakeClass(count: number) {
+    if (count === 0) return "";
+    return count % 2 === 1 ? " kh-shake-a" : " kh-shake-b";
+  }
+
   const dl = (i: number) => ({ animationDelay: `${i * 80}ms` });
 
   function validateStep1(): boolean {
@@ -105,6 +114,7 @@ export default function KalanHesabPage() {
       if (!errs[key]) errs[key] = issue.message;
     }
     setFormErrors(errs);
+    setStep1ShakeCount((c) => c + 1);
     return false;
   }
 
@@ -123,6 +133,7 @@ export default function KalanHesabPage() {
         if (!errs[key]) errs[key] = issue.message;
       }
       setFormErrors(errs);
+      setStep2ShakeCount((c) => c + 1);
       return;
     }
     setSubmitting(true);
@@ -164,9 +175,14 @@ export default function KalanHesabPage() {
               />
             </svg>
           </div>
-          <h2 className="kh-ok__title">ثبت موفق</h2>
+          <h2 className="kh-ok__title">فرهیخته گرامی، {fullName}</h2>
           <p className="kh-ok__body">
-            ضمن تشکر از اعتماد شما، کارشناسان کالان حساب در اولین فرصت با شما تماس خواهند گرفت.
+            ضمن تشکر از اعتماد شما، متخصصان ما در اولین فرصت با شما تماس خواهند گرفت.
+          </p>
+          <p className="kh-ok__sig">
+            شرکت خدمات مالی و مالیاتی
+            <br />
+            کلان حساب
           </p>
         </div>
       </div>
@@ -253,7 +269,11 @@ export default function KalanHesabPage() {
                 className="kh-input"
                 placeholder="علی رضایی"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  if (formErrors.fullName)
+                    setFormErrors((prev) => ({ ...prev, fullName: undefined }));
+                }}
               />
               {formErrors.fullName && <p className="kh-err">{formErrors.fullName}</p>}
             </div>
@@ -272,7 +292,11 @@ export default function KalanHesabPage() {
                 className="kh-input"
                 placeholder="شرکت آریا صنعت"
                 value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                onChange={(e) => {
+                  setCompanyName(e.target.value);
+                  if (formErrors.companyName)
+                    setFormErrors((prev) => ({ ...prev, companyName: undefined }));
+                }}
               />
               {formErrors.companyName && <p className="kh-err">{formErrors.companyName}</p>}
             </div>
@@ -286,7 +310,11 @@ export default function KalanHesabPage() {
               <ChipGroup
                 options={POSITIONS}
                 value={position}
-                onChange={setPosition}
+                onChange={(v) => {
+                  setPosition(v);
+                  if (formErrors.position)
+                    setFormErrors((prev) => ({ ...prev, position: undefined }));
+                }}
                 error={formErrors.position}
                 cols={2}
               />
@@ -311,7 +339,11 @@ export default function KalanHesabPage() {
               <ChipGroup
                 options={TEAM_SIZES}
                 value={teamSize}
-                onChange={setTeamSize}
+                onChange={(v) => {
+                  setTeamSize(v);
+                  if (formErrors.teamSize)
+                    setFormErrors((prev) => ({ ...prev, teamSize: undefined }));
+                }}
                 error={formErrors.teamSize}
                 cols={4}
               />
@@ -320,7 +352,11 @@ export default function KalanHesabPage() {
             <div className="step-in" style={dl(5)}>
               <button
                 type="button"
-                className="kh-btn kh-btn--primary"
+                className={`kh-btn kh-btn--primary${shakeClass(step1ShakeCount)}`}
+                disabled={!!(formErrors.fullName || formErrors.companyName || formErrors.position || formErrors.teamSize)}
+                onAnimationEnd={(e) => {
+                  if (e.animationName === "kh-shake") setStep1ShakeCount(0);
+                }}
                 onClick={() => {
                   if (validateStep1()) setStep(2);
                 }}
@@ -431,7 +467,10 @@ export default function KalanHesabPage() {
               </button>
               <button
                 type="button"
-                className="kh-btn kh-btn--primary"
+                className={`kh-btn kh-btn--primary${shakeClass(step2ShakeCount)}`}
+                onAnimationEnd={(e) => {
+                  if (e.animationName === "kh-shake") setStep2ShakeCount(0);
+                }}
                 onClick={handleSubmit}
                 disabled={submitting}
               >
