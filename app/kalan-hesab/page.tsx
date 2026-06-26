@@ -5,7 +5,10 @@ import Image from "next/image";
 import { z } from "zod";
 
 const step1Schema = z.object({
-  fullName: z.string().min(2, "نام و نام خانوادگی را وارد کنید"),
+  fullName: z
+    .string()
+    .min(2, "نام و نام خانوادگی را وارد کنید")
+    .regex(/^[؀-ۿ ]+$/, "لطفاً فقط حروف فارسی وارد کنید"),
   companyName: z.string().min(1, "نام شرکت یا برند را وارد کنید"),
   position: z.string().min(1, "سمت سازمانی را انتخاب کنید"),
   positionOther: z.string().optional(),
@@ -195,7 +198,7 @@ export default function KalanHesabPage() {
       <header className="kh-hero">
         <Image
           src="/kalan-hesab-logo.jpeg"
-          alt="کالان حساب"
+          alt="کلان حساب"
           width={130}
           height={65}
           className="kh-logo"
@@ -270,7 +273,8 @@ export default function KalanHesabPage() {
                 placeholder="علی رضایی"
                 value={fullName}
                 onChange={(e) => {
-                  setFullName(e.target.value);
+                  const v = e.target.value.replace(/[^؀-ۿ ]/g, "");
+                  setFullName(v);
                   if (formErrors.fullName)
                     setFormErrors((prev) => ({ ...prev, fullName: undefined }));
                 }}

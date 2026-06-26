@@ -38,7 +38,7 @@ export default async function KalanHesabAdminPage({
       <header className="kh-admin-header">
         <Image
           src="/kalan-hesab-logo.jpeg"
-          alt="کالان حساب"
+          alt="کلان حساب"
           width={120}
           height={60}
           className="kh-logo"
