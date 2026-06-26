@@ -312,27 +312,50 @@
 }
 
 .kh-chip--on {
-  background: var(--kh-gold);
+  background: #FBF3D5;
   border-color: var(--kh-gold);
-  box-shadow: 0 2px 14px var(--kh-gold-glow);
-  color: #fff;
+  border-width: 2px;
+  box-shadow: none;
+  color: var(--kh-gold-dk);
   font-weight: 700;
 }
 
 .kh-chip--on:hover {
-  background: var(--kh-gold-dk);
+  background: #F5E9BA;
   border-color: var(--kh-gold-dk);
-  color: #fff;
+  color: var(--kh-gold-dk);
 }
 
 /* ═══════════════════════════════════════════════════
    Errors
 ═══════════════════════════════════════════════════ */
+@keyframes kh-err-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scaleY(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes kh-shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  35%       { transform: translateX(7px); }
+  50%       { transform: translateX(-5px); }
+  70%       { transform: translateX(4px); }
+  85%       { transform: translateX(-2px); }
+}
+
 .kh-err {
+  animation: kh-err-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   color: var(--kh-error);
   font-size: 0.8rem;
   font-weight: 500;
   margin: 0;
+  transform-origin: top;
 }
 
 .kh-err--block {
@@ -340,6 +363,12 @@
   border: 1px solid rgba(194, 65, 53, 0.2);
   border-radius: 8px;
   padding: 10px 14px;
+}
+
+/* Two alternating classes so rapid re-clicks properly restart the animation */
+.kh-shake-a,
+.kh-shake-b {
+  animation: kh-shake 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -364,6 +393,10 @@
     transform 100ms ease;
 }
 
+.kh-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .kh-btn:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -383,7 +416,6 @@
 
 .kh-btn--primary:active:not(:disabled) {
   box-shadow: 0 2px 10px var(--kh-gold-glow);
-  transform: translateY(1px);
 }
 
 .kh-btn--ghost {
@@ -451,9 +483,10 @@
 .kh-ok__title {
   animation: step-in 280ms 180ms ease both;
   color: var(--kh-text);
-  font-size: 1.55rem;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
   font-weight: 800;
   margin: 0;
+  max-width: 340px;
 }
 
 .kh-ok__body {
@@ -463,6 +496,18 @@
   line-height: 1.85;
   margin: 0;
   max-width: 320px;
+}
+
+.kh-ok__sig {
+  animation: step-in 280ms 460ms ease both;
+  border-top: 1px solid var(--kh-border);
+  color: var(--kh-gold-dk);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.8;
+  margin: 0;
+  padding-top: 16px;
+  text-align: center;
 }
 
 @keyframes kh-pop {
@@ -512,7 +557,11 @@
   .kh-ok,
   .kh-ok__ring,
   .kh-ok__title,
-  .kh-ok__body {
+  .kh-ok__body,
+  .kh-ok__sig,
+  .kh-err,
+  .kh-shake-a,
+  .kh-shake-b {
     animation: none;
     opacity: 1;
     transform: none;
