@@ -29,7 +29,7 @@ export async function GET(request: Request) {
       "اندازه تیم": s.teamSize,
       دغدغه: s.mainConcern === "سایر" && s.concernOther ? s.concernOther : s.mainConcern,
       موبایل: s.mobile,
-      "تاریخ ثبت": s.createdAt.toISOString(),
+      "تاریخ ثبت": new Intl.DateTimeFormat("fa-IR-u-nu-latn", { year: "numeric", month: "2-digit", day: "2-digit" }).format(s.createdAt),
     }));
 
     const workbook = XLSX.utils.book_new();

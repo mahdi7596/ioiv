@@ -230,13 +230,20 @@ async function main() {
   );
   const admin = admins[0];
 
-  await prisma.admin.createMany({
-    data: [
-      { mobile: "09390649614", name: "کالان حساب - مدیر اول", role: UserRole.KALAN_HESAB_ADMIN, active: true },
-      { mobile: "09124872163", name: "کالان حساب - مدیر دوم", role: UserRole.KALAN_HESAB_ADMIN, active: true },
-    ],
-    skipDuplicates: true,
-  });
+  const kalanHesabAdmins = [
+    { mobile: "09224872163", name: "کالان حساب - مدیر" },
+    { mobile: "09390649614", name: "کالان حساب - مدیر اول" },
+    { mobile: "09124872163", name: "کالان حساب - مدیر دوم" },
+  ];
+  await Promise.all(
+    kalanHesabAdmins.map(({ mobile, name }) =>
+      prisma.admin.upsert({
+        where: { mobile },
+        update: { role: UserRole.KALAN_HESAB_ADMIN, active: true },
+        create: { mobile, name, role: UserRole.KALAN_HESAB_ADMIN, active: true },
+      }),
+    ),
+  );
 
   if (process.env.SEED_DEMO_DATA !== "true") {
     return;

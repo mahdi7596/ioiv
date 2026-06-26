@@ -19,19 +19,18 @@ export async function sendSms(message: SmsMessage) {
     return { ok: true };
   }
 
-  const { sendGhasedakSms } = await import("./ghasedak");
+  const { sendMelipayamakSms } = await import("./melipayamak");
   logger.info("sms_send_started", {
     to: maskMobile(message.to),
     template: message.template,
   });
 
   try {
-    const result = await sendGhasedakSms(message);
+    await sendMelipayamakSms(message);
     logger.info("sms_send_succeeded", {
       to: maskMobile(message.to),
       template: message.template,
     });
-    return result;
   } catch (error) {
     logger.error("sms_send_failed", error, {
       to: maskMobile(message.to),
