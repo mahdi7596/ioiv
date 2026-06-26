@@ -11,12 +11,12 @@ export default async function KalanHesabAdminPage({
 }) {
   const session = await getSession();
   if (!session || session.kind !== "admin") {
-    redirect("/kalan-hesab/admin/login");
+    redirect("/admin/login");
   }
 
   const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
   if (!admin || !admin.active || admin.role !== UserRole.KALAN_HESAB_ADMIN) {
-    redirect("/kalan-hesab/admin/login");
+    redirect("/admin/login");
   }
 
   const { search } = await searchParams;
@@ -52,7 +52,7 @@ export default async function KalanHesabAdminPage({
       </header>
 
       <div className="kh-admin-toolbar">
-        <form method="GET" action="/kalan-hesab/admin" className="kh-admin-search">
+        <form method="GET" action="/admin" className="kh-admin-search">
           <input
             type="search"
             name="search"
