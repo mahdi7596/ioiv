@@ -13,6 +13,8 @@
     "test:db:m1-integrity": "prisma/tests/test-facilities-foundation.sh",
     "test:db:m1-recovery": "prisma/tests/test-facilities-migration-recovery.sh",
     "test:db:m1-role": "prisma/tests/test-facilities-runtime-role.sh",
+    "test:db:m2-files": "sh prisma/tests/test-facilities-private-files.sh",
+    "facilities:reconcile-files": "tsx scripts/reconcile-facilities-files.ts",
     "test": "vitest run"
   },
   "dependencies": {

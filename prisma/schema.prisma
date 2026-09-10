@@ -75,6 +75,52 @@ enum StoredFileScanStatus {
   FAILED
 }
 
+/// M2 is deliberately more expressive than StoredFileScanStatus: StoredFile is
+/// the verified metadata contract, while this lifecycle records whether a
+/// private upload ever reached that contract and, when it did not, the safe
+/// operational reason. No lifecycle field contains a storage key, file content,
+/// client supplied MIME type, or scanner output.
+enum FacilitiesFileBindingScope {
+  COMPANY_PROFILE
+  APPLICATION
+}
+
+enum FacilitiesFileLifecycleStatus {
+  PENDING
+  PASSED
+  FAILED
+  UNAVAILABLE
+  CORRUPT
+  INTERRUPTED
+  DUPLICATE
+  OVERSIZED
+  DISALLOWED
+}
+
+enum FacilitiesFileFailureReason {
+  STORAGE_UNAVAILABLE
+  STORAGE_WRITE_FAILED
+  SCANNER_UNAVAILABLE
+  SCAN_FAILED
+  CONTENT_TYPE_MISMATCH
+  CONTENT_CORRUPT
+  UPLOAD_INTERRUPTED
+  DUPLICATE_REQUEST
+  FILE_TOO_LARGE
+  APPLICATION_QUOTA_EXCEEDED
+  DISALLOWED_TYPE
+  OWNERSHIP_DENIED
+  REPLACEMENT_FAILED
+  DELETION_FAILED
+}
+
+enum FacilitiesFileDeletionStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  RETRY_REQUIRED
+}
+
 enum CompanyProfileDocumentKind {
   INCORPORATION_NOTICE
   ARTICLES_OF_ASSOCIATION
@@ -145,6 +191,7 @@ model User {
   applications               Application[]
   company                    Company?
   facilitiesApplications     FacilitiesApplication[] @relation("FacilitiesApplicationApplicant")
+  facilitiesFileBindings     FacilitiesFileBinding[] @relation("FacilitiesFileBindingOwner")
 }
 
 /// A facilities-company profile is intentionally independent from the legacy
@@ -161,12 +208,17 @@ model Company {
   registeredCapitalRial  Decimal?
   contactFullName        String?
   contactNationalCode    String?
+  /// Monotonically incremented on every profile mutation. Clients use this to
+  /// avoid silently overwriting another tab's draft.
+  profileVersion         Int                      @default(0)
+  profileCompletedAt     DateTime?
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   shareholders           CompanyShareholder[]
   officers               CompanyOfficer[]
   profileDocuments       CompanyProfileDocument[]
   facilitiesApplications FacilitiesApplication[]
+  facilitiesFileBindings FacilitiesFileBinding[]    @relation("FacilitiesFileBindingCompany")
 }
 
 model CompanyShareholder {
@@ -216,6 +268,102 @@ model StoredFile {
   trialBalanceGeneralLedgers    FacilitiesTrialBalance[]        @relation("FacilitiesTrialBalanceGeneralLedgerFile")
   trialBalanceSubsidiaryLedgers FacilitiesTrialBalance[]        @relation("FacilitiesTrialBalanceSubsidiaryLedgerFile")
   creditReports                 FacilitiesCreditReport[]        @relation("FacilitiesCreditReportFile")
+  facilitiesFileUpload          FacilitiesFileUpload?           @relation("FacilitiesFileUploadStoredFile")
+}
+
+/// A private-file binding is the authorization boundary. It permanently owns a
+/// logical document slot; revisions are stored as FacilitiesFileUpload rows so
+/// a validated replacement can coexist with the prior physical object until
+/// the replacement has been committed.
+model FacilitiesFileBinding {
+  id              String                      @id @default(cuid())
+  scope           FacilitiesFileBindingScope
+  scopeId         String
+  userId          String
+  user            User                        @relation("FacilitiesFileBindingOwner", fields: [userId], references: [id], onDelete: Restrict)
+  companyId       String
+  company         Company                     @relation("FacilitiesFileBindingCompany", fields: [companyId], references: [id], onDelete: Restrict)
+  applicationId   String?
+  application     FacilitiesApplication?      @relation("FacilitiesFileBindingApplication", fields: [applicationId], references: [id], onDelete: Restrict)
+  slotKey         String
+  currentUploadId String?                     @unique
+  currentUpload   FacilitiesFileUpload?       @relation("FacilitiesFileBindingCurrent", fields: [currentUploadId], references: [id], onDelete: Restrict)
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  attempts        FacilitiesFileUploadAttempt[]
+  uploads         FacilitiesFileUpload[]      @relation("FacilitiesFileBindingUploads")
+
+  @@unique([scopeId, slotKey])
+  @@index([userId, companyId])
+  @@index([applicationId])
+}
+
+/// Attempts retain a small, non-content failure outcome for requests that never
+/// become a file revision (for example disallowed, corrupt, oversized or
+/// duplicate uploads). They make the idempotency decision durable without
+/// consuming a revision number needed by a later valid replacement.
+model FacilitiesFileUploadAttempt {
+  id              String                        @id @default(cuid())
+  bindingId       String
+  binding         FacilitiesFileBinding         @relation(fields: [bindingId], references: [id], onDelete: Restrict)
+  idempotencyKey  String
+  lifecycleStatus FacilitiesFileLifecycleStatus
+  failureReason   FacilitiesFileFailureReason?
+  uploadId        String?                       @unique
+  upload          FacilitiesFileUpload?         @relation("FacilitiesFileUploadAttemptRevision", fields: [uploadId], references: [id], onDelete: Restrict)
+  createdAt       DateTime                      @default(now())
+  updatedAt       DateTime                      @updatedAt
+
+  @@unique([bindingId, idempotencyKey])
+  @@index([lifecycleStatus, createdAt])
+}
+
+/// One row is one idempotent upload attempt/revision. The reservation is held
+/// while PENDING and becomes committed only after PASSED. Failed lifecycle
+/// values release it. `StoredFile` remains optional until physical storage,
+/// type verification and scanning all complete.
+model FacilitiesFileUpload {
+  id                String                        @id @default(cuid())
+  bindingId         String
+  binding           FacilitiesFileBinding         @relation("FacilitiesFileBindingUploads", fields: [bindingId], references: [id], onDelete: Restrict)
+  currentForBinding FacilitiesFileBinding?        @relation("FacilitiesFileBindingCurrent")
+  attempt           FacilitiesFileUploadAttempt?  @relation("FacilitiesFileUploadAttemptRevision")
+  storedFileId      String?                       @unique
+  storedFile        StoredFile?                   @relation("FacilitiesFileUploadStoredFile", fields: [storedFileId], references: [id], onDelete: Restrict)
+  idempotencyKey    String
+  revisionNumber    Int
+  replacesUploadId  String?                       @unique
+  replacesUpload    FacilitiesFileUpload?         @relation("FacilitiesFileReplacement", fields: [replacesUploadId], references: [id], onDelete: Restrict)
+  replacedBy        FacilitiesFileUpload?         @relation("FacilitiesFileReplacement")
+  lifecycleStatus   FacilitiesFileLifecycleStatus @default(PENDING)
+  failureReason     FacilitiesFileFailureReason?
+  reservedByteSize  Int
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+  deletionTombstone FacilitiesFileDeletionTombstone?
+
+  @@unique([bindingId, idempotencyKey])
+  @@unique([bindingId, revisionNumber])
+  @@index([lifecycleStatus, createdAt])
+}
+
+/// A tombstone contains only retry scheduling and safe reason codes. The
+/// storage adapter resolves the opaque StoredFile key internally; it never
+/// returns it to callers or records it here.
+model FacilitiesFileDeletionTombstone {
+  id             String                       @id @default(cuid())
+  uploadId       String                       @unique
+  upload         FacilitiesFileUpload         @relation(fields: [uploadId], references: [id], onDelete: Restrict)
+  status         FacilitiesFileDeletionStatus @default(PENDING)
+  attemptCount   Int                          @default(0)
+  lastError      FacilitiesFileFailureReason?
+  nextAttemptAt  DateTime?
+  lastAttemptAt  DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+
+  @@index([status, nextAttemptAt])
 }
 
 model CompanyProfileDocument {
@@ -340,6 +488,7 @@ model FacilitiesApplication {
   correctionRequests             FacilitiesCorrectionRequest[]
   history                        FacilitiesStatusHistory[]
   auditLogs                      FacilitiesAuditLog[]
+  fileBindings                   FacilitiesFileBinding[]                 @relation("FacilitiesFileBindingApplication")
 
   @@unique([companyId, intakeId])
   @@index([userId])

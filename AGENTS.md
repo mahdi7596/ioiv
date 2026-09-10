@@ -8,6 +8,10 @@
 - Before production deployments that affect data, schema, or uploaded files, create a
   new dated Git backup branch and take verified production database, upload-storage,
   and relevant configuration backups.
+- The current confirmed product scope and unresolved client decisions are in
+  `docs/2026-09-10-facilities-application-requirements.md`. Read that document before
+  designing or implementing the facilities workflow. Do not change the existing
+  validation workflow for new applications unless the project owner explicitly asks.
 
 ## Before Implementation
 

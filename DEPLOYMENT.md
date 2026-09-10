@@ -280,6 +280,51 @@ runtime configuration. Leave the additive M1 schema in place. Do not attempt a
 destructive schema rollback without the verified restore procedure and explicit
 approval.
 
+## M2 private facilities file rollout (not deployed)
+
+M2 adds private facilities file storage but does **not** enable facilities, create an
+intake, or expose facilities UI. Do not deploy this milestone by itself as a way to
+open the programme.
+
+Before a later deployment that includes M2, the release owner must:
+
+1. Create a dated Git backup branch and verify matched PostgreSQL, upload-volume, and
+   runtime-configuration backups on an isolated restore target.
+2. Provision an approved, monitored `clamd` service reachable only from the app
+   network. Configure `FACILITIES_CLAMAV_HOST`, `FACILITIES_CLAMAV_PORT`,
+   `FACILITIES_CLAMAV_TIMEOUT_MS`, `FACILITIES_CLAMAV_CHUNK_SIZE`, and the private
+   `FACILITIES_UPLOAD_DIR` in `.env.runtime`. Missing, unhealthy, timed-out, or
+   malformed scanner responses fail closed and keep files quarantined.
+3. Confirm the facilities private root is inside the persisted upload volume, is not
+   mapped by Nginx or any static route, and has capacity for temporary replacement
+   overlap plus quarantine retention. Scanner signatures, capacity monitoring,
+   alerting, retention intervals, and incident ownership require operations approval.
+4. Run the additive migration only through the migration profile, then rerun the
+   runtime-role provision script. Regenerate/upload the Linux Prisma engine export
+   before building because the schema changed.
+5. Run `npm run test:db:m2-files`, `npm run test:db:m1-role`, legacy upload/download
+   regressions, and a restored-environment scanner readiness test before any future
+   facilities enablement.
+
+The maintenance-only reconciliation command is:
+
+```bash
+cd /data/apps/sana
+docker compose exec app npm run facilities:reconcile-files
+```
+
+Schedule it only after the scanner and private storage are ready. It retries scanner-
+unavailable quarantined uploads, purges terminal quarantine objects, retries deletion
+tombstones, and reaps untracked opaque objects older than `FACILITIES_ORPHAN_TTL_MS`;
+it logs record counts only.
+Do not run it against production to inject failures. Controlled scanner/storage/DB
+failure tests belong only to local, test, or staging environments.
+
+Before M5 exposes a multipart facility upload endpoint, set a proxy wire limit above
+the 25 MiB file-content cap (to allow multipart framing) while preserving the server
+side 25 MiB content check. The current `25M` Nginx setting is not sufficient for a
+25 MiB file plus multipart overhead.
+
 ## Environment
 
 Compose interpolation/initialization `.env` lives on the server in:

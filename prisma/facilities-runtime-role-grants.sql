@@ -17,6 +17,10 @@ GRANT USAGE ON TYPE
   "FacilitiesProgram",
   "StoredFileType",
   "StoredFileScanStatus",
+  "FacilitiesFileBindingScope",
+  "FacilitiesFileLifecycleStatus",
+  "FacilitiesFileFailureReason",
+  "FacilitiesFileDeletionStatus",
   "CompanyProfileDocumentKind",
   "FacilitiesApplicationDocumentKind",
   "FacilitiesYearDocumentKind",
@@ -57,7 +61,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "Company",
   "CompanyShareholder",
   "CompanyOfficer",
-  "StoredFile",
   "CompanyProfileDocument",
   "FacilitiesProgramConfiguration",
   "FacilitySupplier",
@@ -75,4 +78,23 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "FacilitiesCreditReport",
   "FacilitiesPaymentAttempt",
   "FacilitiesCorrectionRequest"
+TO :"runtime_role";
+
+-- M2 private-file metadata and lifecycle rows are retained for recovery and
+-- audit. The runtime can progress them but must not delete either metadata,
+-- bindings, revisions, or retry tombstones directly.
+REVOKE DELETE, TRUNCATE ON TABLE
+  "FacilitiesFileBinding",
+  "FacilitiesFileUploadAttempt",
+  "FacilitiesFileUpload",
+  "FacilitiesFileDeletionTombstone"
+FROM :"runtime_role";
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  "StoredFile"
+TO :"runtime_role";
+GRANT SELECT, INSERT, UPDATE ON TABLE
+  "FacilitiesFileBinding",
+  "FacilitiesFileUploadAttempt",
+  "FacilitiesFileUpload",
+  "FacilitiesFileDeletionTombstone"
 TO :"runtime_role";

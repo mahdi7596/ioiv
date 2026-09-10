@@ -173,3 +173,22 @@ The initial export filters are intake, supplier, status, and date range.
   an intake, a date, a supplier availability, or a questionnaire template. Facilities
   remains unavailable until M2–M5 are complete and `SUPER_ADMIN` configuration is
   delivered.
+
+## M2 private-file engineering safeguards
+
+M2 implements the confirmed private-file boundary without making the facilities
+programme available or adding an applicant/admin interface. Facilities evidence is
+kept in private staging/ready storage under opaque server-generated keys. Server-side
+content verification and a successful malware scan are both required before a file is
+downloadable; an unavailable scanner fails closed and leaves the object quarantined.
+
+The 150 MiB application limit counts current application evidence plus pending
+reservations. A replacement credits precisely the currently bound predecessor so a
+full application can replace a file, while temporary physical overlap is cleaned up
+after the database swap. The treatment of future M3 company-profile documents in that
+application total remains a product decision; M2 does not infer it.
+
+Production scanner selection/operations, facilities reviewer download roles, retention
+periods for rejected/quarantined data, archive/CSV policy thresholds, and applicant
+retry wording remain unresolved. Until they are approved and the scanner readiness
+checks pass, facilities stays unavailable.

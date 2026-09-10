@@ -37,6 +37,18 @@ Notes:
 - `nationalCode` exists in the schema but current registration UI mainly collects the company contact national code.
 - One user can have many applications.
 
+### Facilities Company Profile (M3)
+
+`Company`, `CompanyShareholder`, and `CompanyOfficer` are facilities-only records
+owned by one OTP user. They are not derived from legacy `User` or `Application`
+fields. Drafts may be incomplete; `profileCompletedAt` is set only after exact
+server-side completion validation. `profileVersion` prevents a stale browser save
+from overwriting a newer profile.
+
+Required private evidence uses M2 `FacilitiesFileBinding` company-profile slots.
+Completion resolves the binding's current upload and requires a passed upload with a
+passed scan; storage keys and file paths are never exposed.
+
 ### Admin
 
 Admin user allowed to review submissions.
@@ -363,3 +375,27 @@ legacy `Application` table and no legacy user/application is backfilled or linke
 - A replaced physical upload is deleted by the later private-file workflow; only safe
   non-content revision/audit metadata remains. M1 stores the metadata contract but
   does not perform file deletion or scanning.
+
+### M2 private-file lifecycle
+
+M2 leaves the legacy `ApplicationFile` table and its upload/download paths unchanged.
+It adds facilities-only private-file operational records:
+
+- `FacilitiesFileBinding` is a server-created, immutable company-profile or
+  application document slot. It binds the owning user, company, optional facilities
+  application, and current approved revision.
+- `FacilitiesFileUploadAttempt` records a safe idempotent request outcome, including
+  rejected content that never becomes a revision.
+- `FacilitiesFileUpload` represents a quota-bearing revision. Its lifecycle separates
+  `PENDING`, `PASSED`, `FAILED`, `UNAVAILABLE`, `CORRUPT`, `INTERRUPTED`, `DUPLICATE`,
+  `OVERSIZED`, and `DISALLOWED` outcomes from safe failure codes.
+- `FacilitiesFileDeletionTombstone` is the durable retry record for deletion after a
+  replacement is current. It stores scheduling/status codes only—never a path, URL,
+  document content, scanner output, or secret.
+
+Database triggers enforce the owner/company/application tuple, 25 MiB revision cap,
+serialized 150 MiB application reservation, same-slot current-revision replacement,
+passed-scan requirement, and deletion ordering. `UNAVAILABLE` may return to `PENDING`
+for an internal re-scan; other terminal outcomes remain immutable. A deleted predecessor
+retains only safe lifecycle/revision/audit metadata after its private bytes and
+unreferenced `StoredFile` metadata are purged.
