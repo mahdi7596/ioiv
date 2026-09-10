@@ -320,6 +320,24 @@ it logs record counts only.
 Do not run it against production to inject failures. Controlled scanner/storage/DB
 failure tests belong only to local, test, or staging environments.
 
+## M4 facilities configuration rollout (not deployed)
+
+M4 adds an active-`SUPER_ADMIN`-only configuration panel for programme state,
+intakes, per-intake suppliers, maximum amount/payment settings, and private Word
+questionnaire versions. It does not add an applicant facilities route or make the
+programme usable, even if a configuration row is marked enabled.
+
+Questionnaire files use the M2 private storage/scanner boundary. A template version
+is created only from a scan-passed DOC/DOCX revision in an admin-owned binding; each
+version has a new binding and cannot replace, mutate, or delete an older version.
+Before an M4 deployment, follow the same dated backup and isolated restore rehearsal
+required for M1/M2, apply the additive migration through the maintenance profile,
+and rerun the runtime-role provision script so template versions remain non-deletable.
+Verify the M4 database integrity and role checks on an isolated database, then verify
+that ADMIN and ENTRY_VIEWER sessions are denied while an active SUPER_ADMIN can save
+configuration. Rollback redeploys the preceding application/runtime configuration;
+leave the additive schema and private template records in place.
+
 Before M5 exposes a multipart facility upload endpoint, set a proxy wire limit above
 the 25 MiB file-content cap (to allow multipart framing) while preserving the server
 side 25 MiB content check. The current `25M` Nginx setting is not sufficient for a
