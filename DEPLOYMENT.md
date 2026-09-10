@@ -71,7 +71,9 @@ Production redeploy and reset verified on May 7, 2026:
 - A fresh Linux AMD64 Prisma engine export was generated locally and uploaded because
   the previous `prisma-engine-export.tar.gz` was older than the current schema.
 - The app image was rebuilt with the offline Prisma export, restarted, and verified healthy.
-- Migration `20260507120000_replace_final_statuses_with_validation_completed` was applied by the app entrypoint.
+- Migration `20260507120000_replace_final_statuses_with_validation_completed` was
+  applied by the app entrypoint at that time. That historical startup behaviour has
+  been removed: migrations are now explicit maintenance operations.
 - The production database was backed up, then reset for fresh testing; admins were reseeded.
 - Final reset check showed `3` admins and `0` users, applications, payments, uploaded-file records,
   status histories, and OTPs.
@@ -184,13 +186,103 @@ docker compose logs --tail=80 app
 The app container runs:
 
 ```bash
-npx prisma migrate deploy
 npm run start
 ```
 
+It does not run Prisma migrations during startup.
+
+## M1 database credentials and migration procedure
+
+M1 separates the schema owner from the normal application connection:
+
+- `DATABASE_URL` in `.env.migration` is the migration-owner connection. It is used
+  only by the explicit `migrate` Compose profile during a scheduled maintenance
+  operation.
+- `DATABASE_URL` in `.env.runtime` is the restricted `sana_runtime` connection used
+  by the app container. It must never contain the migration-owner password.
+- The Compose project `.env` is used only for Compose interpolation and PostgreSQL
+  initialization. The app receives `.env.runtime`; it must not contain
+  `POSTGRES_PASSWORD` or the migration-owner `DATABASE_URL`. The maintenance profile receives
+  `.env.migration`; it is never mounted into the app container.
+- The app entrypoint does not run `prisma migrate deploy`. Do not restore automatic
+  migrations to normal startup.
+
+After the M1 migration, provision or rotate the runtime role using the one canonical,
+idempotent command below. It prompts for the password, applies the least-privilege
+legacy and facilities grants, and never places a password in source control or a
+shell command:
+
+```bash
+psql "$DATABASE_URL" -v runtime_role=sana_runtime \
+  -f prisma/facilities-runtime-role-provision.sql
+```
+
+`prisma/facilities-runtime-role-grants.sql` is the only grant policy. It permits the
+legacy operations the current application actually performs, gives facilities audit
+and status history only `SELECT`/`INSERT`, and denies their `UPDATE`/`DELETE`/`TRUNCATE`.
+The M1 owner-level triggers are a second append-only defence.
+
+On an isolated restored copy (never production), verify the grant policy with:
+
+```bash
+DATABASE_URL="...migration-owner connection..." npm run test:db:m1-role
+```
+
+Run the core facilities foreign-key, visibility, immutability, and legacy-preservation
+checks against an isolated database with:
+
+```bash
+DATABASE_URL="...isolated test database..." npm run test:db:m1-integrity
+```
+
+The backup/restore and transactional failure/rerun rehearsal also requires two
+explicitly created disposable databases:
+
+```bash
+DATABASE_URL="...source..." M1_RESTORE_DATABASE_URL="...blank restore target..." \
+  npm run test:db:m1-recovery
+```
+
+### Scheduled M1 maintenance runbook
+
+1. Create and push a new dated backup branch from the exact production `master`.
+2. Take database, upload-storage, and relevant configuration backups. Verify every
+   backup is non-empty and restore the database/upload pair to an isolated target
+   before changing production.
+3. Build the image without restarting the app. Keep Compose interpolation and
+   PostgreSQL initialization values in `.env`; put app-only secrets and
+   `DATABASE_URL` in `.env.runtime`; put the migration-owner `DATABASE_URL` only in
+   `.env.migration`.
+4. Run the migration once, explicitly:
+
+   ```bash
+   cd /data/apps/sana
+   docker compose build
+   docker compose --profile migration run --rm migrate
+   ```
+
+5. Provision/reconcile `sana_runtime` with
+   `prisma/facilities-runtime-role-provision.sql`, then set the restricted `DATABASE_URL`
+   only in `.env.runtime`.
+6. Start/restart the normal service and confirm it uses the runtime role:
+
+   ```bash
+   docker compose up -d app
+   docker compose ps
+   docker compose logs --tail=100 app
+   ```
+
+7. Verify the legacy route, legacy file access, payment callback behaviour, and M1
+   role-denial/integrity checks before enabling any facilities intake.
+
+If the application deployment must be rolled back, redeploy the prior application and
+runtime configuration. Leave the additive M1 schema in place. Do not attempt a
+destructive schema rollback without the verified restore procedure and explicit
+approval.
+
 ## Environment
 
-Production `.env` lives on the server in:
+Compose interpolation/initialization `.env` lives on the server in:
 
 ```text
 /data/apps/sana/.env
@@ -205,6 +297,12 @@ SESSION_SECRET=...
 POSTGRES_DB=sana
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=...
+```
+
+The app-only `/data/apps/sana/.env.runtime` contains:
+
+```env
+DATABASE_URL=postgresql://sana_runtime:...@postgres:5432/sana
 
 UPLOAD_DIR=/app/uploads
 
@@ -223,7 +321,14 @@ SEED_ADMIN_MOBILES=...
 SEED_DEMO_DATA=false
 ```
 
-Do not commit real secrets. Use `.env.production.example` for examples only.
+The maintenance-only `/data/apps/sana/.env.migration` contains:
+
+```env
+DATABASE_URL=postgresql://migration-owner:...@postgres:5432/sana
+```
+
+Do not commit real secrets. Use the versioned `.env.production.example`,
+`.env.runtime.example`, and `.env.migration.example` files as templates only.
 
 Important: the real merchant ID is not committed into application source code. Set it on
 the server environment:

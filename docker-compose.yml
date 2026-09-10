@@ -7,10 +7,13 @@ services:
         NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}
     container_name: sana-app
     restart: unless-stopped
+    # Runtime-only application secrets (APP_URL, SESSION_SECRET, SMS/payment
+    # credentials, and restricted DATABASE_URL). This file must never contain an
+    # owner password.
     env_file:
-      - .env
+      - path: .env.runtime
+        required: false
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sana}
       HOSTNAME: 0.0.0.0
       NODE_ENV: production
       PORT: 3000
@@ -27,6 +30,25 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+
+  migrate:
+    # Run only as an explicit maintenance operation:
+    # docker compose --profile migration run --rm migrate
+    profiles: ["migration"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}
+    # This maintenance-only file contains the migration-owner DATABASE_URL, but
+    # is deliberately never passed to the app service.
+    env_file:
+      - path: .env.migration
+        required: false
+    command: ["npx", "prisma", "migrate", "deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine

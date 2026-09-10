@@ -10,6 +10,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "test:db:m1-integrity": "prisma/tests/test-facilities-foundation.sh",
+    "test:db:m1-recovery": "prisma/tests/test-facilities-migration-recovery.sh",
+    "test:db:m1-role": "prisma/tests/test-facilities-runtime-role.sh",
     "test": "vitest run"
   },
   "dependencies": {

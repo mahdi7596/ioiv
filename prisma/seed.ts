@@ -18,6 +18,12 @@ const userId = "seed-user-09108119122";
 const paymentId = "seed-payment-09108119122-verified";
 const defaultAdminMobiles = ["09390649614", "09127670204", "09132974595"];
 const validationCertificateFieldKey = "validationCertificate";
+const facilitySupplierNames = [
+  "شرکت ملی نفت ایران",
+  "شرکت ملی گاز ایران",
+  "شرکت ملی صنایع پتروشیمی ایران",
+  "شرکت ملی پالایش و پخش فرآورده‌های نفتی ایران",
+] as const;
 
 const demoSubmissions = [
   {
@@ -209,6 +215,18 @@ function seedAdminMobiles() {
 
 async function main() {
   const seededAt = new Date();
+
+  // M1 seeds only the confirmed supplier catalogue. It does not create a
+  // facilities programme configuration, intake, availability, or template.
+  await Promise.all(
+    facilitySupplierNames.map((name) =>
+      prisma.facilitySupplier.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      }),
+    ),
+  );
 
   const adminMobiles = seedAdminMobiles();
   const admins = await Promise.all(

@@ -46,27 +46,497 @@ enum AuditOutcome {
   FAILED
 }
 
+// These enums and models belong exclusively to the facilities route.  The legacy
+// validation application models below deliberately continue to use their original
+// data shape and workflow contracts.
+enum FacilityType {
+  FIXED_CAPITAL
+  WORKING_CAPITAL
+}
+
+enum FacilitiesProgram {
+  VALIDATION
+  FACILITIES
+}
+
+enum StoredFileType {
+  PDF
+  DOC
+  DOCX
+  XLS
+  XLSX
+  CSV
+  ZIP
+}
+
+enum StoredFileScanStatus {
+  PENDING
+  PASSED
+  FAILED
+}
+
+enum CompanyProfileDocumentKind {
+  INCORPORATION_NOTICE
+  ARTICLES_OF_ASSOCIATION
+  BOARD_CHANGES_GAZETTE
+  CAPITAL_INCREASE_GAZETTE
+  OFFICER_IDENTITY_PACKAGE
+}
+
+enum FacilitiesApplicationDocumentKind {
+  INCORPORATION_NOTICE
+  ARTICLES_OF_ASSOCIATION
+  BOARD_CHANGES_GAZETTE
+  CAPITAL_INCREASE_GAZETTE
+  INSURANCE_LIST
+  GENERAL_LEDGER_TRIAL_BALANCE
+  SUBSIDIARY_LEDGER_TRIAL_BALANCE
+  COMPANY_CREDIT_REPORT
+  CEO_CREDIT_REPORT
+  BOARD_MEMBER_CREDIT_REPORT
+  COMPLETED_QUESTIONNAIRE
+  QUESTIONNAIRE_ATTACHMENT
+  LICENCES_AND_CERTIFICATES
+  ACTIVE_CONTRACTS
+}
+
+enum FacilitiesYearDocumentKind {
+  TAX_DECLARATION
+  AUDITED_FINANCIAL_STATEMENT
+  VAT_DECLARATION
+}
+
+enum FacilitiesCreditReportTarget {
+  COMPANY
+  CEO
+  BOARD_MEMBER
+}
+
+enum FacilitiesAuditAction {
+  COMPANY_CREATED
+  COMPANY_UPDATED
+  COMPANY_DOCUMENT_REPLACED
+  INTAKE_CONFIGURED
+  SUPPLIER_CONFIGURED
+  QUESTIONNAIRE_TEMPLATE_CONFIGURED
+  APPLICATION_CREATED
+  APPLICATION_UPDATED
+  APPLICATION_SUBMITTED
+  PAYMENT_INITIATED
+  PAYMENT_VERIFIED
+  PAYMENT_FAILED
+  CORRECTION_REQUESTED
+  CORRECTION_SUBMITTED
+  STATUS_CHANGED
+  FILE_ATTACHED
+  FILE_REPLACED
+}
+
 model User {
-  id                         String        @id @default(cuid())
-  mobile                     String        @unique
+  id                         String                  @id @default(cuid())
+  mobile                     String                  @unique
   companyName                String?
   companyNationalId          String?
   companyContactFullName     String?
   companyContactNationalCode String?
   nationalCode               String?
-  createdAt                  DateTime      @default(now())
-  updatedAt                  DateTime      @updatedAt
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
   applications               Application[]
+  company                    Company?
+  facilitiesApplications     FacilitiesApplication[] @relation("FacilitiesApplicationApplicant")
+}
+
+/// A facilities-company profile is intentionally independent from the legacy
+/// company fields on User. Existing users are not backfilled into this table.
+model Company {
+  id                     String                   @id @default(cuid())
+  userId                 String                   @unique
+  user                   User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  name                   String?
+  nationalId             String?                  @unique
+  registrationNumber     String?
+  registrationPlace      String?
+  registrationDate       DateTime?
+  registeredCapitalRial  Decimal?
+  contactFullName        String?
+  contactNationalCode    String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  shareholders           CompanyShareholder[]
+  officers               CompanyOfficer[]
+  profileDocuments       CompanyProfileDocument[]
+  facilitiesApplications FacilitiesApplication[]
+}
+
+model CompanyShareholder {
+  id                  String   @id @default(cuid())
+  companyId           String
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  fullName            String
+  ownershipPercentage Decimal
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model CompanyOfficer {
+  id               String                   @id @default(cuid())
+  companyId        String
+  company          Company                  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  fullName         String
+  position         String
+  isChiefExecutive Boolean                  @default(false)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  profileDocuments CompanyProfileDocument[]
+
+  @@index([companyId])
+}
+
+/// Safe metadata only. The opaque storage key is not a public URL or filesystem
+/// path. Physical storage and scanning are introduced in M2.
+model StoredFile {
+  id                            String                          @id @default(cuid())
+  storageKey                    String                          @unique
+  originalName                  String
+  fileType                      StoredFileType
+  detectedMimeType              String
+  byteSize                      Int
+  sha256                        String
+  scanStatus                    StoredFileScanStatus            @default(PENDING)
+  scannedAt                     DateTime?
+  createdAt                     DateTime                        @default(now())
+  companyProfileDocuments       CompanyProfileDocument[]        @relation("CompanyProfileDocumentFile")
+  questionnaireTemplates        QuestionnaireTemplateVersion[]  @relation("QuestionnaireTemplateFile")
+  applicationDocuments          FacilitiesApplicationDocument[] @relation("FacilitiesApplicationDocumentFile")
+  yearDocuments                 FacilitiesYearDocument[]        @relation("FacilitiesYearDocumentFile")
+  humanResources                FacilitiesHumanResources[]      @relation("FacilitiesHumanResourcesInsuranceFile")
+  trialBalanceGeneralLedgers    FacilitiesTrialBalance[]        @relation("FacilitiesTrialBalanceGeneralLedgerFile")
+  trialBalanceSubsidiaryLedgers FacilitiesTrialBalance[]        @relation("FacilitiesTrialBalanceSubsidiaryLedgerFile")
+  creditReports                 FacilitiesCreditReport[]        @relation("FacilitiesCreditReportFile")
+}
+
+model CompanyProfileDocument {
+  id           String                     @id @default(cuid())
+  companyId    String
+  company      Company                    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  officerId    String?
+  officer      CompanyOfficer?            @relation(fields: [officerId], references: [id], onDelete: Restrict)
+  kind         CompanyProfileDocumentKind
+  storedFileId String
+  storedFile   StoredFile                 @relation("CompanyProfileDocumentFile", fields: [storedFileId], references: [id], onDelete: Restrict)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+
+  @@index([companyId, kind])
+  @@index([officerId])
+  @@index([storedFileId])
+}
+
+/// Configuration rows make validation/facilities programme visibility explicit
+/// without changing either programme's application tables or workflow.
+model FacilitiesProgramConfiguration {
+  program   FacilitiesProgram @id
+  isEnabled Boolean           @default(false)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model FacilitySupplier {
+  id              String                         @id @default(cuid())
+  name            String                         @unique
+  createdAt       DateTime                       @default(now())
+  updatedAt       DateTime                       @updatedAt
+  intakeSuppliers FacilityIntakeSupplier[]
+  templates       QuestionnaireTemplateVersion[]
+}
+
+model FacilityIntake {
+  id                     String                   @id @default(cuid())
+  name                   String                   @unique
+  isEnabled              Boolean                  @default(false)
+  maximumAmountRial      Decimal                  @default(500000000000)
+  paymentEnabled         Boolean                  @default(true)
+  paymentAmountToman     Int                      @default(3000000)
+  paymentTermsVersion    String?
+  paymentTermsText       String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  supplierConfigurations FacilityIntakeSupplier[]
+  applications           FacilitiesApplication[]
+
+  @@index([isEnabled])
+}
+
+model FacilityIntakeSupplier {
+  id                             String                        @id @default(cuid())
+  intakeId                       String
+  intake                         FacilityIntake                @relation(fields: [intakeId], references: [id], onDelete: Restrict)
+  supplierId                     String
+  supplier                       FacilitySupplier              @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  isEnabled                      Boolean                       @default(false)
+  questionnaireTemplateVersionId String?
+  questionnaireTemplateVersion   QuestionnaireTemplateVersion? @relation("OfferedQuestionnaireTemplate", fields: [questionnaireTemplateVersionId], references: [id], onDelete: Restrict)
+  createdAt                      DateTime                      @default(now())
+  updatedAt                      DateTime                      @updatedAt
+  applications                   FacilitiesApplication[]
+
+  @@unique([intakeId, supplierId])
+  @@index([supplierId])
+  @@index([questionnaireTemplateVersionId])
+}
+
+model QuestionnaireTemplateVersion {
+  id               String                   @id @default(cuid())
+  supplierId       String
+  supplier         FacilitySupplier         @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  versionLabel     String
+  storedFileId     String
+  storedFile       StoredFile               @relation("QuestionnaireTemplateFile", fields: [storedFileId], references: [id], onDelete: Restrict)
+  publishedAt      DateTime?
+  retiredAt        DateTime?
+  createdAt        DateTime                 @default(now())
+  offeredByIntakes FacilityIntakeSupplier[] @relation("OfferedQuestionnaireTemplate")
+  applications     FacilitiesApplication[]
+
+  @@unique([supplierId, versionLabel])
+  @@index([storedFileId])
+}
+
+model FacilitiesApplication {
+  id                             String                                @id @default(cuid())
+  userId                         String
+  user                           User                                  @relation("FacilitiesApplicationApplicant", fields: [userId], references: [id], onDelete: Restrict)
+  companyId                      String
+  company                        Company                               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  intakeId                       String
+  intake                         FacilityIntake                        @relation(fields: [intakeId], references: [id], onDelete: Restrict)
+  intakeSupplierId               String
+  intakeSupplier                 FacilityIntakeSupplier                @relation(fields: [intakeSupplierId], references: [id], onDelete: Restrict)
+  questionnaireTemplateVersionId String
+  questionnaireTemplateVersion   QuestionnaireTemplateVersion          @relation(fields: [questionnaireTemplateVersionId], references: [id], onDelete: Restrict)
+  facilityType                   FacilityType
+  requestedAmountRial            Decimal
+  maximumAmountRialSnapshot      Decimal
+  paymentEnabledSnapshot         Boolean
+  paymentAmountTomanSnapshot     Int?
+  paymentTermsVersionSnapshot    String?
+  status                         ApplicationStatus                     @default(DRAFT)
+  currentStep                    Int                                   @default(1)
+  submittedAt                    DateTime?
+  createdAt                      DateTime                              @default(now())
+  updatedAt                      DateTime                              @updatedAt
+  companySnapshot                FacilitiesApplicationCompanySnapshot?
+  shareholders                   FacilitiesApplicationShareholder[]
+  officers                       FacilitiesApplicationOfficer[]
+  documents                      FacilitiesApplicationDocument[]
+  yearDocuments                  FacilitiesYearDocument[]
+  humanResources                 FacilitiesHumanResources?
+  trialBalance                   FacilitiesTrialBalance?
+  creditReports                  FacilitiesCreditReport[]
+  payments                       FacilitiesPaymentAttempt[]
+  correctionRequests             FacilitiesCorrectionRequest[]
+  history                        FacilitiesStatusHistory[]
+  auditLogs                      FacilitiesAuditLog[]
+
+  @@unique([companyId, intakeId])
+  @@index([userId])
+  @@index([intakeId, status, submittedAt])
+  @@index([intakeSupplierId])
+  @@index([questionnaireTemplateVersionId])
+}
+
+model FacilitiesApplicationCompanySnapshot {
+  id                    String                @id @default(cuid())
+  applicationId         String                @unique
+  application           FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  name                  String?
+  nationalId            String?
+  registrationNumber    String?
+  registrationPlace     String?
+  registrationDate      DateTime?
+  registeredCapitalRial Decimal?
+  contactFullName       String?
+  contactNationalCode   String?
+  createdAt             DateTime              @default(now())
+}
+
+model FacilitiesApplicationShareholder {
+  id                  String                @id @default(cuid())
+  applicationId       String
+  application         FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  fullName            String
+  ownershipPercentage Decimal
+  createdAt           DateTime              @default(now())
+
+  @@index([applicationId])
+}
+
+model FacilitiesApplicationOfficer {
+  id               String                   @id @default(cuid())
+  applicationId    String
+  application      FacilitiesApplication    @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  fullName         String
+  position         String
+  isChiefExecutive Boolean                  @default(false)
+  createdAt        DateTime                 @default(now())
+  creditReports    FacilitiesCreditReport[]
+
+  @@index([applicationId])
+}
+
+model FacilitiesApplicationDocument {
+  id            String                            @id @default(cuid())
+  applicationId String
+  application   FacilitiesApplication             @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  kind          FacilitiesApplicationDocumentKind
+  storedFileId  String
+  storedFile    StoredFile                        @relation("FacilitiesApplicationDocumentFile", fields: [storedFileId], references: [id], onDelete: Restrict)
+  createdAt     DateTime                          @default(now())
+
+  @@index([applicationId, kind])
+  @@index([storedFileId])
+}
+
+model FacilitiesYearDocument {
+  id            String                     @id @default(cuid())
+  applicationId String
+  application   FacilitiesApplication      @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  kind          FacilitiesYearDocumentKind
+  year          Int
+  storedFileId  String
+  storedFile    StoredFile                 @relation("FacilitiesYearDocumentFile", fields: [storedFileId], references: [id], onDelete: Restrict)
+  createdAt     DateTime                   @default(now())
+
+  @@unique([applicationId, kind, year])
+  @@index([storedFileId])
+}
+
+model FacilitiesHumanResources {
+  id              String                @id @default(cuid())
+  applicationId   String                @unique
+  application     FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  employeeCount   Int
+  insuranceFileId String
+  insuranceFile   StoredFile            @relation("FacilitiesHumanResourcesInsuranceFile", fields: [insuranceFileId], references: [id], onDelete: Restrict)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([insuranceFileId])
+}
+
+model FacilitiesTrialBalance {
+  id                     String                @id @default(cuid())
+  applicationId          String                @unique
+  application            FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  year                   Int                   @default(1405)
+  generalLedgerFileId    String
+  generalLedgerFile      StoredFile            @relation("FacilitiesTrialBalanceGeneralLedgerFile", fields: [generalLedgerFileId], references: [id], onDelete: Restrict)
+  subsidiaryLedgerFileId String
+  subsidiaryLedgerFile   StoredFile            @relation("FacilitiesTrialBalanceSubsidiaryLedgerFile", fields: [subsidiaryLedgerFileId], references: [id], onDelete: Restrict)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  @@index([generalLedgerFileId])
+  @@index([subsidiaryLedgerFileId])
+}
+
+model FacilitiesCreditReport {
+  id                String                        @id @default(cuid())
+  applicationId     String
+  application       FacilitiesApplication         @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  target            FacilitiesCreditReportTarget
+  officerSnapshotId String?
+  officerSnapshot   FacilitiesApplicationOfficer? @relation(fields: [officerSnapshotId], references: [id], onDelete: Restrict)
+  storedFileId      String
+  storedFile        StoredFile                    @relation("FacilitiesCreditReportFile", fields: [storedFileId], references: [id], onDelete: Restrict)
+  createdAt         DateTime                      @default(now())
+
+  @@unique([applicationId, target])
+  @@index([officerSnapshotId])
+  @@index([storedFileId])
+}
+
+model FacilitiesPaymentAttempt {
+  id            String                @id @default(cuid())
+  applicationId String
+  application   FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  amountToman   Int
+  gateway       String
+  authority     String?
+  referenceId   String?
+  status        PaymentStatus         @default(INITIATED)
+  safeMetadata  Json                  @default("{}")
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([applicationId, createdAt])
+  @@index([authority])
+  @@index([referenceId])
+}
+
+model FacilitiesCorrectionRequest {
+  id            String                @id @default(cuid())
+  applicationId String
+  application   FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  sequence      Int
+  reviewerId    String
+  reviewer      Admin                 @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+  note          String
+  openedAt      DateTime              @default(now())
+  resolvedAt    DateTime?
+
+  @@unique([applicationId, sequence])
+  @@index([reviewerId])
+}
+
+model FacilitiesStatusHistory {
+  id             String                @id @default(cuid())
+  applicationId  String
+  application    FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  previousStatus ApplicationStatus?
+  newStatus      ApplicationStatus
+  actorType      AuditActorType
+  actorId        String?
+  note           String?
+  createdAt      DateTime              @default(now())
+
+  @@index([applicationId, createdAt])
+}
+
+model FacilitiesAuditLog {
+  id            String                 @id @default(cuid())
+  applicationId String?
+  application   FacilitiesApplication? @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  actorType     AuditActorType
+  actorId       String?
+  action        FacilitiesAuditAction
+  outcome       AuditOutcome           @default(SUCCEEDED)
+  entityType    String
+  entityId      String?
+  metadata      Json                   @default("{}")
+  requestId     String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime               @default(now())
+
+  @@index([applicationId, createdAt])
+  @@index([actorType, actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([requestId])
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  name      String
-  mobile    String   @unique
-  role      UserRole @default(ADMIN)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                           String                        @id @default(cuid())
+  name                         String
+  mobile                       String                        @unique
+  role                         UserRole                      @default(ADMIN)
+  active                       Boolean                       @default(true)
+  createdAt                    DateTime                      @default(now())
+  updatedAt                    DateTime                      @updatedAt
+  facilitiesCorrectionRequests FacilitiesCorrectionRequest[]
 }
 
 model OtpCode {
