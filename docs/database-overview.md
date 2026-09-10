@@ -339,6 +339,9 @@ legacy `Application` table and no legacy user/application is backfilled or linke
 - `QuestionnaireTemplateVersion` records a supplier questionnaire template version.
   The template and completed questionnaire are Word documents; applications pin the
   chosen template version.
+  M4 creates it only from a passed M2 private upload bound to an active
+  `SUPER_ADMIN`; versions are immutable and each uses a fresh binding so prior
+  template content is never replaced or deleted.
 
 ### Facilities application evidence
 

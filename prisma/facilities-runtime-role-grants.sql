@@ -57,7 +57,10 @@ TO :"runtime_role";
 -- All remaining facilities tables are mutable operational data. Their UI/API
 -- flows are introduced in later milestones, but M1 provides the least necessary
 -- table-level contract; audit and history tables remain excluded above.
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+REVOKE DELETE, TRUNCATE ON TABLE "QuestionnaireTemplateVersion" FROM :"runtime_role";
+REVOKE DELETE, TRUNCATE ON TABLE "FacilitiesProgramConfiguration", "FacilitySupplier", "FacilityIntake", "FacilityIntakeSupplier" FROM :"runtime_role";
+GRANT SELECT, INSERT ON TABLE "QuestionnaireTemplateVersion" TO :"runtime_role";
+GRANT SELECT, INSERT, UPDATE ON TABLE
   "Company",
   "CompanyShareholder",
   "CompanyOfficer",
@@ -66,7 +69,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "FacilitySupplier",
   "FacilityIntake",
   "FacilityIntakeSupplier",
-  "QuestionnaireTemplateVersion",
   "FacilitiesApplication",
   "FacilitiesApplicationCompanySnapshot",
   "FacilitiesApplicationShareholder",
