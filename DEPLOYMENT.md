@@ -4,6 +4,26 @@ Production domain: `https://sana.ioiv.ir`
 
 This document records the current production deployment state and the operational steps learned during the first server deployment.
 
+## Code and Production Backup Baseline
+
+On September 10, 2026, the current application state was preserved before implementing
+new client-requested functionality directly on `master`.
+
+- Backup branch: `backup-master-2026-09-10`
+- GitHub branch: `origin/backup-master-2026-09-10`
+- Snapshot commit: `ab16e9122881617d6c7dcf9fb84878c00684ee03`
+- `master` and the backup branch pointed to the same commit when the backup was made.
+
+Before a future production deployment that changes data or the database schema:
+
+1. Create and push a new dated backup branch from the then-current `master`.
+2. SSH to the production server and take a database backup.
+3. Back up production uploads and any server-side configuration/storage not tracked by Git.
+4. Confirm the database backup can be restored before deploying destructive migrations or data changes.
+
+The current agreed workflow is to develop the new functionality on `master`; the dated
+backup branch is the code rollback point.
+
 ## Current Status
 
 The app is deployed and verified on `sana.ioiv.ir`.
