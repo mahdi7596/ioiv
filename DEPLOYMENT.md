@@ -1175,3 +1175,35 @@ tar -czf /data/backups/sana/sana-uploads-$(date +%Y%m%d-%H%M%S).tar.gz \
 ```
 
 Do not restore database and uploads independently unless you know which application/file IDs belong together.
+
+## M6 facilities payment and confirmed submission (not deployed)
+
+M6 adds an additive facilities payment lifecycle and a facilities-only callback route.
+It does not modify the legacy `Payment` table, legacy payment callback, legacy
+application statuses, or legacy validation workflow. Payment-enabled applications
+use the amount pinned when the draft was created. The applicant confirms the final
+information before checkout; after the gateway callback is verified server-side, the
+application is submitted atomically as `SUBMITTED`. Payment-disabled applications
+skip checkout and submit after the same server-side evidence checks.
+
+Before a future M6 deployment:
+
+1. Create a dated Git backup branch and verify PostgreSQL, private upload storage,
+   runtime configuration, and an isolated restore rehearsal.
+2. Apply the additive migration through the migration Compose profile only, then
+   rerun the restricted runtime-role provisioning script and regenerate the Linux
+   Prisma engine export.
+3. Confirm that the Zarinpal merchant configuration is present only in the runtime
+   environment. Never place it in browser code, audit metadata, or logs.
+4. Run Prisma validation/generation, `npm test`, `npm run lint`, `npm run build`,
+   and the isolated facilities database integrity checks. Also verify forged,
+   duplicate, delayed, cancelled, failed, and unknown callbacks in a non-production
+   environment.
+5. Confirm the applicant-facing payment confirmation wording before enabling any
+   payment-enabled intake. Do not expose unapproved payment acknowledgement copy.
+
+Rollback redeploys the prior application and runtime configuration while leaving the
+additive M6 schema and immutable payment/audit history in place. A payment-enabled
+facilities intake must remain disabled until the callback and submission checks pass
+in the restored verification environment. No M6 production deployment has been run
+by this change.

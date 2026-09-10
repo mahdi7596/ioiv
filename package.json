@@ -14,6 +14,7 @@
     "test:db:m1-recovery": "prisma/tests/test-facilities-migration-recovery.sh",
     "test:db:m1-role": "prisma/tests/test-facilities-runtime-role.sh",
     "test:db:m2-files": "sh prisma/tests/test-facilities-private-files.sh",
+    "test:db:m6-payment": "sh prisma/tests/test-facilities-m6-payment.sh",
     "facilities:reconcile-files": "tsx scripts/reconcile-facilities-files.ts",
     "test": "vitest run"
   },

@@ -34,6 +34,18 @@ enum PaymentStatus {
   FAILED
 }
 
+/// Facilities-only payment lifecycle. The legacy PaymentStatus enum and payment
+/// flow remain unchanged for the existing validation route.
+enum FacilitiesPaymentStatus {
+  INITIATED
+  REDIRECT_READY
+  PENDING
+  VERIFIED
+  FAILED
+  CANCELLED
+  TIMED_OUT
+}
+
 enum AuditActorType {
   USER
   ADMIN
@@ -171,8 +183,12 @@ enum FacilitiesAuditAction {
   APPLICATION_UPDATED
   APPLICATION_SUBMITTED
   PAYMENT_INITIATED
+  PAYMENT_REDIRECT_READY
+  PAYMENT_PENDING
   PAYMENT_VERIFIED
   PAYMENT_FAILED
+  PAYMENT_CANCELLED
+  PAYMENT_TIMED_OUT
   CORRECTION_REQUESTED
   CORRECTION_SUBMITTED
   STATUS_CHANGED
@@ -637,16 +653,18 @@ model FacilitiesPaymentAttempt {
   id            String                @id @default(cuid())
   applicationId String
   application   FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  idempotencyKey String?
   amountToman   Int
   gateway       String
   authority     String?
   referenceId   String?
-  status        PaymentStatus         @default(INITIATED)
+  status        FacilitiesPaymentStatus @default(INITIATED)
   safeMetadata  Json                  @default("{}")
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
 
   @@index([applicationId, createdAt])
+  @@unique([applicationId, idempotencyKey])
   @@index([authority])
   @@index([referenceId])
 }

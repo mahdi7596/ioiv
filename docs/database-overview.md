@@ -411,3 +411,26 @@ replacement and deletion cannot break the application record. The current passed
 revision is resolved through the binding. Questionnaire templates remain immutable
 private `StoredFile` records while referenced by an intake or application; they are
 not public URLs and are not deleted as part of applicant replacement cleanup.
+
+### M6 payment and confirmed submission
+
+Facilities payments use the facilities-only `FacilitiesPaymentStatus` lifecycle;
+the legacy `PaymentStatus` enum and legacy payment routes are unchanged. A facilities
+payment keeps only safe identifiers and state metadata. Database constraints allow
+one active or timed-out payment per application and one verified payment per
+application. A timed-out payment remains eligible for a later server verification,
+but cannot be used to start a second payment.
+
+When payment is enabled, the amount is copied from the intake snapshot and is never
+accepted from the browser. The applicant must confirm the final information before
+checkout. A successful server-side gateway verification atomically records the
+verified payment, submits the facilities application as `SUBMITTED`, records status
+history, and appends the corresponding audit events. When payment is disabled, the
+same server-side evidence checks submit the application directly after the final
+applicant action.
+
+Facilities status transitions are database-guarded. Audit and status-history rows
+remain append-only. Failed or cancelled payments return an unsubmitted application
+to draft; unknown gateway outcomes remain pending and do not trigger another charge.
+No raw gateway response, credential, OTP, file content, storage path, or public file
+URL is stored in the facilities payment or audit records.
