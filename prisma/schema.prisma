@@ -34,6 +34,18 @@ enum PaymentStatus {
   FAILED
 }
 
+enum AuditActorType {
+  USER
+  ADMIN
+  SYSTEM
+}
+
+enum AuditOutcome {
+  SUCCEEDED
+  REJECTED
+  FAILED
+}
+
 model User {
   id                         String        @id @default(cuid())
   mobile                     String        @unique
@@ -94,6 +106,7 @@ model Application {
   files                      ApplicationFile[]
   payments                   Payment[]
   history                    StatusHistory[]
+  auditLogs                  AuditLog[]
 
   @@unique([mobile, companyNationalId, applicationRound])
   @@index([status])
@@ -139,4 +152,27 @@ model StatusHistory {
   createdAt      DateTime           @default(now())
 
   @@index([applicationId])
+}
+
+model AuditLog {
+  id            String         @id @default(cuid())
+  actorType     AuditActorType
+  actorId       String?
+  action        String
+  outcome       AuditOutcome   @default(SUCCEEDED)
+  entityType    String
+  entityId      String?
+  applicationId String?
+  application   Application?   @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  metadata      Json           @default("{}")
+  requestId     String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime       @default(now())
+
+  @@index([actorType, actorId, createdAt])
+  @@index([applicationId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([requestId])
+  @@index([createdAt])
 }
