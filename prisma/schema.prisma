@@ -292,6 +292,7 @@ model FacilitiesFileBinding {
   updatedAt       DateTime                    @updatedAt
   attempts        FacilitiesFileUploadAttempt[]
   uploads         FacilitiesFileUpload[]      @relation("FacilitiesFileBindingUploads")
+  applicationEvidence FacilitiesApplicationEvidence?
 
   @@unique([scopeId, slotKey])
   @@index([userId, companyId])
@@ -489,6 +490,7 @@ model FacilitiesApplication {
   history                        FacilitiesStatusHistory[]
   auditLogs                      FacilitiesAuditLog[]
   fileBindings                   FacilitiesFileBinding[]                 @relation("FacilitiesFileBindingApplication")
+  evidence                       FacilitiesApplicationEvidence[]
 
   @@unique([companyId, intakeId])
   @@index([userId])
@@ -547,6 +549,24 @@ model FacilitiesApplicationDocument {
 
   @@index([applicationId, kind])
   @@index([storedFileId])
+}
+
+/// M5 evidence points to a stable M2 binding instead of a replaceable physical revision.
+model FacilitiesApplicationEvidence {
+  id            String                @id @default(cuid())
+  applicationId String
+  application   FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  bindingId     String                @unique
+  binding       FacilitiesFileBinding @relation(fields: [bindingId], references: [id], onDelete: Restrict)
+  kind          String
+  year          Int?
+  officerId     String?
+  employeeCount Int?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@unique([applicationId, kind, year])
+  @@index([applicationId, kind])
 }
 
 model FacilitiesYearDocument {

@@ -399,3 +399,12 @@ passed-scan requirement, and deletion ordering. `UNAVAILABLE` may return to `PEN
 for an internal re-scan; other terminal outcomes remain immutable. A deleted predecessor
 retains only safe lifecycle/revision/audit metadata after its private bytes and
 unreferenced `StoredFile` metadata are purged.
+
+### M5 application evidence and templates
+
+M5 stores applicant evidence in `FacilitiesApplicationEvidence`. Each row references
+an immutable M2 application binding—not a replaceable `StoredFile` revision—so safe
+replacement and deletion cannot break the application record. The current passed
+revision is resolved through the binding. Questionnaire templates remain immutable
+private `StoredFile` records while referenced by an intake or application; they are
+not public URLs and are not deleted as part of applicant replacement cleanup.
