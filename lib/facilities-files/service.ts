@@ -50,9 +50,10 @@ function failureFromError(error: unknown): { status: FacilitiesFileLifecycleStat
   return { status: "FAILED", reason: "STORAGE_WRITE_FAILED" };
 }
 
-async function requireOwnedBinding(userId: string, bindingId: string) {
+async function requireOwnedBinding(owner: { userId?: string; adminId?: string }, bindingId: string) {
+  if ((owner.userId ? 1 : 0) + (owner.adminId ? 1 : 0) !== 1) throw new Error("FACILITIES_FILE_FORBIDDEN");
   const binding = await db.facilitiesFileBinding.findFirst({
-    where: { id: bindingId, userId },
+    where: { id: bindingId, ...(owner.userId ? { userId: owner.userId } : { adminId: owner.adminId }) },
     include: { currentUpload: true },
   });
   if (!binding) throw new Error("FACILITIES_FILE_FORBIDDEN");
@@ -90,13 +91,38 @@ export async function createOwnedFacilitiesFileBinding(input: {
   });
 }
 
+/** A template is deliberately a fresh, admin-owned binding: it can never replace
+ * an earlier template version and therefore cannot schedule that version for deletion. */
+export async function createAdminQuestionnaireTemplateBinding(input: { adminId: string; supplierId: string; slotKey: string }) {
+  const admin = await db.admin.findFirst({ where: { id: input.adminId, active: true, role: "SUPER_ADMIN" } });
+  const supplier = await db.facilitySupplier.findUnique({ where: { id: input.supplierId } });
+  if (!admin || !supplier || !/^[A-Za-z0-9_.-]{1,100}$/.test(input.slotKey)) throw new Error("FACILITIES_FILE_FORBIDDEN");
+  return db.facilitiesFileBinding.create({
+    data: { scope: "QUESTIONNAIRE_TEMPLATE", scopeId: input.supplierId, adminId: input.adminId, slotKey: input.slotKey },
+  });
+}
+
+/** If publishing a freshly scanned template fails, retain a durable deletion
+ * tombstone rather than an unreachable passed object. Published versions never
+ * call this helper. */
+export async function scheduleUnpublishedTemplateDeletion(uploadId: string) {
+  return db.$transaction(async (tx) => {
+    const upload = await tx.facilitiesFileUpload.findUnique({ where: { id: uploadId }, include: { binding: true } });
+    if (!upload?.storedFileId || upload.binding.scope !== "QUESTIONNAIRE_TEMPLATE") return false;
+    if (await tx.questionnaireTemplateVersion.count({ where: { storedFileId: upload.storedFileId } })) return false;
+    await tx.facilitiesFileDeletionTombstone.upsert({ where: { uploadId }, create: { uploadId }, update: {} });
+    return true;
+  });
+}
+
 /**
  * Persist a replacement only after server-side type verification and a passed
  * malware scan. The database trigger serializes application quota reservations
  * and validates owner/scope/revision relationships.
  */
 export async function storeOwnedFacilitiesFile(input: {
-  userId: string;
+  userId?: string;
+  adminId?: string;
   bindingId: string;
   idempotencyKey: string;
   fileName: string;
@@ -106,7 +132,7 @@ export async function storeOwnedFacilitiesFile(input: {
 }): Promise<FacilitiesFileCommitResult> {
   ensureIdempotencyKey(input.idempotencyKey);
   const bytes = Buffer.from(input.bytes);
-  const binding = await requireOwnedBinding(input.userId, input.bindingId);
+  const binding = await requireOwnedBinding({ userId: input.userId, adminId: input.adminId }, input.bindingId);
   const existing = await db.facilitiesFileUploadAttempt.findUnique({
     where: { bindingId_idempotencyKey: { bindingId: binding.id, idempotencyKey: input.idempotencyKey } },
   });
@@ -252,7 +278,7 @@ export async function storeOwnedFacilitiesFile(input: {
           data: {
             applicationId: current.applicationId,
             actorType: AuditActorType.USER,
-            actorId: input.userId,
+            actorId: input.userId!,
             action: current.currentUploadId ? "FILE_REPLACED" : "FILE_ATTACHED",
             outcome: AuditOutcome.SUCCEEDED,
             entityType: "FacilitiesFileBinding",
