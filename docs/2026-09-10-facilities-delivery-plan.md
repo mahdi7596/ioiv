@@ -72,11 +72,26 @@ UI, export, or applicant UI.
 Build the private upload/download service, verified-content and scan boundary,
 server-side limits, authorized access, and replacement/deletion workflow.
 
+M2 implementation is facilities-only and does not expose facilities UI, seed an intake,
+or enable the programme. It adds an owned document-slot binding, idempotent attempt and
+revision records, a serialized application quota reservation, private staging/ready
+storage, content verification, a fail-closed ClamAV adapter, owner-only private
+downloads, and a durable deletion tombstone/reconciliation path. Scanner-unavailable
+objects are quarantined and non-downloadable. The exact production scanner operation,
+facilities reviewer permission matrix, retention intervals, and whether M3 profile
+documents count toward an application total remain decisions for later approval.
+
 ### M3 — Company profile
 
 Build the company profile, shareholders, officers, required profile documents, and
 completion rules. Existing users create this facilities profile without changing their
 legacy records.
+
+M3 permits an OTP-authenticated user to prepare this private profile while the
+facilities programme and application remain unavailable. Profile document slots use
+the M2 private-file binding lifecycle; only a current scan-passed revision satisfies
+completion. The profile does not enter an intake, create an application, or expose
+supplier/payment/review/export behaviour.
 
 ### M4 — Facilities configuration
 

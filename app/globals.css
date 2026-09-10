@@ -89,6 +89,16 @@ textarea:focus-visible {
   width: 1px;
 }
 
+.profile-form { display: grid; gap: 1.25rem; }
+.profile-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.profile-grid label, .profile-row { display: grid; gap: .4rem; }
+.profile-grid input, .profile-row input { border: 1px solid var(--color-border-strong); border-radius: var(--radius-control); min-height: 44px; padding: .6rem .75rem; width: 100%; }
+.profile-list { border: 1px solid var(--color-border); border-radius: var(--radius-card); display: grid; gap: .75rem; padding: 1rem; }
+.profile-list legend { font-weight: 700; padding-inline: .35rem; }
+.profile-row { align-items: end; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+.form-error { background: #fff1ef; border: 1px solid var(--color-danger); border-radius: var(--radius-control); color: #8e241c; padding: .75rem; }
+@media (max-width: 600px) { .profile-row { grid-template-columns: 1fr; } }
+
 .eyebrow {
   color: var(--color-secondary);
   font-size: 0.875rem;

@@ -42,15 +42,22 @@ SELECT NOT EXISTS (
 \if :runtime_role_attributes_restricted
 \else
   \echo 'runtime role attributes were not restricted'
-  \quit 1
+  SELECT 1 / 0;
 \endif
-SELECT NOT (has_table_privilege(:'runtime_role', 'public."FacilitiesAuditLog"', 'UPDATE')
+SELECT (NOT (has_table_privilege(:'runtime_role', 'public."FacilitiesAuditLog"', 'UPDATE')
   OR has_table_privilege(:'runtime_role', 'public."Application"', 'DELETE')
+  OR has_table_privilege(:'runtime_role', 'public."FacilitiesFileBinding"', 'DELETE')
+  OR has_table_privilege(:'runtime_role', 'public."FacilitiesFileUploadAttempt"', 'DELETE')
+  OR has_table_privilege(:'runtime_role', 'public."FacilitiesFileUpload"', 'DELETE')
+  OR has_table_privilege(:'runtime_role', 'public."FacilitiesFileDeletionTombstone"', 'DELETE'))
+  AND has_table_privilege(:'runtime_role', 'public."StoredFile"', 'DELETE')
+  AND has_table_privilege(:'runtime_role', 'public."FacilitiesFileUpload"', 'SELECT,INSERT,UPDATE')
+  AND has_table_privilege(:'runtime_role', 'public."FacilitiesFileUploadAttempt"', 'SELECT,INSERT,UPDATE')
 ) AS runtime_role_table_privileges_restricted \gset
 \if :runtime_role_table_privileges_restricted
 \else
   \echo 'runtime role retained excessive table privileges'
-  \quit 1
+  SELECT 1 / 0;
 \endif
 SQL
 
