@@ -2,23 +2,23 @@
 
 **Source:** Client answers from Mr. Sohankar, recorded September 10, 2026.
 
-This document records confirmed decisions only. Items still needing a decision are
-listed in [Open Questions](#open-questions).
+This document records the confirmed product decisions for the facilities route.
 
 ## Scope for This Change
 
 - Do **not** change or reopen the existing "اعتبارسنجی شرکت‌های متقاضی ورود به
   لیست بلند تأمین‌کنندگان وزارت نفت" route for new applications at this time.
 - A company that previously used the old validation route may now apply for the
-  facilities route, but must first complete the expanded company profile.
+  facilities route, but must first complete the expanded company profile in M3.
 - This change implements the facilities route:
   "تسهیلات از محل منابع ماده ۲۸ آیین‌نامه تولید، دانش‌بنیان و اشتغال‌زایی در صنعت نفت".
 - The facilities route collects **all existing/old document requirements in addition
   to** the new facilities-specific documents.
 - The existing old workflow remains unchanged for its existing applications, except
   that any trial-balance labels in the new facilities workflow must refer to year **۱۴۰۵**.
-- Show both program choices for now. The client may later direct us to disable the
-  validation choice, so availability must be configurable.
+- Programme availability must be configurable. M1 has no applicant-facing facilities
+  route and keeps facilities unavailable until M2–M5 are complete; it does not alter
+  the existing validation route’s availability.
 
 ## Login and Company Profile
 
@@ -58,8 +58,9 @@ facilities application:
 
 - The client permits applicants to attach files as needed, including questionnaire
   attachments that are not limited to ZIP files.
-- File-size, total-storage, and safe file-type limits are an engineering decision and
-  must be defined for security, performance, and scalability before implementation.
+- Each file is limited to 25 MB and an application is limited to 150 MB in total.
+- Allowed types are PDF, DOC, DOCX, XLS, XLSX, CSV, and ZIP. The server must verify
+  the actual content type and scan the file before it becomes available.
 
 ## Facilities Setup
 
@@ -82,7 +83,7 @@ Supplier choices, with the exact requested names:
   ۵۰۰ میلیارد ریال.
 - The maximum must be configurable in the future.
 - Supplier availability, supplier-specific questionnaire templates, and related
-  configuration must be managed by admins through the admin UI.
+  configuration must be managed through the admin UI by `SUPER_ADMIN` only.
 
 ## Existing Documents Required in the Facilities Route
 
@@ -127,12 +128,13 @@ The facilities route also requires the current legacy document flow:
 - When a reviewer allows correction, all information and files may be edited.
 - There is only one payment, if payment is required at all; correction cycles do not
   require another payment.
-- Payment is in scope for now, uses تومان as the existing flow does, and may be
-  disabled later by client direction.
-- User-facing information text will be proposed by the product/design work and
-  reviewed with the client before release.
+- Payment is enabled at 3,000,000 تومان for this release and may be disabled later
+  by client direction.
+- The payment acknowledgement wording remains release-copy draft and requires the
+  product owner’s copy approval before it is shown to applicants.
 - Keep change history.
-- When a file is replaced, delete the prior file.
+- When a file is replaced, delete the prior physical file and retain only safe
+  non-content revision/audit metadata.
 - For now, send SMS only when a reviewer requests corrections.
 - When an applicant submits corrections, return the application automatically to the
   review queue.
@@ -152,21 +154,22 @@ The facilities route also requires the current legacy document flow:
 - File download links may be included. A link must require an authenticated,
   authorized admin session when opened; it must not expose a public file URL.
 
-## Open Questions
+The initial export filters are intake, supplier, status, and date range.
 
-These questions remain unresolved and should be decided before technical design and
-implementation are approved:
+## Confirmed M0 implementation decisions
 
-1. What exact payment amount and non-refundable acknowledgement text apply to the
-   facilities route while payment is enabled?
-2. What enforced maximum file size, total application-storage quota, and allowed file
-   types should apply? "All formats with no limit" is unsafe and infeasible for a
-   public upload service.
-3. Can a company submit more than one facilities application, for example for another
-   supplier or in a future intake period? If so, what makes an application distinct?
-4. What unit must registered capital use: ریال or تومان?
-5. Does "keep change history" require retaining only the audit record after a file is
-   replaced, or also retaining the old file itself? The current answers request both
-   history retention and deletion of the old file, so this needs an explicit rule.
-6. Which filters and report layouts are required in the Excel export beyond including
-   all entered fields and protected file-download links?
+- A company may submit one facilities application per intake.
+- Registered capital is entered and stored in ریال.
+- The existing `VALIDATION_COMPLETED` state is the facilities route’s final outcome;
+  the route does not create a facilities completion certificate.
+- One OTP-authenticated user owns one company for this release. Multi-user company
+  access is out of scope.
+- Existing users and legacy applications are not backfilled into the facilities
+  company model. Existing users complete the expanded company profile when M3 is
+  delivered.
+- The M1 seed contains only the four confirmed suppliers. It must not invent an
+  intake, date, availability, or questionnaire template.
+- M1 seeds only the four confirmed suppliers. It does not seed programme availability,
+  an intake, a date, a supplier availability, or a questionnaire template. Facilities
+  remains unavailable until M2–M5 are complete and `SUPER_ADMIN` configuration is
+  delivered.
