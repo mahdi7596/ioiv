@@ -83,6 +83,7 @@ enum StoredFileScanStatus {
 enum FacilitiesFileBindingScope {
   COMPANY_PROFILE
   APPLICATION
+  QUESTIONNAIRE_TEMPLATE
 }
 
 enum FacilitiesFileLifecycleStatus {
@@ -162,6 +163,7 @@ enum FacilitiesAuditAction {
   COMPANY_CREATED
   COMPANY_UPDATED
   COMPANY_DOCUMENT_REPLACED
+  PROGRAMME_CONFIGURED
   INTAKE_CONFIGURED
   SUPPLIER_CONFIGURED
   QUESTIONNAIRE_TEMPLATE_CONFIGURED
@@ -279,10 +281,12 @@ model FacilitiesFileBinding {
   id              String                      @id @default(cuid())
   scope           FacilitiesFileBindingScope
   scopeId         String
-  userId          String
-  user            User                        @relation("FacilitiesFileBindingOwner", fields: [userId], references: [id], onDelete: Restrict)
-  companyId       String
-  company         Company                     @relation("FacilitiesFileBindingCompany", fields: [companyId], references: [id], onDelete: Restrict)
+  userId          String?
+  user            User?                       @relation("FacilitiesFileBindingOwner", fields: [userId], references: [id], onDelete: Restrict)
+  companyId       String?
+  company         Company?                    @relation("FacilitiesFileBindingCompany", fields: [companyId], references: [id], onDelete: Restrict)
+  adminId         String?
+  admin           Admin?                       @relation("FacilitiesTemplateBindingOwner", fields: [adminId], references: [id], onDelete: Restrict)
   applicationId   String?
   application     FacilitiesApplication?      @relation("FacilitiesFileBindingApplication", fields: [applicationId], references: [id], onDelete: Restrict)
   slotKey         String
@@ -295,6 +299,7 @@ model FacilitiesFileBinding {
 
   @@unique([scopeId, slotKey])
   @@index([userId, companyId])
+  @@index([adminId])
   @@index([applicationId])
 }
 
@@ -686,6 +691,7 @@ model Admin {
   createdAt                    DateTime                      @default(now())
   updatedAt                    DateTime                      @updatedAt
   facilitiesCorrectionRequests FacilitiesCorrectionRequest[]
+  facilitiesTemplateBindings   FacilitiesFileBinding[] @relation("FacilitiesTemplateBindingOwner")
 }
 
 model OtpCode {
