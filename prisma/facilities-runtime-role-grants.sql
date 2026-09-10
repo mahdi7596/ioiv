@@ -71,6 +71,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "FacilitiesApplicationCompanySnapshot",
   "FacilitiesApplicationShareholder",
   "FacilitiesApplicationOfficer",
+  "FacilitiesApplicationEvidence",
   "FacilitiesApplicationDocument",
   "FacilitiesYearDocument",
   "FacilitiesHumanResources",

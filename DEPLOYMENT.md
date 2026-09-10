@@ -325,6 +325,21 @@ the 25 MiB file-content cap (to allow multipart framing) while preserving the se
 side 25 MiB content check. The current `25M` Nginx setting is not sufficient for a
 25 MiB file plus multipart overhead.
 
+## M4/M5 facilities configuration and applicant wizard (not deployed)
+
+M4 adds a `SUPER_ADMIN`-only configuration page under `/admin/facilities`.
+Facilities must remain disabled until an enabled programme has an enabled intake, an
+enabled supplier for that intake, and a published, non-retired, scan-passed Word
+template for that supplier. M5 creates drafts only after those checks and an OTP
+user's completed company profile pass server-side. Applicant uploads remain private:
+the 25 MiB per-file and 150 MiB application limits are still enforced by the app.
+
+This release has no payment, submission, review, export, or production rollout.
+Rollback disables the facilities programme and redeploys the preceding application;
+leave the additive evidence schema in place and preserve private storage/template
+versions. Run reconciliation only after scanner/storage health checks, never to
+inject failures in production.
+
 ## Environment
 
 Compose interpolation/initialization `.env` lives on the server in:

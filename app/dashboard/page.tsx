@@ -57,8 +57,11 @@ export default async function DashboardPage() {
       <section className="panel status-card">
         <p className="eyebrow">تسهیلات</p>
         <h2>پروفایل شرکت</h2>
-        <p>پروفایل شرکت را برای مراحل بعدی تکمیل کنید. ثبت درخواست تسهیلات هنوز فعال نیست.</p>
-        <Link href="/dashboard/facilities-profile" className="button button--ghost">مدیریت پروفایل شرکت</Link>
+        <p>پس از تکمیل پروفایل و فعال‌سازی دوره توسط مدیریت، می‌توانید درخواست تسهیلات را ایجاد کنید.</p>
+        <div className="flex gap-3 flex-wrap">
+          <Link href="/dashboard/facilities-profile" className="button button--ghost">مدیریت پروفایل شرکت</Link>
+          <Link href="/dashboard/facilities-application" className="button button--primary">درخواست تسهیلات</Link>
+        </div>
       </section>
 
       <section className="panel status-card">
