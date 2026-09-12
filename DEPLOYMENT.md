@@ -1207,3 +1207,96 @@ additive M6 schema and immutable payment/audit history in place. A payment-enabl
 facilities intake must remain disabled until the callback and submission checks pass
 in the restored verification environment. No M6 production deployment has been run
 by this change.
+
+## M7 facilities review and corrections (not deployed)
+
+M7 adds the facilities-only admin queue/detail routes, full-review permissions for
+active `ADMIN` and `SUPER_ADMIN`, read-only metadata access for `ENTRY_VIEWER`, current
+protected evidence downloads, repeatable correction cycles, correction-only SMS, and
+applicant resubmission without another payment. It does not change legacy submissions,
+legacy file routes, legacy certificates, or legacy status actions.
+
+Required runtime settings:
+
+```env
+GHASEDAK_FACILITIES_CORRECTION_TEMPLATE=sanacorrection
+SMS_REQUEST_TIMEOUT_MS=10000
+```
+
+Before an M7 production deployment:
+
+1. Create and push a new dated backup branch from the release commit. Take verified
+   PostgreSQL, private upload-storage, `.env.runtime`, and relevant configuration
+   backups, then complete an isolated restore rehearsal.
+2. Apply the additive M7 migrations
+   `20260911160000_add_facilities_m7_review_corrections`,
+   `20260911161000_restore_facilities_audit_metadata_validation`,
+   `20260911162000_enforce_persian_facilities_correction_notes`, and
+   `20260911163000_expand_persian_correction_note_range` with the migration-owner
+   credential through the maintenance profile. The second migration restores safety
+   checks accidentally omitted by an earlier audit-validator replacement; the final
+   two enforce the full Persian/Arabic Unicode range for new correction notes without
+   rejecting legacy rows. Re-run
+   `prisma/facilities-runtime-role-provision.sql`; the app runtime must not migrate.
+3. Configure and verify the correction template without logging its API credential.
+   Confirm provider timeout/failure leaves the application in `NEEDS_EDIT`, shows a
+   failed delivery state to full reviewers, and succeeds through the explicit retry.
+4. Run `npm run test:db:m7-review`, `npm test`, `npm run lint`, and `npm run build` in
+   the release environment. Manually verify two full correction cycles, entry-viewer
+   denial, cross-user denial, stale-file denial, disabled-intake correction recovery,
+   and profile locking.
+5. Keep facilities availability disabled if the scanner, private ready storage,
+   restricted database role, SMS template, or reviewer access checks are not ready.
+
+M7 rollback redeploys the M6 application/runtime configuration while leaving the
+additive correction SMS columns, officer source identifier, enum values, and immutable
+history/audit rows in place. Do not attempt a destructive schema rollback without an
+approved tested database restore.
+
+## M8 facilities export, audit, and resilience (not deployed)
+
+M8 adds a facilities-only XLSX export for active `ADMIN`/`SUPER_ADMIN`, a
+`SUPER_ADMIN`-only audit viewer, application-scoped admin file downloads, typed audit
+events for sensitive reads, and singleton file reconciliation. It does not change the
+legacy export, enable facilities, or deploy the programme; those controls remain for M9.
+
+Apply migration `20260912120000_add_facilities_m8_export_audit_resilience` with the
+migration-owner credential, regenerate the Linux Prisma engine export, and reapply the
+canonical runtime-role grants. Rollback redeploys M7 and leaves additive enum values and
+indexes in place.
+
+The synchronous facilities export rejects more than 5,000 applications or 100,000
+related worksheet rows. `APP_URL` is the only origin used for workbook hyperlinks and
+must be HTTPS in production. Never derive export links from request headers.
+
+Schedule the maintenance reconciler every five minutes only as part of M9 after scanner
+and storage approval. It uses a PostgreSQL advisory transaction lock; exit code `2`
+means another run holds the lock, and exit code `1` means an operational failure that
+requires investigation. Terminal quarantine bytes purge on the next successful run.
+Scanner/storage-unavailable bytes retry for 24 hours, then become terminal and purge;
+safe metadata remains. Logs contain counts, IDs, durations, and fixed reason codes only.
+
+Before M9, run:
+
+```bash
+DATABASE_URL="...isolated migration-owner database..." npm run test:db:m8-operations
+DATABASE_URL="...restricted staging runtime..." npm run facilities:check-readiness
+```
+
+The readiness command verifies the trusted URL, restricted audit grants, a private
+storage write/read/delete canary, ClamAV scan canary, expired quarantine backlog,
+pending deletion backlog, export limits, and at least 2 GiB free private-storage
+capacity. A non-zero result keeps facilities disabled. It never prints credentials,
+paths, document names, hashes, or content.
+
+Before production rollout, create and push a new dated Git backup branch and take
+matched PostgreSQL, private upload volume, `.env.runtime`, and facilities configuration
+backups. Restore the database and upload pair into an isolated environment, verify audit
+immutability and scoped links, run M1/M2/M6/M7/M8 suites, and rehearse rollback. Chaos
+tests for database, scanner, storage, and deletion failures are local/staging only.
+
+For a failed correction SMS, a full reviewer opens the facilities application detail
+page and uses «تلاش مجدد برای پیامک اصلاح». Repeated retries do not create another
+correction request or charge. Inspect only masked diagnostics matching
+`facilities_correction_sms_failed`; never copy provider responses or mobile numbers
+into tickets or audit metadata.

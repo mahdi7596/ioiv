@@ -3,6 +3,7 @@ import type { SmsMessage } from "./index";
 const DEFAULT_OTP_TEMPLATE = "sanaotp";
 const DEFAULT_STATUS_TEMPLATE = "sanastatus";
 const DEFAULT_SUBMITTED_TEMPLATE = "sanasubmitted";
+const DEFAULT_FACILITIES_CORRECTION_TEMPLATE = "sanacorrection";
 const DEFAULT_RECIPIENT_LABEL = "کاربر";
 const SERVICE_NAME = "سامانه اعتبار سنجی سانا";
 
@@ -37,5 +38,15 @@ export function createAdminSubmissionSmsMessage(to: string, applicationId: strin
   return {
     to,
     text: `پرونده جدید در ${SERVICE_NAME} ثبت شد: ${applicationId}`,
+  };
+}
+
+export function createFacilitiesCorrectionSmsMessage(to: string, correctionRequestId: string): SmsMessage {
+  return {
+    to,
+    text: `${DEFAULT_RECIPIENT_LABEL} گرامی، پرونده تسهیلات شما نیازمند اصلاح است. لطفاً برای مشاهده موارد وارد پنل ${SERVICE_NAME} شوید.`,
+    template: process.env.GHASEDAK_FACILITIES_CORRECTION_TEMPLATE || DEFAULT_FACILITIES_CORRECTION_TEMPLATE,
+    params: { recipient: DEFAULT_RECIPIENT_LABEL },
+    clientReferenceId: correctionRequestId,
   };
 }

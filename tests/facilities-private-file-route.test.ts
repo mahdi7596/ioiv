@@ -11,9 +11,11 @@ vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: {
   facilitiesProgramConfiguration: { findUnique: vi.fn() },
   facilitiesFileUpload: { findFirst: vi.fn() },
+  admin: { findUnique: vi.fn() },
 } }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn() } }));
 vi.mock("@/lib/facilities-files/service", () => ({ bytesMatchStoredDigest: vi.fn() }));
+vi.mock("@/lib/audit/facilities", () => ({ facilitiesRequestId: () => "00000000-0000-4000-8000-000000000008", writeFacilitiesAudit: vi.fn() }));
 vi.mock("@/lib/facilities-files/storage", () => ({
   FilesystemFacilitiesPrivateStorage: class {
     readReady = storageMocks.readReady;
@@ -51,7 +53,7 @@ describe("facilities private file download", () => {
   it("requires a session before looking up a facilities file", async () => {
     vi.mocked(getSession).mockResolvedValue(null);
     const response = await GET(new Request("http://test.local/api/facilities/files/stored-file-1"), context());
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
     expect(db.facilitiesFileUpload.findFirst).not.toHaveBeenCalled();
   });
 
@@ -68,10 +70,26 @@ describe("facilities private file download", () => {
     expect(response.status).toBe(200);
   });
 
-  it("rejects admins until the facilities reviewer permission is approved", async () => {
+  it("requires administrators to use the application-scoped route", async () => {
     vi.mocked(getSession).mockResolvedValue({ kind: "admin", subjectId: "admin-1" });
+    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: true, role: "ADMIN" } as never);
     const response = await GET(new Request("http://test.local/api/facilities/files/stored-file-1"), context());
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(404);
+  });
+
+  it("hides facilities evidence from entry viewers", async () => {
+    vi.mocked(getSession).mockResolvedValue({ kind: "admin", subjectId: "viewer-1" });
+    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: true, role: "ENTRY_VIEWER" } as never);
+    const response = await GET(new Request("http://test.local/api/facilities/files/stored-file-1"), context());
+    expect(response.status).toBe(404);
+    expect(db.facilitiesFileUpload.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("hides facilities evidence from inactive admins", async () => {
+    vi.mocked(getSession).mockResolvedValue({ kind: "admin", subjectId: "admin-1" });
+    vi.mocked(db.admin.findUnique).mockResolvedValue({ active: false, role: "ADMIN" } as never);
+    const response = await GET(new Request("http://test.local/api/facilities/files/stored-file-1"), context());
+    expect(response.status).toBe(404);
     expect(db.facilitiesFileUpload.findFirst).not.toHaveBeenCalled();
   });
 

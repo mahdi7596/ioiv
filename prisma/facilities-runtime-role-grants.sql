@@ -11,6 +11,8 @@ GRANT USAGE ON TYPE
   "OtpPurpose",
   "ApplicationStatus",
   "PaymentStatus",
+  "FacilitiesPaymentStatus",
+  "FacilitiesCorrectionSmsStatus",
   "AuditActorType",
   "AuditOutcome",
   "FacilityType",
@@ -27,6 +29,9 @@ GRANT USAGE ON TYPE
   "FacilitiesCreditReportTarget",
   "FacilitiesAuditAction"
 TO :"runtime_role";
+
+-- M8 adds FacilitiesAuditAction enum values and read indexes only. PostgreSQL type
+-- usage covers new enum values automatically; no broader table privilege is needed.
 
 -- The current legacy application runtime access has been derived from its Prisma
 -- calls: user creation/login, OTP consumption, application drafts/uploads/payment,

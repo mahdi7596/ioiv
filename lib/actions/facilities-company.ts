@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { ActionError } from "@/lib/actions/auth";
 import { companyDraftSchema, CEO_POSITION, normalizedText } from "@/lib/validations/facilities-company";
-import { createOwnedFacilitiesFileBinding } from "@/lib/facilities-files/service";
+import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
 
 const DOCUMENT_SLOTS = ["incorporation-notice", "articles-of-association", "board-changes-gazette", "capital-increase-gazette"] as const;
 
@@ -17,7 +17,10 @@ function dateOnly(value: string) {
 
 export async function getFacilitiesCompanyProfile() {
   const session = await requireSession("user");
-  return db.company.findFirst({ where: { userId: session.subjectId }, include: { shareholders: true, officers: true, facilitiesFileBindings: { include: { currentUpload: { include: { storedFile: true } } } } } });
+  const company = await db.company.findFirst({ where: { userId: session.subjectId }, include: { shareholders: true, officers: true, facilitiesFileBindings: { include: { currentUpload: { include: { storedFile: true } } } } } });
+  if (!company) return null;
+  const activeApplication = await db.facilitiesApplication.findFirst({ where: { companyId: company.id, status: { in: ["PENDING_PAYMENT", "SUBMITTED", "UNDER_REVIEW", "NEEDS_EDIT"] } }, select: { status: true } });
+  return { ...company, profileLocked: Boolean(activeApplication), activeApplicationStatus: activeApplication?.status ?? null };
 }
 
 export async function saveFacilitiesCompanyDraft(input: unknown) {
@@ -30,6 +33,10 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
   try {
     return await db.$transaction(async (tx) => {
       const current = await tx.company.findUnique({ where: { userId: session.subjectId } });
+      if (current) {
+        await tx.company.update({ where: { id: current.id }, data: { updatedAt: new Date() } });
+        await assertFacilitiesProfileEditable(tx, current.id);
+      }
       if (current && value.version !== undefined && current.profileVersion !== value.version) throw new ActionError("پروفایل در جای دیگری تغییر کرده است؛ صفحه را تازه‌سازی کنید", 409);
       const fields = { name: value.name, nationalId: value.nationalId, registrationNumber: value.registrationNumber, registrationPlace: value.registrationPlace, registrationDate: dateOnly(value.registrationDate), registeredCapitalRial: new Prisma.Decimal(value.registeredCapitalRial), contactFullName: value.contactFullName, contactNationalCode: value.contactNationalCode, profileCompletedAt: null };
       const company = current ? await tx.company.update({ where: { id: current.id }, data: { ...fields, profileVersion: { increment: 1 } } }) : await tx.company.create({ data: { userId: session.subjectId, ...fields, profileVersion: 1 } });
@@ -58,19 +65,24 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
 
 export async function ensureFacilitiesProfileDocumentSlot(kind: string, officerId?: string) {
   const session = await requireSession("user");
-  const company = await db.company.findUnique({ where: { userId: session.subjectId } });
-  if (!company) throw new ActionError("ابتدا پیش‌نویس پروفایل را ذخیره کنید");
-  const slotKey = officerId ? `officer-${officerId}-identity-package` : `profile-${kind}`;
-  if (!officerId && !DOCUMENT_SLOTS.includes(kind as typeof DOCUMENT_SLOTS[number])) throw new ActionError("نوع مدرک معتبر نیست");
-  if (officerId && !await db.companyOfficer.findFirst({ where: { id: officerId, companyId: company.id } })) throw new ActionError("دسترسی به این عضو امکان‌پذیر نیست", 404);
-  const existing = await db.facilitiesFileBinding.findFirst({ where: { userId: session.subjectId, companyId: company.id, scope: "COMPANY_PROFILE", slotKey } });
-  return existing ?? createOwnedFacilitiesFileBinding({ userId: session.subjectId, companyId: company.id, slotKey });
+  return db.$transaction(async (tx) => {
+    const company = await tx.company.findUnique({ where: { userId: session.subjectId } });
+    if (!company) throw new ActionError("ابتدا پیش‌نویس پروفایل را ذخیره کنید");
+    await tx.company.update({ where: { id: company.id }, data: { updatedAt: new Date() } });
+    await assertFacilitiesProfileEditable(tx, company.id);
+    const slotKey = officerId ? `officer-${officerId}-identity-package` : `profile-${kind}`;
+    if (!officerId && !DOCUMENT_SLOTS.includes(kind as typeof DOCUMENT_SLOTS[number])) throw new ActionError("نوع مدرک معتبر نیست");
+    if (officerId && !await tx.companyOfficer.findFirst({ where: { id: officerId, companyId: company.id } })) throw new ActionError("دسترسی به این عضو امکان‌پذیر نیست", 404);
+    const existing = await tx.facilitiesFileBinding.findFirst({ where: { userId: session.subjectId, companyId: company.id, scope: "COMPANY_PROFILE", slotKey } });
+    return existing ?? tx.facilitiesFileBinding.create({ data: { scope: "COMPANY_PROFILE", scopeId: company.id, userId: session.subjectId, companyId: company.id, slotKey } });
+  });
 }
 
 export async function completeFacilitiesCompanyProfile(input: { version: number }) {
   const session = await requireSession("user");
   const company = await db.company.findUnique({ where: { userId: session.subjectId }, include: { shareholders: true, officers: true, facilitiesFileBindings: { include: { currentUpload: { include: { storedFile: true } } } } } });
   if (!company || company.profileVersion !== input.version) throw new ActionError("پروفایل تغییر کرده است؛ صفحه را تازه‌سازی کنید", 409);
+  await assertFacilitiesProfileEditable(db, company.id);
   const fields = [company.name, company.nationalId, company.registrationNumber, company.registrationPlace, company.registrationDate, company.registeredCapitalRial, company.contactFullName, company.contactNationalCode];
   if (fields.some((field) => field === null || field === undefined) || !company.shareholders.length || !company.officers.length) throw new ActionError("همه اطلاعات و فهرست‌ها را تکمیل کنید");
   const total = company.shareholders.reduce((sum, item) => sum.plus(item.ownershipPercentage), new Prisma.Decimal(0));

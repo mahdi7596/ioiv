@@ -9,7 +9,7 @@ import { ActionError } from "@/lib/actions/auth";
 import { db } from "@/lib/db";
 import { requestZarinpalPayment, verifyZarinpalPayment } from "@/lib/payments/zarinpal";
 import { logger } from "@/lib/logger";
-import { checkFacilitiesSubmissionReadiness, facilitiesSubmissionInclude, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, type FacilitiesSubmissionInput } from "@/lib/facilities/submission";
+import { checkFacilitiesSubmissionReadiness, facilitiesSubmissionInclude, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot, type FacilitiesSubmissionInput } from "@/lib/facilities/submission";
 
 const ACTIVE_PAYMENT_STATES: FacilitiesPaymentStatus[] = [
   FacilitiesPaymentStatus.INITIATED,
@@ -80,7 +80,7 @@ async function recordStatusChange(
   note: string,
 ) {
   await tx.facilitiesStatusHistory.create({ data: { applicationId, previousStatus, newStatus, actorType, actorId, note } });
-  await tx.facilitiesApplication.update({ where: { id: applicationId }, data: { status: newStatus, ...(newStatus === ApplicationStatus.SUBMITTED ? { submittedAt: new Date() } : {}) } });
+  await tx.facilitiesApplication.update({ where: { id: applicationId }, data: { status: newStatus, ...(newStatus === ApplicationStatus.SUBMITTED && previousStatus !== ApplicationStatus.NEEDS_EDIT ? { submittedAt: new Date() } : {}) } });
 }
 
 async function returnPaymentApplicationToDraft(tx: Prisma.TransactionClient, applicationId: string) {
@@ -100,7 +100,7 @@ async function submitLockedFacilitiesApplication(
     return { ok: true, state: "already-submitted", redirectTo: "/dashboard/facilities-application?submitted=already" };
   }
 
-  if (application.status !== ApplicationStatus.DRAFT && application.status !== ApplicationStatus.PENDING_PAYMENT) {
+  if (application.status !== ApplicationStatus.DRAFT && application.status !== ApplicationStatus.PENDING_PAYMENT && application.status !== ApplicationStatus.NEEDS_EDIT) {
     throw new ActionError("این درخواست در حال حاضر قابل ارسال نیست", 409);
   }
 
@@ -115,17 +115,22 @@ async function submitLockedFacilitiesApplication(
   }
 
   await materializeFacilitiesEvidence(tx, application, input);
-  await recordStatusChange(tx, application.id, application.status, ApplicationStatus.SUBMITTED, actorType, actorId, "درخواست پس از تکمیل بررسی‌های سرور ارسال شد");
+  const correction = application.status === ApplicationStatus.NEEDS_EDIT
+    ? await tx.facilitiesCorrectionRequest.findFirst({ where: { applicationId: application.id, resolvedAt: null } })
+    : null;
+  if (application.status === ApplicationStatus.NEEDS_EDIT && !correction) throw new ActionError("درخواست اصلاح فعال پیدا نشد", 409);
+  if (correction) await tx.facilitiesCorrectionRequest.update({ where: { id: correction.id }, data: { resolvedAt: new Date() } });
+  await recordStatusChange(tx, application.id, application.status, ApplicationStatus.SUBMITTED, actorType, actorId, correction ? "اصلاحات متقاضی ارسال شد" : "درخواست پس از تکمیل بررسی‌های سرور ارسال شد");
   await tx.facilitiesAuditLog.create({
     data: {
       applicationId: application.id,
       actorType,
       actorId,
-      action: FacilitiesAuditAction.APPLICATION_SUBMITTED,
+      action: correction ? FacilitiesAuditAction.CORRECTION_SUBMITTED : FacilitiesAuditAction.APPLICATION_SUBMITTED,
       outcome: AuditOutcome.SUCCEEDED,
-      entityType: "FacilitiesApplication",
-      entityId: application.id,
-      metadata: { previousStatus: application.status, newStatus: ApplicationStatus.SUBMITTED },
+      entityType: correction ? "FacilitiesCorrectionRequest" : "FacilitiesApplication",
+      entityId: correction?.id ?? application.id,
+      metadata: { ...(correction ? { correctionRequestId: correction.id } : {}), previousStatus: application.status, newStatus: ApplicationStatus.SUBMITTED },
     },
   });
   return { ok: true, state: "submitted", redirectTo: "/dashboard/facilities-application?submitted=success" };
@@ -134,10 +139,15 @@ async function submitLockedFacilitiesApplication(
 export async function submitFacilitiesApplication(input: FacilitiesSubmissionInput & { applicationId: string }): Promise<FacilitiesSubmissionResult> {
   const session = await requireFacilitiesUserSession();
   const result = await db.$transaction(async (tx) => {
-    const application = await lockFacilitiesApplication(tx, input.applicationId);
+    let application = await lockFacilitiesApplication(tx, input.applicationId);
     if (!application || application.userId !== session.subjectId) throw new ActionError("دسترسی به این درخواست امکان‌پذیر نیست", 403);
     if (application.status === ApplicationStatus.SUBMITTED || application.status === ApplicationStatus.VALIDATION_COMPLETED) return { ok: true as const, state: "already-submitted" as const, redirectTo: "/dashboard/facilities-application?submitted=already" };
-    if (application.paymentEnabledSnapshot) throw new ActionError("ابتدا پرداخت را انجام دهید", 409);
+    if (application.status === ApplicationStatus.DRAFT) {
+      try { await refreshFacilitiesProfileSnapshot(tx, application.id); } catch { throw new ActionError("پروفایل شرکت و مدارک آن باید پیش از ارسال کامل باشد", 409); }
+      application = await loadFacilitiesSubmissionApplication(tx, application.id);
+      if (!application) throw new ActionError("پرونده پیدا نشد", 404);
+    }
+    if (application.paymentEnabledSnapshot && application.status !== ApplicationStatus.NEEDS_EDIT) throw new ActionError("ابتدا پرداخت را انجام دهید", 409);
     return submitLockedFacilitiesApplication(tx, application, input, AuditActorType.USER, session.subjectId);
   });
   revalidatePath("/dashboard/facilities-application");
@@ -147,9 +157,15 @@ export async function submitFacilitiesApplication(input: FacilitiesSubmissionInp
 export async function startFacilitiesPayment(input: { applicationId: string; confirmed: boolean; employeeCount: number; boardOfficerId: string }): Promise<FacilitiesPaymentStartResult> {
   const session = await requireFacilitiesUserSession();
   const reservation = await db.$transaction(async (tx) => {
-    const application = await lockFacilitiesApplication(tx, input.applicationId);
+    let application = await lockFacilitiesApplication(tx, input.applicationId);
     if (!application || application.userId !== session.subjectId) throw new ActionError("دسترسی به این درخواست امکان‌پذیر نیست", 403);
     if (application.status === ApplicationStatus.SUBMITTED || application.status === ApplicationStatus.VALIDATION_COMPLETED) return { kind: "submitted" as const, submitted: { ok: true as const, state: "submitted" as const, redirectTo: "/dashboard/facilities-application?submitted=already" } };
+
+    if (application.status === ApplicationStatus.DRAFT) {
+      try { await refreshFacilitiesProfileSnapshot(tx, application.id); } catch { throw new ActionError("پروفایل شرکت و مدارک آن باید پیش از پرداخت کامل باشد", 409); }
+      application = await loadFacilitiesSubmissionApplication(tx, application.id);
+      if (!application) throw new ActionError("پرونده پیدا نشد", 404);
+    }
 
     if (!application.paymentEnabledSnapshot) {
       const submitted = await submitLockedFacilitiesApplication(tx, application, input, AuditActorType.USER, session.subjectId);

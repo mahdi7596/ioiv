@@ -118,6 +118,14 @@ timeline.
 Build XLSX export with the approved filters, authorized file links, privileged audit
 viewer, and operational/recovery coverage.
 
+M8 exports all statuses by intake, supplier, status, and Tehran creation-date range in
+related Persian worksheets. Active `ADMIN` and `SUPER_ADMIN` roles may export, while
+only `SUPER_ADMIN` may view facilities audit events. File metadata is exported for all
+statuses; authenticated application-scoped links are emitted only for review-visible
+current files. Synchronous work is capped at 5,000 applications and 100,000 related
+rows. Reconciliation is singleton, purges terminal quarantine on its next run, and
+retains scanner/storage-unavailable bytes for no more than 24 hours.
+
 ### M9 — Controlled rollout
 
 Deploy facilities behind its availability controls only after the preceding milestones

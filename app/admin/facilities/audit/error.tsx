@@ -1,0 +1,2 @@
+"use client";
+export default function FacilitiesAuditError({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <main className="shell"><section className="panel" role="alert"><h1>نمایش رویدادهای ممیزی ممکن نیست</h1><p>فیلترها و اتصال سامانه را بررسی و دوباره تلاش کنید.</p><button className="button button--primary" onClick={() => reset()}>تلاش دوباره</button></section></main>; }

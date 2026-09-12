@@ -14,6 +14,8 @@ type GhasedakResponse = {
 async function postToGhasedak(path: string, body: Record<string, unknown>) {
   const apiKey = process.env.GHASEDAK_API_KEY;
   const baseUrl = process.env.GHASEDAK_BASE_URL || DEFAULT_GHASEDAK_BASE_URL;
+  const configuredTimeout = Number(process.env.SMS_REQUEST_TIMEOUT_MS || 10000);
+  const timeoutMs = Number.isFinite(configuredTimeout) ? Math.min(30000, Math.max(1000, configuredTimeout)) : 10000;
 
   if (!apiKey) {
     throw new Error("GHASEDAK_API_KEY is required in production");
@@ -35,6 +37,7 @@ async function postToGhasedak(path: string, body: Record<string, unknown>) {
         return params;
       }, {}),
     ).toString(),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   if (!response.ok) {
