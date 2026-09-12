@@ -10,9 +10,10 @@ INSERT INTO "Admin" ("id", "name", "mobile", "role", "updatedAt") VALUES
   ('m1-facilities-admin', 'M1 integration reviewer', '09900000003', 'SUPER_ADMIN', CURRENT_TIMESTAMP);
 INSERT INTO "Company" ("id", "userId", "updatedAt") VALUES
   ('m1-facilities-company', 'm1-facilities-user', CURRENT_TIMESTAMP);
-INSERT INTO "StoredFile" ("id", "storageKey", "originalName", "fileType", "detectedMimeType", "byteSize", "sha256") VALUES
-  ('m1-facilities-word', 'm1/test/template.docx', 'template.docx', 'DOCX', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1, repeat('a', 64)),
-  ('m1-facilities-zip', 'm1/test/document.zip', 'document.zip', 'ZIP', 'application/zip', 1, repeat('b', 64));
+INSERT INTO "StoredFile" ("id", "storageKey", "originalName", "fileType", "detectedMimeType", "byteSize", "sha256", "scanStatus", "scannedAt") VALUES
+  ('m1-facilities-word', 'm1/test/template.docx', 'template.docx', 'DOCX', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1, repeat('a', 64), 'PASSED', CURRENT_TIMESTAMP),
+  ('m1-facilities-other-word', 'm1/test/other-template.docx', 'other-template.docx', 'DOCX', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1, repeat('c', 64), 'PASSED', CURRENT_TIMESTAMP),
+  ('m1-facilities-zip', 'm1/test/document.zip', 'document.zip', 'ZIP', 'application/zip', 1, repeat('b', 64), 'PASSED', CURRENT_TIMESTAMP);
 INSERT INTO "FacilitySupplier" ("id", "name", "updatedAt") VALUES
   ('m1-facilities-supplier', 'M1 integration supplier', CURRENT_TIMESTAMP),
   ('m1-facilities-other-supplier', 'M1 integration other supplier', CURRENT_TIMESTAMP);
@@ -20,9 +21,17 @@ INSERT INTO "FacilityIntake" ("id", "name", "isEnabled", "updatedAt") VALUES
   ('m1-facilities-intake', 'M1 integration intake', true, CURRENT_TIMESTAMP);
 INSERT INTO "FacilitiesProgramConfiguration" ("program", "isEnabled", "updatedAt") VALUES
   ('FACILITIES', true, CURRENT_TIMESTAMP);
+INSERT INTO "FacilitiesFileBinding" ("id", "scope", "scopeId", "adminId", "slotKey", "updatedAt") VALUES
+  ('m1-template-binding', 'QUESTIONNAIRE_TEMPLATE', 'm1-facilities-supplier', 'm1-facilities-admin', 'questionnaire-template-m1', CURRENT_TIMESTAMP),
+  ('m1-other-template-binding', 'QUESTIONNAIRE_TEMPLATE', 'm1-facilities-other-supplier', 'm1-facilities-admin', 'questionnaire-template-m1-other', CURRENT_TIMESTAMP);
+INSERT INTO "FacilitiesFileUpload" ("id", "bindingId", "idempotencyKey", "revisionNumber", "storedFileId", "lifecycleStatus", "reservedByteSize", "updatedAt") VALUES
+  ('m1-template-upload', 'm1-template-binding', 'm1-template-upload-key', 1, 'm1-facilities-word', 'PASSED', 1, CURRENT_TIMESTAMP),
+  ('m1-other-template-upload', 'm1-other-template-binding', 'm1-other-template-key', 1, 'm1-facilities-other-word', 'PASSED', 1, CURRENT_TIMESTAMP);
+UPDATE "FacilitiesFileBinding" SET "currentUploadId" = 'm1-template-upload', "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = 'm1-template-binding';
+UPDATE "FacilitiesFileBinding" SET "currentUploadId" = 'm1-other-template-upload', "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = 'm1-other-template-binding';
 INSERT INTO "QuestionnaireTemplateVersion" ("id", "supplierId", "versionLabel", "storedFileId") VALUES
   ('m1-facilities-template', 'm1-facilities-supplier', 'v1', 'm1-facilities-word'),
-  ('m1-facilities-other-template', 'm1-facilities-other-supplier', 'v1', 'm1-facilities-word');
+  ('m1-facilities-other-template', 'm1-facilities-other-supplier', 'v1', 'm1-facilities-other-word');
 INSERT INTO "FacilityIntakeSupplier" ("id", "intakeId", "supplierId", "isEnabled", "questionnaireTemplateVersionId", "updatedAt") VALUES
   ('m1-facilities-intake-supplier', 'm1-facilities-intake', 'm1-facilities-supplier', true, 'm1-facilities-template', CURRENT_TIMESTAMP);
 INSERT INTO "FacilitiesApplication" (
@@ -98,16 +107,16 @@ DO $$ BEGIN
   END;
 END $$;
 
-INSERT INTO "FacilitiesPaymentAttempt" ("id", "applicationId", "amountToman", "gateway", "status", "updatedAt") VALUES
-  ('m1-facilities-payment', 'm1-facilities-application', 3000000, 'test', 'VERIFIED', CURRENT_TIMESTAMP);
+INSERT INTO "FacilitiesPaymentAttempt" ("id", "applicationId", "amountToman", "gateway", "authority", "referenceId", "status", "updatedAt") VALUES
+  ('m1-facilities-payment', 'm1-facilities-application', 3000000, 'test', 'm1-authority', 'm1-reference', 'VERIFIED', CURRENT_TIMESTAMP);
 INSERT INTO "FacilitiesAuditLog" ("id", "actorType", "action", "entityType", "metadata") VALUES
   ('m1-facilities-audit', 'SYSTEM', 'APPLICATION_CREATED', 'FacilitiesApplication', '{"status":"DRAFT"}');
 INSERT INTO "FacilitiesStatusHistory" ("id", "applicationId", "newStatus", "actorType") VALUES
   ('m1-facilities-history', 'm1-facilities-application', 'DRAFT', 'SYSTEM');
 DO $$ BEGIN
   BEGIN
-    INSERT INTO "FacilitiesPaymentAttempt" ("id", "applicationId", "amountToman", "gateway", "status", "updatedAt") VALUES
-      ('m1-facilities-second-payment', 'm1-facilities-application', 3000000, 'test', 'VERIFIED', CURRENT_TIMESTAMP);
+    INSERT INTO "FacilitiesPaymentAttempt" ("id", "applicationId", "amountToman", "gateway", "authority", "referenceId", "status", "updatedAt") VALUES
+      ('m1-facilities-second-payment', 'm1-facilities-application', 3000000, 'test', 'm1-second-authority', 'm1-second-reference', 'VERIFIED', CURRENT_TIMESTAMP);
     RAISE EXCEPTION 'verified-payment partial unique index was not enforced';
   EXCEPTION WHEN unique_violation THEN NULL;
   END;

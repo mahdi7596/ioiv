@@ -16,6 +16,8 @@ import { stageVerifyScanPromoteFacilitiesFile } from "@/lib/facilities-files/lif
 import type { FacilitiesFileScanner } from "@/lib/facilities-files/scanner";
 import type { FacilitiesPrivateStorage, FacilitiesStorageKey } from "@/lib/facilities-files/storage";
 import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
+import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
+import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
 
 export type FacilitiesFileCommitResult = {
   attemptId: string;
@@ -165,6 +167,14 @@ export async function storeOwnedFacilitiesFile(input: {
       // serializes same-slot retries without relying on a client-side revision.
       await tx.facilitiesFileBinding.update({ where: { id: binding.id }, data: { updatedAt: new Date() } });
       const liveBinding = await tx.facilitiesFileBinding.findUniqueOrThrow({ where: { id: binding.id } });
+      if (liveBinding.scope === "COMPANY_PROFILE" && liveBinding.companyId) {
+        await tx.company.update({ where: { id: liveBinding.companyId }, data: { updatedAt: new Date() } });
+        await assertFacilitiesProfileEditable(tx, liveBinding.companyId);
+      }
+      if (liveBinding.applicationId) {
+        const editable = await tx.facilitiesApplication.count({ where: { id: liveBinding.applicationId, status: { in: FACILITIES_EDITABLE_STATUSES } } });
+        if (!editable) throw new Error("FACILITIES_APPLICATION_NOT_EDITABLE");
+      }
       const latestRevision = await tx.facilitiesFileUpload.aggregate({ where: { bindingId: binding.id }, _max: { revisionNumber: true } });
       const createdAttempt = await tx.facilitiesFileUploadAttempt.create({
         data: { bindingId: binding.id, idempotencyKey: input.idempotencyKey, lifecycleStatus: FacilitiesFileLifecycleStatus.PENDING },
@@ -256,7 +266,9 @@ export async function storeOwnedFacilitiesFile(input: {
 
   if (staged.scanStatus !== "PASSED") {
     const lifecycleStatus = staged.scanStatus === "UNAVAILABLE" ? FacilitiesFileLifecycleStatus.UNAVAILABLE : FacilitiesFileLifecycleStatus.FAILED;
-    const failureReason = staged.scanStatus === "UNAVAILABLE" ? FacilitiesFileFailureReason.SCANNER_UNAVAILABLE : FacilitiesFileFailureReason.SCAN_FAILED;
+    const failureReason = staged.scanStatus === "UNAVAILABLE"
+      ? staged.scanReason === "STORAGE_UNAVAILABLE" ? FacilitiesFileFailureReason.STORAGE_UNAVAILABLE : FacilitiesFileFailureReason.SCANNER_UNAVAILABLE
+      : FacilitiesFileFailureReason.SCAN_FAILED;
     const unavailable = await db.$transaction(async (tx) => {
       await tx.facilitiesFileUploadAttempt.update({ where: { id: attempt!.id }, data: { lifecycleStatus, failureReason } });
       return tx.facilitiesFileUpload.update({ where: { id: pending.id }, data: { storedFileId: stored.id, lifecycleStatus, failureReason } });
@@ -267,6 +279,14 @@ export async function storeOwnedFacilitiesFile(input: {
   try {
     const committed = await db.$transaction(async (tx) => {
       const current = await tx.facilitiesFileBinding.findUniqueOrThrow({ where: { id: binding.id } });
+      if (current.scope === "COMPANY_PROFILE" && current.companyId) {
+        await tx.company.update({ where: { id: current.companyId }, data: { updatedAt: new Date() } });
+        await assertFacilitiesProfileEditable(tx, current.companyId);
+      }
+      if (current.applicationId) {
+        const editable = await tx.facilitiesApplication.count({ where: { id: current.applicationId, status: { in: FACILITIES_EDITABLE_STATUSES } } });
+        if (!editable) throw new Error("FACILITIES_APPLICATION_NOT_EDITABLE");
+      }
       const upload = await tx.facilitiesFileUpload.update({
         where: { id: pending.id },
         data: { storedFileId: stored.id, lifecycleStatus: FacilitiesFileLifecycleStatus.PASSED },

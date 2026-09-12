@@ -34,4 +34,17 @@ describe("facilities submission validation", () => {
     expect(result.issues).toContain("حداقل یک صورت مالی حسابرسی‌شده کامل لازم است");
     expect(result.issues.some((issue) => issue.includes("questionnaire"))).toBe(true);
   });
+
+  it("allows correction submissions to replace saved employee and board-member evidence", () => {
+    const result = checkFacilitiesSubmissionReadiness(application({
+      status: "NEEDS_EDIT",
+      evidence: [
+        { kind: "insurance", employeeCount: 5, officerId: null },
+        { kind: "credit-board", employeeCount: null, officerId: "old-board" },
+      ],
+    }), { employeeCount: 8, boardOfficerId: "board" });
+
+    expect(result.issues).not.toContain("تعداد کارکنان با اطلاعات ذخیره‌شده یکسان نیست");
+    expect(result.issues).not.toContain("عضو هیئت‌مدیره با اطلاعات ذخیره‌شده یکسان نیست");
+  });
 });

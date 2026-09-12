@@ -15,13 +15,17 @@
     "test:db:m1-role": "prisma/tests/test-facilities-runtime-role.sh",
     "test:db:m2-files": "sh prisma/tests/test-facilities-private-files.sh",
     "test:db:m6-payment": "sh prisma/tests/test-facilities-m6-payment.sh",
+    "test:db:m7-review": "sh prisma/tests/test-facilities-m7-review.sh",
+    "test:db:m8-operations": "sh prisma/tests/test-facilities-m8-operations.sh",
     "facilities:reconcile-files": "tsx scripts/reconcile-facilities-files.ts",
+    "facilities:check-readiness": "tsx scripts/check-facilities-readiness.ts",
     "test": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
+    "fflate": "^0.8.3",
     "jose": "^6.2.3",
     "lucide-react": "^1.14.0",
     "next": "16.2.4",

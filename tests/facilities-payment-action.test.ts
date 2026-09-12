@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     facilitiesApplicationEvidence: { upsert: vi.fn() },
     facilitiesStatusHistory: { create: vi.fn() },
     facilitiesAuditLog: { create: vi.fn() },
+    facilitiesCorrectionRequest: { findFirst: vi.fn(), update: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -19,6 +20,10 @@ vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/payments/zarinpal", () => ({ requestZarinpalPayment: mocks.requestZarinpalPayment, verifyZarinpalPayment: mocks.verifyZarinpalPayment }));
 vi.mock("@/lib/db", () => ({ db: mocks.db }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/facilities/submission", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/facilities/submission")>();
+  return { ...actual, refreshFacilitiesProfileSnapshot: vi.fn() };
+});
 
 function application(overrides: Record<string, unknown> = {}) {
   const file = (slotKey: string, fileType = slotKey === "questionnaire" ? "DOCX" : slotKey.includes("vat") || ["licences", "active-contracts"].includes(slotKey) ? "ZIP" : "PDF") => ({
@@ -44,6 +49,8 @@ function application(overrides: Record<string, unknown> = {}) {
     evidence: [{ kind: "insurance", employeeCount: 10, officerId: null }, { kind: "credit-board", employeeCount: null, officerId: "board_1" }],
     payments: [],
     user: { mobile: "09120000000" },
+    correctionRequests: [],
+    history: [],
     ...overrides,
   };
 }
@@ -58,6 +65,8 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesApplicationEvidence.upsert.mockResolvedValue({ id: "evidence" });
     mocks.db.facilitiesStatusHistory.create.mockResolvedValue({ id: "history" });
     mocks.db.facilitiesAuditLog.create.mockResolvedValue({ id: "audit" });
+    mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue(null);
+    mocks.db.facilitiesCorrectionRequest.update.mockResolvedValue({ id: "correction_1" });
     mocks.db.facilitiesPaymentAttempt.create.mockResolvedValue({ id: "pay_1", applicationId: "app_1", amountToman: 3000000, status: FacilitiesPaymentStatus.INITIATED });
     mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ id: "pay_1", applicationId: "app_1", amountToman: 3000000, status: FacilitiesPaymentStatus.INITIATED, authority: null });
     mocks.db.facilitiesPaymentAttempt.update.mockResolvedValue({ id: "pay_1" });
@@ -129,5 +138,17 @@ describe("facilities payment and submission actions", () => {
     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "OK" })).resolves.toEqual({ state: "success" });
     expect(mocks.verifyZarinpalPayment).toHaveBeenCalledOnce();
     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
+  });
+
+  it("resubmits an open correction with the verified payment and preserves submittedAt", async () => {
+    const originalSubmittedAt = new Date("2026-09-10T10:00:00.000Z");
+    mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "NEEDS_EDIT", submittedAt: originalSubmittedAt, payments: [{ id: "verified", amountToman: 3000000, status: FacilitiesPaymentStatus.VERIFIED }] }));
+    mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1" });
+    const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
+    await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ state: "submitted" });
+    expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
+    expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith({ where: { id: "correction_1" }, data: { resolvedAt: expect.any(Date) } });
+    const statusUpdate = mocks.db.facilitiesApplication.update.mock.calls.find((call) => call[0]?.data?.status === "SUBMITTED")?.[0];
+    expect(statusUpdate.data).not.toHaveProperty("submittedAt");
   });
 });

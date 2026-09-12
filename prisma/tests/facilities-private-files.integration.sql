@@ -8,6 +8,8 @@ INSERT INTO "User" ("id", "mobile", "updatedAt") VALUES
   ('m2-file-other-user', '09900000012', CURRENT_TIMESTAMP);
 INSERT INTO "Company" ("id", "userId", "updatedAt") VALUES
   ('m2-file-company', 'm2-file-user', CURRENT_TIMESTAMP);
+INSERT INTO "Admin" ("id", "name", "mobile", "role", "updatedAt") VALUES
+  ('m2-file-admin', 'M2 file integration admin', '09900000013', 'SUPER_ADMIN', CURRENT_TIMESTAMP);
 INSERT INTO "StoredFile" ("id", "storageKey", "originalName", "fileType", "detectedMimeType", "byteSize", "sha256", "scanStatus", "scannedAt") VALUES
   ('m2-file-template', 'm2-private-template', 'template.docx', 'DOCX', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1, repeat('a', 64), 'PASSED', CURRENT_TIMESTAMP),
   ('m2-file-passed-25m', 'm2-private-passed-25m', 'safe.pdf', 'PDF', 'application/pdf', 26214400, repeat('b', 64), 'PASSED', CURRENT_TIMESTAMP),
@@ -16,6 +18,11 @@ INSERT INTO "StoredFile" ("id", "storageKey", "originalName", "fileType", "detec
 INSERT INTO "FacilitySupplier" ("id", "name", "updatedAt") VALUES ('m2-file-supplier', 'M2 file integration supplier', CURRENT_TIMESTAMP);
 INSERT INTO "FacilityIntake" ("id", "name", "isEnabled", "updatedAt") VALUES ('m2-file-intake', 'M2 file integration intake', true, CURRENT_TIMESTAMP);
 INSERT INTO "FacilitiesProgramConfiguration" ("program", "isEnabled", "updatedAt") VALUES ('FACILITIES', true, CURRENT_TIMESTAMP);
+INSERT INTO "FacilitiesFileBinding" ("id", "scope", "scopeId", "adminId", "slotKey", "updatedAt") VALUES
+  ('m2-template-binding', 'QUESTIONNAIRE_TEMPLATE', 'm2-file-supplier', 'm2-file-admin', 'questionnaire-template-m2', CURRENT_TIMESTAMP);
+INSERT INTO "FacilitiesFileUpload" ("id", "bindingId", "idempotencyKey", "revisionNumber", "storedFileId", "lifecycleStatus", "reservedByteSize", "updatedAt") VALUES
+  ('m2-template-upload', 'm2-template-binding', 'm2-template-upload-key', 1, 'm2-file-template', 'PASSED', 1, CURRENT_TIMESTAMP);
+UPDATE "FacilitiesFileBinding" SET "currentUploadId" = 'm2-template-upload', "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = 'm2-template-binding';
 INSERT INTO "QuestionnaireTemplateVersion" ("id", "supplierId", "versionLabel", "storedFileId") VALUES ('m2-file-template-version', 'm2-file-supplier', 'v1', 'm2-file-template');
 INSERT INTO "FacilityIntakeSupplier" ("id", "intakeId", "supplierId", "isEnabled", "questionnaireTemplateVersionId", "updatedAt") VALUES ('m2-file-intake-supplier', 'm2-file-intake', 'm2-file-supplier', true, 'm2-file-template-version', CURRENT_TIMESTAMP);
 INSERT INTO "FacilitiesApplication" (

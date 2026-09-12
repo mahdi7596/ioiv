@@ -3,6 +3,7 @@ import {
   createOtpSmsMessage,
   createStatusChangeSmsMessage,
   createSubmissionReceivedSmsMessage,
+  createFacilitiesCorrectionSmsMessage,
 } from "@/lib/sms/messages";
 
 describe("SMS message templates", () => {
@@ -11,6 +12,15 @@ describe("SMS message templates", () => {
       to: "09123456789",
       template: "sanaotp",
       params: { code: "4321" },
+    });
+  });
+
+  it("uses a correction-only template and stable provider reference", () => {
+    expect(createFacilitiesCorrectionSmsMessage("09123456789", "correction_1")).toMatchObject({
+      to: "09123456789",
+      template: "sanacorrection",
+      params: { recipient: "کاربر" },
+      clientReferenceId: "correction_1",
     });
   });
 

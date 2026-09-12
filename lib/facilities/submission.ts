@@ -21,11 +21,13 @@ type SubmissionApplication = FacilitiesApplication & {
   shareholders: { fullName: string; ownershipPercentage: Prisma.Decimal }[];
   officers: { id: string; fullName: string; position: string; isChiefExecutive: boolean }[];
   fileBindings: (FacilitiesFileBinding & {
-    currentUpload: (FacilitiesFileUpload & { storedFile: StoredFile | null }) | null;
+    currentUpload: (FacilitiesFileUpload & { storedFile: Pick<StoredFile, "id" | "originalName" | "fileType" | "byteSize" | "scanStatus"> | null }) | null;
   })[];
   evidence: FacilitiesApplicationEvidence[];
   payments: { id: string; amountToman: number; status: string; authority: string | null; referenceId: string | null }[];
   user: Pick<User, "mobile">;
+  correctionRequests: { id: string; sequence: number; note: string; openedAt: Date; resolvedAt: Date | null; smsStatus: string }[];
+  history: { id: string; previousStatus: string | null; newStatus: string; note: string | null; createdAt: Date }[];
 };
 
 export type FacilitiesSubmissionReadiness = {
@@ -51,10 +53,12 @@ export const facilitiesSubmissionInclude = {
   companySnapshot: true,
   shareholders: true,
   officers: true,
-  fileBindings: { include: { currentUpload: { include: { storedFile: true } } } },
+  fileBindings: { include: { currentUpload: { include: { storedFile: { select: { id: true, originalName: true, fileType: true, byteSize: true, scanStatus: true } } } } } },
   evidence: true,
   payments: { select: { id: true, amountToman: true, status: true, authority: true, referenceId: true } },
   user: { select: { mobile: true } },
+  correctionRequests: { orderBy: { sequence: "desc" as const }, select: { id: true, sequence: true, note: true, openedAt: true, resolvedAt: true, smsStatus: true } },
+  history: { orderBy: { createdAt: "desc" as const }, select: { id: true, previousStatus: true, newStatus: true, note: true, createdAt: true } },
 } as const;
 
 function nonEmpty(value: string | null | undefined) {
@@ -93,6 +97,58 @@ export async function loadFacilitiesSubmissionApplication(tx: Prisma.Transaction
   return tx.facilitiesApplication.findUnique({ where: { id: applicationId }, include: facilitiesSubmissionInclude });
 }
 
+export async function refreshFacilitiesProfileSnapshot(tx: Prisma.TransactionClient, applicationId: string) {
+  const application = await tx.facilitiesApplication.findUnique({ where: { id: applicationId }, select: { companyId: true, status: true } });
+  if (!application || application.status !== "DRAFT") return;
+  await tx.company.update({ where: { id: application.companyId }, data: { updatedAt: new Date() } });
+  const company = await tx.company.findUnique({
+    where: { id: application.companyId },
+    include: {
+      shareholders: true,
+      officers: true,
+      facilitiesFileBindings: { include: { currentUpload: { include: { storedFile: true } } } },
+    },
+  });
+  if (!company?.profileCompletedAt) throw new Error("FACILITIES_PROFILE_INCOMPLETE");
+  const ready = new Set(company.facilitiesFileBindings.filter((binding) => binding.currentUpload?.lifecycleStatus === "PASSED" && binding.currentUpload.storedFile?.scanStatus === "PASSED").map((binding) => binding.slotKey));
+  const requiredProfileSlots = [
+    "profile-incorporation-notice",
+    "profile-articles-of-association",
+    "profile-board-changes-gazette",
+    "profile-capital-increase-gazette",
+    ...company.officers.map((officer) => `officer-${officer.id}-identity-package`),
+  ];
+  if (requiredProfileSlots.some((slot) => !ready.has(slot))) throw new Error("FACILITIES_PROFILE_INCOMPLETE");
+
+  await tx.facilitiesApplicationCompanySnapshot.update({
+    where: { applicationId },
+    data: {
+      name: company.name,
+      nationalId: company.nationalId,
+      registrationNumber: company.registrationNumber,
+      registrationPlace: company.registrationPlace,
+      registrationDate: company.registrationDate,
+      registeredCapitalRial: company.registeredCapitalRial,
+      contactFullName: company.contactFullName,
+      contactNationalCode: company.contactNationalCode,
+    },
+  });
+  await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
+  await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, ownershipPercentage: shareholder.ownershipPercentage })) });
+
+  const existing = await tx.facilitiesApplicationOfficer.findMany({ where: { applicationId } });
+  const retained: string[] = [];
+  for (const officer of company.officers) {
+    const snapshot = existing.find((item) => item.sourceCompanyOfficerId === officer.id)
+      ?? existing.find((item) => !item.sourceCompanyOfficerId && item.fullName === officer.fullName && item.position === officer.position && item.isChiefExecutive === officer.isChiefExecutive);
+    const saved = snapshot
+      ? await tx.facilitiesApplicationOfficer.update({ where: { id: snapshot.id }, data: { sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } })
+      : await tx.facilitiesApplicationOfficer.create({ data: { applicationId, sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } });
+    retained.push(saved.id);
+  }
+  await tx.facilitiesApplicationOfficer.deleteMany({ where: { applicationId, id: { notIn: retained }, creditReports: { none: {} } } });
+}
+
 export function checkFacilitiesSubmissionReadiness(
   application: SubmissionApplication,
   input: FacilitiesSubmissionInput,
@@ -128,10 +184,12 @@ export function checkFacilitiesSubmissionReadiness(
   if (!Number.isInteger(input.employeeCount) || input.employeeCount < 0) issues.push("تعداد کارکنان معتبر نیست");
   if (!boardMembers.some((officer) => officer.id === input.boardOfficerId)) issues.push("عضو هیئت‌مدیره برای گزارش اعتباری معتبر نیست");
 
-  const insuranceEvidence = application.evidence.find((item) => item.kind === "insurance");
-  if (insuranceEvidence && insuranceEvidence.employeeCount !== null && insuranceEvidence.employeeCount !== input.employeeCount) issues.push("تعداد کارکنان با اطلاعات ذخیره‌شده یکسان نیست");
-  const boardEvidence = application.evidence.find((item) => item.kind === "credit-board");
-  if (boardEvidence && boardEvidence.officerId !== null && boardEvidence.officerId !== input.boardOfficerId) issues.push("عضو هیئت‌مدیره با اطلاعات ذخیره‌شده یکسان نیست");
+  if (application.status !== "NEEDS_EDIT") {
+    const insuranceEvidence = application.evidence.find((item) => item.kind === "insurance");
+    if (insuranceEvidence && insuranceEvidence.employeeCount !== null && insuranceEvidence.employeeCount !== input.employeeCount) issues.push("تعداد کارکنان با اطلاعات ذخیره‌شده یکسان نیست");
+    const boardEvidence = application.evidence.find((item) => item.kind === "credit-board");
+    if (boardEvidence && boardEvidence.officerId !== null && boardEvidence.officerId !== input.boardOfficerId) issues.push("عضو هیئت‌مدیره با اطلاعات ذخیره‌شده یکسان نیست");
+  }
 
   if (application.paymentEnabledSnapshot && (!application.paymentAmountTomanSnapshot || application.paymentAmountTomanSnapshot <= 0)) issues.push("تنظیمات پرداخت دوره معتبر نیست");
 

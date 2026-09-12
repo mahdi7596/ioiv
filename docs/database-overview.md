@@ -434,3 +434,52 @@ remain append-only. Failed or cancelled payments return an unsubmitted applicati
 to draft; unknown gateway outcomes remain pending and do not trigger another charge.
 No raw gateway response, credential, OTP, file content, storage path, or public file
 URL is stored in the facilities payment or audit records.
+
+### M7 review and correction cycles
+
+Facilities review remains separate from the legacy validation admin workflow.
+`ADMIN` and `SUPER_ADMIN` roles can review and download current protected facilities
+evidence; `ENTRY_VIEWER` can inspect queue/detail metadata but cannot download files or
+change state. Reviewer transitions use the existing database-guarded loop:
+`SUBMITTED` → `UNDER_REVIEW` → `NEEDS_EDIT` → `SUBMITTED`, with
+`UNDER_REVIEW` → `VALIDATION_COMPLETED` as the final path.
+
+`FacilitiesCorrectionRequest` keeps every numbered correction cycle and permits only
+one unresolved row per application. Its SMS fields record only `PENDING`, `SENT`, or
+`FAILED`, attempt timestamps/counts, and a safe failure code. The correction and
+`NEEDS_EDIT` transition commit before the external SMS call; provider failure does not
+undo application state and can be retried by a full reviewer. Status history and audit
+events remain append-only. New correction notes must contain Persian text and contain
+between 1 and 2,000 trimmed characters; legacy rows remain readable after migration.
+
+Applicants may change the requested facility type/amount, application evidence, human
+resources count, and selected board-member report while `NEEDS_EDIT`. Resubmission
+resolves the open correction, preserves the original `submittedAt`, reuses the verified
+payment, and returns the application to `SUBMITTED`. Intake, supplier, pinned template,
+and captured company snapshot remain immutable during corrections.
+
+Reviewers resolve current company-profile documents through their private bindings.
+Profile data and file mutations are therefore locked while a company has an application
+in `PENDING_PAYMENT`, `SUBMITTED`, `UNDER_REVIEW`, or `NEEDS_EDIT`; they unlock after a
+failed payment returns to `DRAFT` or after `VALIDATION_COMPLETED`. M7 does not snapshot
+profile bytes or include them in the 150 MiB application quota.
+
+### M8 export, audit viewer, and retention
+
+M8 adds only facilities audit enum values and query indexes; it does not migrate or
+reinterpret legacy applications. Active `ADMIN` and `SUPER_ADMIN` roles may create a
+bounded facilities XLSX export, and active `SUPER_ADMIN` alone may query the facilities
+audit viewer. `FacilitiesAuditLog` remains append-only for the runtime role and through
+its owner-level trigger. Export, audit-view, protected admin-file, questionnaire, and
+reconciliation reads write typed safe audit events before releasing protected results.
+
+Export filters use `FacilitiesApplication.createdAt`, with indexes for created date,
+status, intake, and intake-supplier paths. Audit pagination is ordered by the stable
+`(createdAt, id)` pair. M8 metadata validation permits only bounded safe filter-key and
+count metadata; it continues to reject content, storage keys, hashes, secrets, URLs,
+and raw gateway values.
+
+Physical terminal quarantine is purged on reconciliation. An `UNAVAILABLE` upload is
+retryable for 24 hours from creation, then becomes terminal and loses its physical
+bytes while its safe attempt/revision/audit metadata remains. Current scan-passed
+evidence and replaced-file deletion tombstones retain their existing lifecycle.

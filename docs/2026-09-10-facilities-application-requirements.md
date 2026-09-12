@@ -156,6 +156,23 @@ The facilities route also requires the current legacy document flow:
 
 The initial export filters are intake, supplier, status, and date range.
 
+## Confirmed M8 decisions
+
+- Active `ADMIN` and `SUPER_ADMIN` users may export facilities applications; the
+  privileged facilities audit viewer is limited to active `SUPER_ADMIN` users.
+- Facilities export includes all application statuses and applies its inclusive date
+  range to the application creation date using Tehran day boundaries.
+- XLSX uses related sheets keyed by application ID. It contains current safe file
+  metadata for every status, but download links only for review-visible applications.
+- Synchronous export is limited to 5,000 applications and 100,000 related rows; larger
+  requests must be narrowed rather than queued in this milestone.
+- Terminal rejected/quarantined file bytes are purged by the next reconciler run.
+  Scanner/storage-unavailable bytes remain quarantined and retryable for at most 24
+  hours, after which bytes are purged and safe non-content metadata is retained.
+- Facilities audit/revision metadata is retained indefinitely until a separate approved
+  legal retention policy exists. M8 does not backfill historical events or collect new
+  IP-address/user-agent data.
+
 ## Confirmed M0 implementation decisions
 
 - A company may submit one facilities application per intake.

@@ -6,7 +6,12 @@ export type AdminPermission =
   | "downloadSubmissionFiles"
   | "exportSubmissions"
   | "changeSubmissionStatus"
-  | "manageValidationCertificates";
+  | "manageValidationCertificates"
+  | "viewFacilitiesEntries"
+  | "downloadFacilitiesFiles"
+  | "changeFacilitiesStatus"
+  | "exportFacilitiesApplications"
+  | "viewFacilitiesAudit";
 
 export type AdminPermissions = Record<AdminPermission, boolean>;
 
@@ -17,6 +22,11 @@ const noAdminPermissions: AdminPermissions = {
   exportSubmissions: false,
   changeSubmissionStatus: false,
   manageValidationCertificates: false,
+  viewFacilitiesEntries: false,
+  downloadFacilitiesFiles: false,
+  changeFacilitiesStatus: false,
+  exportFacilitiesApplications: false,
+  viewFacilitiesAudit: false,
 };
 
 const fullAdminPermissions: AdminPermissions = {
@@ -26,6 +36,11 @@ const fullAdminPermissions: AdminPermissions = {
   exportSubmissions: true,
   changeSubmissionStatus: true,
   manageValidationCertificates: true,
+  viewFacilitiesEntries: true,
+  downloadFacilitiesFiles: true,
+  changeFacilitiesStatus: true,
+  exportFacilitiesApplications: true,
+  viewFacilitiesAudit: false,
 };
 
 const entryViewerPermissions: AdminPermissions = {
@@ -35,12 +50,17 @@ const entryViewerPermissions: AdminPermissions = {
   exportSubmissions: false,
   changeSubmissionStatus: false,
   manageValidationCertificates: false,
+  viewFacilitiesEntries: true,
+  downloadFacilitiesFiles: false,
+  changeFacilitiesStatus: false,
+  exportFacilitiesApplications: false,
+  viewFacilitiesAudit: false,
 };
 
 export const adminRolePermissions: Record<UserRole, AdminPermissions> = {
   [UserRole.USER]: noAdminPermissions,
   [UserRole.ADMIN]: fullAdminPermissions,
-  [UserRole.SUPER_ADMIN]: fullAdminPermissions,
+  [UserRole.SUPER_ADMIN]: { ...fullAdminPermissions, viewFacilitiesAudit: true },
   [UserRole.ENTRY_VIEWER]: entryViewerPermissions,
 };
 

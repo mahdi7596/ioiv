@@ -181,4 +181,23 @@ describe("scan and quarantine lifecycle", () => {
     const invalidAdapter = new ClamdInstreamFacilitiesFileScanner({ host: "127.0.0.1", port: 0 });
     await expect(invalidAdapter.scan({ storageKey: "staging/00000000-0000-4000-8000-000000000001", byteSize: 3, sha256: "a", fileType: "PDF", bytes: Buffer.from("abc") })).resolves.toEqual({ status: "UNAVAILABLE", reason: "SCANNER_UNAVAILABLE" });
   });
+
+  it("retains verified staging bytes when promotion storage is temporarily unavailable", async () => {
+    const storage: FacilitiesPrivateStorage = {
+      createStagingKey: () => "staging/00000000-0000-4000-8000-000000000001",
+      createReadyKey: () => "ready/00000000-0000-4000-8000-000000000002",
+      writeStaging: async () => undefined,
+      promote: async () => { throw new Error("storage unavailable"); },
+      readStaging: async () => pdf(),
+      readReady: async () => Buffer.alloc(0),
+      remove: async () => undefined,
+    };
+    const scanner: FacilitiesFileScanner = { scan: async () => ({ status: "PASSED" }) };
+    await expect(stageVerifyScanPromoteFacilitiesFile({ fileName: "document.pdf", bytes: pdf(), storage, scanner })).resolves.toMatchObject({
+      storageKey: "staging/00000000-0000-4000-8000-000000000001",
+      scanStatus: "UNAVAILABLE",
+      scanReason: "STORAGE_UNAVAILABLE",
+      quarantine: true,
+    });
+  });
 });

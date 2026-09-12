@@ -5,7 +5,7 @@ import { verifyFacilitiesUpload, type VerifiedFacilitiesFile } from "@/lib/facil
 export type FacilitiesStagedFile = VerifiedFacilitiesFile & {
   storageKey: FacilitiesStorageKey;
   scanStatus: FacilitiesScanResult["status"];
-  scanReason?: FacilitiesScanResult["reason"];
+  scanReason?: FacilitiesScanResult["reason"] | "STORAGE_UNAVAILABLE";
   quarantine: boolean;
 };
 
@@ -43,7 +43,13 @@ export async function stageVerifyScanPromoteFacilitiesFile(input: {
   }
 
   const readyKey = input.storage.createReadyKey();
-  await input.storage.promote(stagingKey, readyKey);
+  try {
+    await input.storage.promote(stagingKey, readyKey);
+  } catch {
+    // The verified bytes still exist under the private staging key. Preserve
+    // them as unavailable so reconciliation can retry promotion for 24 hours.
+    return { ...verified, storageKey: stagingKey, scanStatus: "UNAVAILABLE", scanReason: "STORAGE_UNAVAILABLE", quarantine: true };
+  }
   return { ...verified, storageKey: readyKey, scanStatus: "PASSED", quarantine: false };
 }
 

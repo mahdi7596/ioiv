@@ -4,7 +4,7 @@
 import { useMemo, useState, useTransition } from "react";
 
 import { showToast } from "@/components/ui/toast";
-import { createFacilitiesDraft, ensureFacilitiesApplicationSlot, saveFacilitiesDraftDetails } from "@/lib/actions/facilities-application";
+import { createFacilitiesDraft, ensureFacilitiesApplicationSlot, saveFacilitiesDraftDetails, updateFacilitiesApplicationDetails } from "@/lib/actions/facilities-application";
 import { startFacilitiesPayment, submitFacilitiesApplication } from "@/lib/actions/facilities-payment";
 
 const documents = [
@@ -30,6 +30,15 @@ const paymentMessages: Record<string, string> = {
   pending: "نتیجه پرداخت هنوز مشخص نیست. لطفاً کمی بعد دوباره صفحه را بررسی کنید.",
 };
 
+const statusLabels: Record<string, string> = {
+  DRAFT: "پیش‌نویس",
+  PENDING_PAYMENT: "در انتظار پرداخت",
+  SUBMITTED: "در صف بررسی",
+  UNDER_REVIEW: "در حال بررسی",
+  NEEDS_EDIT: "نیازمند اصلاح",
+  VALIDATION_COMPLETED: "پایان فرآیند اعتبارسنجی",
+};
+
 export function FacilitiesApplicationWizard({ data, notice }: { data: any; notice?: string }) {
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
@@ -37,10 +46,12 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
   const intake = useMemo(() => data.intakes.find((item: any) => item.id === intakeId), [data.intakes, intakeId]);
   const [supplierId, setSupplierId] = useState(intake?.supplierConfigurations[0]?.id || "");
   const [app, setApp] = useState(data.applications[0] || null);
-  const [amount, setAmount] = useState("");
-  const [type, setType] = useState("FIXED_CAPITAL");
-  const [employeeCount, setEmployeeCount] = useState("0");
-  const [boardOfficerId, setBoardOfficerId] = useState("");
+  const [amount, setAmount] = useState(data.applications[0]?.requestedAmountRial || "");
+  const [type, setType] = useState(data.applications[0]?.facilityType || "FIXED_CAPITAL");
+  const insuranceEvidence = data.applications[0]?.evidence?.find((item: any) => item.kind === "insurance");
+  const boardEvidence = data.applications[0]?.evidence?.find((item: any) => item.kind === "credit-board");
+  const [employeeCount, setEmployeeCount] = useState(String(insuranceEvidence?.employeeCount ?? 0));
+  const [boardOfficerId, setBoardOfficerId] = useState(boardEvidence?.officerId || "");
   const [confirmed, setConfirmed] = useState(false);
 
   const paymentEnabled = Boolean(app?.paymentEnabledSnapshot);
@@ -89,9 +100,8 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
     }
   }
 
-  if (!data.intakes.length) return <div className="panel" role="status">در حال حاضر دوره یا تأمین‌کننده واجد شرایطی برای درخواست وجود ندارد.</div>;
-
   if (!app) {
+    if (!data.intakes.length) return <div className="panel" role="status">در حال حاضر دوره یا تأمین‌کننده واجد شرایطی برای درخواست وجود ندارد.</div>;
     return (
       <form className="panel profile-form" onSubmit={(event) => { event.preventDefault(); run(() => createFacilitiesDraft({ intakeId, intakeSupplierId: supplierId, facilityType: type as any, requestedAmountRial: amount })); }}>
         <h2>شروع درخواست</h2>
@@ -105,13 +115,29 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
     );
   }
 
-  if (["SUBMITTED", "UNDER_REVIEW", "VALIDATION_COMPLETED"].includes(app.status)) return <>{noticePanel}<div className="panel" role="status">این درخواست قبلاً ارسال شده است و امکان ویرایش آن وجود ندارد.</div></>;
-  if (app.status === "PENDING_PAYMENT") return <div className="panel" role="status"><h2>در انتظار نتیجه پرداخت</h2><p>{activePayment?.status === "TIMED_OUT" ? "نتیجه پرداخت هنوز از درگاه دریافت نشده است." : "پس از مشخص شدن نتیجه پرداخت، این صفحه را دوباره بررسی کنید."}</p></div>;
+  const latestCorrection = app.correctionRequests?.find((item: any) => !item.resolvedAt);
+  const timeline = (
+    <section className="panel" aria-labelledby="facilities-history-heading">
+      <h2 id="facilities-history-heading">سوابق وضعیت و اصلاحات</h2>
+      {app.correctionRequests?.length ? <ol className="facilities-timeline">{app.correctionRequests.map((item: any) => <li key={item.id}><strong>اصلاح شماره {item.sequence}</strong><span>{new Date(item.openedAt).toLocaleString("fa-IR")} — {item.resolvedAt ? "ارسال‌شده" : "در انتظار اقدام"}</span><p>{item.note}</p></li>)}</ol> : <p>درخواست اصلاحی ثبت نشده است.</p>}
+      {app.history?.length ? <ol className="facilities-timeline">{app.history.map((item: any) => <li key={item.id}><strong>{statusLabels[item.newStatus] || item.newStatus}</strong><span>{new Date(item.createdAt).toLocaleString("fa-IR")}</span>{item.note ? <p>{item.note}</p> : null}</li>)}</ol> : <p>هنوز سابقه‌ای ثبت نشده است.</p>}
+    </section>
+  );
+
+  if (["SUBMITTED", "UNDER_REVIEW", "VALIDATION_COMPLETED"].includes(app.status)) return <div className="profile-form">{noticePanel}<section className="panel" role="status"><h2>{statusLabels[app.status]}</h2><p>{app.status === "SUBMITTED" ? "درخواست در صف بررسی مدیریت قرار دارد." : app.status === "UNDER_REVIEW" ? "کارشناس در حال بررسی اطلاعات و مدارک است." : "فرآیند اعتبارسنجی این درخواست پایان یافته است."}</p></section>{timeline}</div>;
+  if (app.status === "PENDING_PAYMENT") return <div className="profile-form"><section className="panel" role="status"><h2>در انتظار نتیجه پرداخت</h2><p>{activePayment?.status === "TIMED_OUT" ? "نتیجه پرداخت هنوز از درگاه دریافت نشده است." : "پس از مشخص شدن نتیجه پرداخت، این صفحه را دوباره بررسی کنید."}</p></section>{timeline}</div>;
 
   const officers = app.officers?.filter((officer: any) => !officer.isChiefExecutive) || [];
   return (
     <div className="profile-form">
       {noticePanel}
+      {app.status === "NEEDS_EDIT" && latestCorrection ? <section className="panel review-message" role="alert"><p className="eyebrow">اقدام لازم</p><h2>موارد درخواستی کارشناس</h2><p>{latestCorrection.note}</p></section> : null}
+      <section className="panel">
+        <h2>مشخصات درخواست</h2>
+        <label>نوع تسهیلات<select value={type} onChange={(event) => setType(event.target.value)}><option value="FIXED_CAPITAL">سرمایه ثابت</option><option value="WORKING_CAPITAL">سرمایه در گردش</option></select></label>
+        <label>مبلغ درخواستی (ریال)<input dir="ltr" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} /><small>سقف ثبت‌شده: {app.maximumAmountRialSnapshot} ریال</small></label>
+        <button type="button" className="button button--ghost" disabled={pending || uploading} onClick={() => run(() => updateFacilitiesApplicationDetails({ applicationId: app.id, facilityType: type as any, requestedAmountRial: amount }))}>ذخیره مشخصات درخواست</button>
+      </section>
       <section className="panel">
         <h2>مدارک درخواست</h2>
         <p role="status">هر فایل حداکثر ۲۵ مگابایت و مجموع مدارک حداکثر ۱۵۰ مگابایت است.</p>
@@ -126,10 +152,11 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
       </section>
       <section className="panel" aria-labelledby="facilities-final-heading">
         <h2 id="facilities-final-heading">تأیید و ارسال</h2>
-        {paymentEnabled ? <label className="checkbox-row"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />اطلاعات و مدارک را بررسی کرده‌ام و برای ادامه به پرداخت می‌روم.</label> : null}
-        <button className="button button--primary" disabled={pending || uploading || (paymentEnabled && !confirmed)} onClick={() => run(() => paymentEnabled ? startFacilitiesPayment({ applicationId: app.id, confirmed, employeeCount: Number(employeeCount), boardOfficerId }) : submitFacilitiesApplication({ applicationId: app.id, employeeCount: Number(employeeCount), boardOfficerId }))}>{paymentEnabled ? "تأیید و ورود به پرداخت" : "ارسال نهایی درخواست"}</button>
-        <p role="status">{paymentEnabled ? "پس از تأیید موفق پرداخت، درخواست به‌صورت خودکار ارسال می‌شود." : "پس از بررسی نهایی سرور، درخواست ارسال می‌شود."}</p>
+        {paymentEnabled && app.status !== "NEEDS_EDIT" ? <label className="checkbox-row"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />اطلاعات و مدارک را بررسی کرده‌ام و برای ادامه به پرداخت می‌روم.</label> : null}
+        <button className="button button--primary" disabled={pending || uploading || (paymentEnabled && app.status !== "NEEDS_EDIT" && !confirmed)} onClick={() => run(() => app.status === "NEEDS_EDIT" ? submitFacilitiesApplication({ applicationId: app.id, employeeCount: Number(employeeCount), boardOfficerId }) : paymentEnabled ? startFacilitiesPayment({ applicationId: app.id, confirmed, employeeCount: Number(employeeCount), boardOfficerId }) : submitFacilitiesApplication({ applicationId: app.id, employeeCount: Number(employeeCount), boardOfficerId }))}>{app.status === "NEEDS_EDIT" ? "ارسال اصلاحات" : paymentEnabled ? "تأیید و ورود به پرداخت" : "ارسال نهایی درخواست"}</button>
+        <p role="status">{app.status === "NEEDS_EDIT" ? "ارسال اصلاحات هزینه دیگری ندارد و پرونده را به صف بررسی بازمی‌گرداند." : paymentEnabled ? "پس از تأیید موفق پرداخت، درخواست به‌صورت خودکار ارسال می‌شود." : "پس از بررسی نهایی سرور، درخواست ارسال می‌شود."}</p>
       </section>
+      {timeline}
     </div>
   );
 }
