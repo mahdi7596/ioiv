@@ -2,6 +2,8 @@ import { Prisma } from "@prisma/client";
 
 import type { FacilitiesApplication, FacilitiesApplicationEvidence, FacilitiesFileBinding, FacilitiesFileUpload, StoredFile, User } from "@prisma/client";
 
+import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
+
 export type FacilitiesSubmissionInput = {
   employeeCount: number;
   boardOfficerId: string;
@@ -97,6 +99,63 @@ export async function loadFacilitiesSubmissionApplication(tx: Prisma.Transaction
   return tx.facilitiesApplication.findUnique({ where: { id: applicationId }, include: facilitiesSubmissionInclude });
 }
 
+type CompanyOfficerSource = { id: string; fullName: string; position: string; isChiefExecutive: boolean };
+
+/**
+ * Upsert the application's officer snapshot from the live company officers, keyed by
+ * sourceCompanyOfficerId (falling back to a value match for legacy rows created without it).
+ * Snapshot rows that no longer map to a company officer are dropped, except any already
+ * referenced by a credit report so existing evidence is never orphaned.
+ */
+async function syncFacilitiesOfficerSnapshot(tx: Prisma.TransactionClient, applicationId: string, officers: CompanyOfficerSource[]) {
+  const existing = await tx.facilitiesApplicationOfficer.findMany({ where: { applicationId } });
+  const retained: string[] = [];
+  for (const officer of officers) {
+    const snapshot = existing.find((item) => item.sourceCompanyOfficerId === officer.id)
+      ?? existing.find((item) => !item.sourceCompanyOfficerId && item.fullName === officer.fullName && item.position === officer.position && item.isChiefExecutive === officer.isChiefExecutive);
+    const saved = snapshot
+      ? await tx.facilitiesApplicationOfficer.update({ where: { id: snapshot.id }, data: { sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } })
+      : await tx.facilitiesApplicationOfficer.create({ data: { applicationId, sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } });
+    retained.push(saved.id);
+  }
+  await tx.facilitiesApplicationOfficer.deleteMany({ where: { applicationId, id: { notIn: retained }, creditReports: { none: {} } } });
+}
+
+/**
+ * Lightweight snapshot re-sync for the editable (DRAFT / NEEDS_EDIT) wizard paths.
+ *
+ * Unlike {@link refreshFacilitiesProfileSnapshot}, this never gates on profile-document
+ * completeness, so it can safely run on wizard load / draft save. It keeps the company,
+ * shareholder and officer snapshots aligned with the live company profile — most importantly
+ * populating the board-member dropdown when officers were added after the draft was created.
+ */
+export async function refreshFacilitiesEditableSnapshot(tx: Prisma.TransactionClient, applicationId: string) {
+  const application = await tx.facilitiesApplication.findUnique({ where: { id: applicationId }, select: { companyId: true, status: true } });
+  if (!application || !FACILITIES_EDITABLE_STATUSES.includes(application.status)) return;
+  const company = await tx.company.findUnique({
+    where: { id: application.companyId },
+    include: { shareholders: true, officers: true },
+  });
+  if (!company) return;
+
+  await tx.facilitiesApplicationCompanySnapshot.update({
+    where: { applicationId },
+    data: {
+      name: company.name,
+      nationalId: company.nationalId,
+      registrationNumber: company.registrationNumber,
+      registrationPlace: company.registrationPlace,
+      registrationDate: company.registrationDate,
+      registeredCapitalRial: company.registeredCapitalRial,
+      contactFullName: company.contactFullName,
+      contactNationalCode: company.contactNationalCode,
+    },
+  });
+  await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
+  await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, ownershipPercentage: shareholder.ownershipPercentage })) });
+  await syncFacilitiesOfficerSnapshot(tx, applicationId, company.officers);
+}
+
 export async function refreshFacilitiesProfileSnapshot(tx: Prisma.TransactionClient, applicationId: string) {
   const application = await tx.facilitiesApplication.findUnique({ where: { id: applicationId }, select: { companyId: true, status: true } });
   if (!application || application.status !== "DRAFT") return;
@@ -135,18 +194,7 @@ export async function refreshFacilitiesProfileSnapshot(tx: Prisma.TransactionCli
   });
   await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
   await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, ownershipPercentage: shareholder.ownershipPercentage })) });
-
-  const existing = await tx.facilitiesApplicationOfficer.findMany({ where: { applicationId } });
-  const retained: string[] = [];
-  for (const officer of company.officers) {
-    const snapshot = existing.find((item) => item.sourceCompanyOfficerId === officer.id)
-      ?? existing.find((item) => !item.sourceCompanyOfficerId && item.fullName === officer.fullName && item.position === officer.position && item.isChiefExecutive === officer.isChiefExecutive);
-    const saved = snapshot
-      ? await tx.facilitiesApplicationOfficer.update({ where: { id: snapshot.id }, data: { sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } })
-      : await tx.facilitiesApplicationOfficer.create({ data: { applicationId, sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } });
-    retained.push(saved.id);
-  }
-  await tx.facilitiesApplicationOfficer.deleteMany({ where: { applicationId, id: { notIn: retained }, creditReports: { none: {} } } });
+  await syncFacilitiesOfficerSnapshot(tx, applicationId, company.officers);
 }
 
 export function checkFacilitiesSubmissionReadiness(

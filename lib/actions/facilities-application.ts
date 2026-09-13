@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { ActionError } from "@/lib/actions/auth";
 import { db } from "@/lib/db";
-import { facilitiesSubmissionInclude, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, requiredFacilitiesSlots } from "@/lib/facilities/submission";
+import { facilitiesSubmissionInclude, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesEditableSnapshot, requiredFacilitiesSlots } from "@/lib/facilities/submission";
 import { FACILITIES_EDITABLE_STATUSES, isFacilitiesApplicationEditable } from "@/lib/facilities/review-status";
 
 function slotFor(kind: string, year?: number) {
@@ -62,6 +62,16 @@ export async function getFacilitiesWizard() {
       },
     },
   }) : [];
+  // Re-sync the editable draft snapshots so board members added to the company profile after the
+  // draft was created appear in the wizard (e.g. the credit-report officer dropdown) without a
+  // submit/payment attempt. Guarded to DRAFT/NEEDS_EDIT and gate-free by design.
+  const editableApplications = await db.facilitiesApplication.findMany({
+    where: { userId: session.subjectId, companyId: company.id, status: { in: FACILITIES_EDITABLE_STATUSES } },
+    select: { id: true },
+  });
+  for (const application of editableApplications) {
+    await db.$transaction((tx) => refreshFacilitiesEditableSnapshot(tx, application.id));
+  }
   const applications = await db.facilitiesApplication.findMany({
     where: { userId: session.subjectId, companyId: company.id },
     orderBy: { createdAt: "desc" },
@@ -142,8 +152,13 @@ export async function saveFacilitiesDraftDetails(input: { applicationId: string;
   const session = await requireSession("user");
   const result = await db.$transaction(async (tx) => {
     if (!await lockApplication(tx, input.applicationId)) throw new ActionError("این پرونده در حال حاضر قابل ویرایش نیست", 403);
+    const locked = await loadFacilitiesSubmissionApplication(tx, input.applicationId);
+    if (!locked || locked.userId !== session.subjectId || !isFacilitiesApplicationEditable(locked.status)) throw new ActionError("این پرونده در حال حاضر قابل ویرایش نیست", 403);
+    // Align the officer snapshot with the live company profile first, so a board member added after
+    // draft creation is a valid selection here rather than being rejected against a stale snapshot.
+    await refreshFacilitiesEditableSnapshot(tx, input.applicationId);
     const application = await loadFacilitiesSubmissionApplication(tx, input.applicationId);
-    if (!application || application.userId !== session.subjectId || !isFacilitiesApplicationEditable(application.status)) throw new ActionError("این پرونده در حال حاضر قابل ویرایش نیست", 403);
+    if (!application) throw new ActionError("این پرونده در حال حاضر قابل ویرایش نیست", 403);
     if (!Number.isInteger(input.employeeCount) || input.employeeCount < 0 || !application.officers.some((officer) => officer.id === input.boardOfficerId && !officer.isChiefExecutive)) throw new ActionError("اطلاعات منابع انسانی یا عضو هیئت‌مدیره معتبر نیست");
     const ready = application.fileBindings.filter((binding) => binding.currentUpload?.lifecycleStatus === "PASSED");
     if (requiredFacilitiesSlots.some((key) => !ready.some((binding) => binding.slotKey === key)) || !ready.some((binding) => binding.slotKey.startsWith("tax-")) || !ready.some((binding) => binding.slotKey.startsWith("financial-"))) throw new ActionError("همه مدارک الزامی باید با موفقیت بررسی شده باشند");
