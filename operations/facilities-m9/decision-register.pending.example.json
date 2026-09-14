@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "facilities-m9-PENDING",
+  "decisions": [
+    { "id": "production-intake", "status": "pending", "evidenceRef": "pending://product-approval" },
+    { "id": "supplier-questionnaires", "status": "pending", "evidenceRef": "pending://template-approval" },
+    { "id": "amount-payment", "status": "pending", "evidenceRef": "pending://product-approval" },
+    { "id": "payment-acknowledgement", "status": "pending", "evidenceRef": "pending://copy-approval" },
+    { "id": "correction-scope", "status": "pending", "evidenceRef": "pending://product-resolution" },
+    { "id": "profile-quota", "status": "pending", "evidenceRef": "pending://product-resolution" },
+    { "id": "file-policy", "status": "pending", "evidenceRef": "pending://security-approval" },
+    { "id": "scanner-operations", "status": "pending", "evidenceRef": "pending://operator-assignment" },
+    { "id": "capacity-retention", "status": "pending", "evidenceRef": "pending://operations-approval" },
+    { "id": "alerting-support", "status": "pending", "evidenceRef": "pending://responder-assignment" },
+    { "id": "release-safety", "status": "pending", "evidenceRef": "pending://release-approval" },
+    { "id": "dependency-security", "status": "pending", "evidenceRef": "pending://dependency-remediation-and-risk-review" }
+  ]
+}

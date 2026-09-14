@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
 const SESSION_COOKIE = "sana_session";
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const SESSION_MAX_AGE_SECONDS = 60 * 30;
 
 export type SessionKind = "user" | "admin";
 

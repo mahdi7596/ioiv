@@ -1,21 +1,23 @@
 import Link from "next/link";
-import { ClipboardList, Info, MessageSquareWarning } from "lucide-react";
+import { Building2, MessageSquareWarning } from "lucide-react";
 import { redirect } from "next/navigation";
-import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { DashboardEvaluationNotice } from "@/components/dashboard/DashboardEvaluationNotice";
 import { ValidationCertificateDownload } from "@/components/dashboard/ValidationCertificateDownload";
 import { AppShell } from "@/components/layout/AppShell";
 import { canEditApplication } from "@/lib/application/status";
+import { isFacilitiesApplicationEditable } from "@/lib/facilities/review-status";
 import { getCurrentUserApplication } from "@/lib/actions/application";
+import { getFacilitiesDashboardSummary, hasCompletedFacilitiesProfile } from "@/lib/actions/facilities-company";
 
-const statusGuidance: Record<string, string> = {
-  DRAFT: "پرونده هنوز ارسال نشده است. می‌توانید مدارک را کامل کنید و پرداخت را انجام دهید.",
-  PENDING_PAYMENT: "پرونده کامل شده و منتظر نتیجه پرداخت از درگاه است. اگر پرداخت کامل نشد یا از درگاه خارج شدید، می‌توانید از صفحه پرونده دوباره پرداخت را انجام دهید.",
-  SUBMITTED: "پرداخت موفق بوده و پرونده در صف بررسی مدیریت قرار دارد.",
-  UNDER_REVIEW: "تیم مدیریت در حال بررسی مدارک شماست.",
-  NEEDS_EDIT: "پرونده نیازمند اصلاح است. یادداشت مدیریت را بررسی کنید و موارد خواسته شده را اصلاح کنید.",
-  VALIDATION_COMPLETED: "فرآیند اعتبارسنجی پرونده به پایان رسیده است.",
+type ServiceRow = {
+  key: string;
+  index: string;
+  title: string;
+  fullTitle: string;
+  href: string;
+  status: string | null;
+  editable: boolean;
 };
 
 export default async function DashboardPage() {
@@ -24,135 +26,148 @@ export default async function DashboardPage() {
   try {
     data = await getCurrentUserApplication();
   } catch {
-    redirect("/");
+    // The session cookie is a self-contained JWT, so it can stay valid after
+    // the underlying user is gone (e.g. the DB was reseeded). Redirecting to
+    // "/" would bounce straight back here because "/" trusts the cookie, so
+    // clear the cookie via the logout route to break the redirect loop.
+    redirect("/api/auth/logout");
+  }
+
+  if (!(await hasCompletedFacilitiesProfile())) {
+    redirect("/dashboard/facilities-profile");
   }
 
   const { application } = data;
-  const latestPayment = application?.payments[0];
+  const facilitiesSummary = await getFacilitiesDashboardSummary();
   const validationCertificate = application?.files[0];
-  const editable = application ? canEditApplication(application.status) : true;
   const hasActiveEditRequest = application?.status === "NEEDS_EDIT";
+
+  const rows: ServiceRow[] = [
+    {
+      key: "validation",
+      index: "۱",
+      title: "اعتبارسنجی تأمین‌کنندگان",
+      fullTitle: "اعتبارسنجی شرکت‌های متقاضی ورود به لیست بلند تأمین‌کنندگان وزارت نفت",
+      href: "/dashboard/application",
+      status: application?.status ?? null,
+      editable: application ? canEditApplication(application.status) : true,
+    },
+    {
+      key: "facilities",
+      index: "۲",
+      title: "تسهیلات ماده ۲۸",
+      fullTitle: "تسهیلات از محل منابع ماده ۲۸ آیین‌نامه تولید، دانش‌بنیان و اشتغالزایی در صنعت نفت",
+      href: "/dashboard/facilities-application",
+      status: facilitiesSummary?.status ?? null,
+      editable: facilitiesSummary?.status ? isFacilitiesApplicationEditable(facilitiesSummary.status) : true,
+    },
+  ];
 
   return (
     <AppShell
       area="user"
       eyebrow="داشبورد متقاضی"
       title="وضعیت پرونده"
-      description="وضعیت فعلی، اقدام بعدی و پیام‌های مدیریت را از اینجا دنبال کنید."
-      action={
-        <Link
-          href="/dashboard/application"
-          className="button button--primary"
-          aria-disabled={false}
-          aria-label={application ? "مشاهده پرونده" : "شروع ثبت مدارک"}
-          title={application ? "مشاهده پرونده" : "شروع ثبت مدارک"}
-        >
-          <ClipboardList aria-hidden="true" size={19} strokeWidth={2} />
-          {application ? "مشاهده پرونده" : "شروع ثبت مدارک"}
-        </Link>
-      }
+      description="وضعیت دو مسیر زیر و پیام‌های مدیریت را از اینجا دنبال کنید."
+      stickyHeader
     >
-      <DashboardEvaluationNotice />
+      <div className="applicant-dashboard">
+        <DashboardEvaluationNotice />
 
-      <section className="panel status-card">
-        <p className="eyebrow">تسهیلات</p>
-        <h2>پروفایل شرکت</h2>
-        <p>پس از تکمیل پروفایل و فعال‌سازی دوره توسط مدیریت، می‌توانید درخواست تسهیلات را ایجاد کنید.</p>
-        <div className="flex gap-3 flex-wrap">
-          <Link href="/dashboard/facilities-profile" className="button button--ghost">مدیریت پروفایل شرکت</Link>
-          <Link href="/dashboard/facilities-application" className="button button--primary">درخواست تسهیلات</Link>
-        </div>
-      </section>
-
-      <section className="panel status-card">
-        {application ? (
-          <div className="space-y-5">
-            <div className="detail-grid">
-              <div>
-                <p className="stat-label">وضعیت</p>
-                <div className="mt-2">
-                  <StatusBadge status={application.status} />
-                </div>
-              </div>
-              <div>
-                <p className="stat-label">شناسه ملی شرکت</p>
-                <p className="stat-value" dir="ltr">
-                  {application.companyNationalId}
-                </p>
-              </div>
-              <div>
-                <p className="stat-label">پرداخت</p>
-                <div className="mt-2">
-                  <PaymentStatusBadge status={latestPayment?.status} />
-                </div>
-              </div>
-              <div>
-                <p className="stat-label">مرحله فعلی</p>
-                <p className="stat-value">{application.currentStep}</p>
-              </div>
-            </div>
-
-            <p className="status-info" role="status">
-              <Info aria-hidden="true" size={20} strokeWidth={2.2} />
-              <span>{statusGuidance[application.status]}</span>
+        <section className="profile-callout" aria-label="پروفایل شرکت">
+          <span className="profile-callout__icon" aria-hidden="true">
+            <Building2 size={24} strokeWidth={2} />
+          </span>
+          <div className="profile-callout__text">
+            <p className="profile-callout__eyebrow">پروفایل شرکت</p>
+            <p className="profile-callout__title">{facilitiesSummary?.name}</p>
+            <p className="profile-callout__meta" dir="ltr">
+              {facilitiesSummary?.nationalId}
             </p>
-
-            {application.adminNote ? (
-              <article
-                className="review-message"
-                data-state={hasActiveEditRequest ? "active" : "resolved"}
-                aria-label="پیام مدیریت"
-              >
-                <div className="review-message__header">
-                  <span className="review-message__icon" aria-hidden="true">
-                    <MessageSquareWarning size={21} strokeWidth={2.2} />
-                  </span>
-                  <div>
-                    <p className="review-message__eyebrow">
-                      {hasActiveEditRequest ? "پیام کارشناس بررسی" : "پیام قبلی کارشناس"}
-                    </p>
-                    <h2>
-                      {hasActiveEditRequest
-                        ? "مواردی که باید اصلاح شود"
-                        : "درخواست اصلاح قبلی شما ثبت و ارسال شده است"}
-                    </h2>
-                  </div>
-                  <span className="review-message__badge">
-                    {hasActiveEditRequest ? "اقدام لازم" : "ارسال شد"}
-                  </span>
-                </div>
-                {!hasActiveEditRequest ? (
-                  <p className="review-message__context">
-                    این پیام مربوط به مرحله اصلاح قبلی است. اگر کارشناس دوباره موردی ثبت کند،
-                    پیام جدید همین‌جا جایگزین می‌شود.
-                  </p>
-                ) : null}
-                <div className="review-message__body">
-                  <p>{application.adminNote}</p>
-                </div>
-              </article>
-            ) : null}
-
-            <ValidationCertificateDownload certificate={validationCertificate} />
-
-            <Link
-              href="/dashboard/application"
-              className={editable ? "button button--primary" : "button button--ghost"}
-            >
-              <ClipboardList aria-hidden="true" size={18} strokeWidth={2} />
-              {editable ? "ادامه یا ویرایش پرونده" : "مشاهده پرونده ثبت شده"}
-            </Link>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <p>برای شروع، پرونده ثبت مدارک شرکت را ایجاد کنید. پس از ذخیره، می‌توانید مرحله‌ها را ادامه دهید.</p>
-            <Link href="/dashboard/application" className="button button--primary">
-              <ClipboardList aria-hidden="true" size={18} strokeWidth={2} />
-              شروع ثبت مدارک
-            </Link>
-          </div>
-        )}
-      </section>
+          <Link href="/dashboard/facilities-profile" className="button button--ghost profile-callout__action">
+            ویرایش پروفایل
+          </Link>
+        </section>
+
+        <div className="services-heading">
+          <h2>خدمات قابل انتخاب</h2>
+          <p>وضعیت و اقدام بعدی هر مسیر را ببینید.</p>
+        </div>
+
+        <div className="services-table-wrap">
+          <table className="services-table">
+            <thead>
+              <tr>
+                <th scope="col">خدمت</th>
+                <th scope="col">وضعیت</th>
+                <th scope="col">اقدام</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const label = !row.status
+                  ? "شروع ثبت‌نام"
+                  : row.status === "NEEDS_EDIT"
+                    ? "اصلاح پرونده"
+                    : row.editable
+                      ? "ادامه ثبت‌نام"
+                      : "مشاهده پرونده";
+
+                return (
+                  <tr key={row.key}>
+                    <td>
+                      <span className="services-table__row-title" title={row.fullTitle}>
+                        <span className="services-table__index" aria-hidden="true">
+                          {row.index}
+                        </span>
+                        {row.title}
+                      </span>
+                    </td>
+                    <td>
+                      {row.status ? (
+                        <StatusBadge status={row.status} />
+                      ) : (
+                        <span className="status-badge" data-variant="muted">
+                          شروع نشده
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <Link
+                        href={row.href}
+                        className={!row.status || row.editable ? "button button--primary button--sm" : "button button--ghost button--sm"}
+                      >
+                        {label}
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {hasActiveEditRequest && application?.adminNote ? (
+          <article className="review-message" data-state="active" aria-label="پیام مدیریت">
+            <div className="review-message__header">
+              <span className="review-message__icon" aria-hidden="true">
+                <MessageSquareWarning size={21} strokeWidth={2.2} />
+              </span>
+              <div>
+                <p className="review-message__eyebrow">اعتبارسنجی تأمین‌کنندگان</p>
+                <h2>نیاز به اصلاح دارد</h2>
+              </div>
+              <span className="review-message__badge">اقدام لازم</span>
+            </div>
+            <div className="review-message__body">
+              <p>{application.adminNote}</p>
+            </div>
+          </article>
+        ) : null}
+
+        <ValidationCertificateDownload certificate={validationCertificate} />
+      </div>
     </AppShell>
   );
 }

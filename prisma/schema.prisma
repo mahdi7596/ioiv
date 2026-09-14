@@ -85,6 +85,10 @@ enum StoredFileType {
   XLSX
   CSV
   ZIP
+  JPG
+  PNG
+  WEBP
+  HEIC
 }
 
 enum StoredFileScanStatus {

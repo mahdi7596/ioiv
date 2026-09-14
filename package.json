@@ -17,8 +17,13 @@
     "test:db:m6-payment": "sh prisma/tests/test-facilities-m6-payment.sh",
     "test:db:m7-review": "sh prisma/tests/test-facilities-m7-review.sh",
     "test:db:m8-operations": "sh prisma/tests/test-facilities-m8-operations.sh",
+    "test:db:m9-suppliers": "sh prisma/tests/test-facilities-m9-supplier-provisioning.sh",
     "facilities:reconcile-files": "tsx scripts/reconcile-facilities-files.ts",
     "facilities:check-readiness": "tsx scripts/check-facilities-readiness.ts",
+    "facilities:m9:validate": "tsx scripts/validate-facilities-m9-release.ts --decisions operations/facilities-m9/decision-register.pending.example.json --evidence operations/facilities-m9/evidence-ledger.pending.example.json",
+    "facilities:m9:manifest": "tsx scripts/create-facilities-m9-candidate-manifest.ts",
+    "facilities:m9:preflight": "tsx scripts/check-facilities-m9-preflight.ts",
+    "facilities:m9:provision-suppliers": "tsx scripts/provision-facilities-suppliers.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -26,10 +31,11 @@
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "fflate": "^0.8.3",
+    "iran-cities-json": "^2.0.0",
+    "jalaali-js": "^2.0.1",
     "jose": "^6.2.3",
     "lucide-react": "^1.14.0",
-    "next": "16.2.4",
-    "prisma": "^6.19.3",
+    "next": "16.3.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.74.0",
@@ -45,9 +51,10 @@
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "16.2.4",
+    "eslint-config-next": "16.3.5",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.5"
+    "vitest": "4.1.11"
   }
 }

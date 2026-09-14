@@ -12,7 +12,7 @@ const OTP_TTL_MS = 2 * 60 * 1000;
 const OTP_REQUEST_COOLDOWN_MS = 90 * 1000;
 const OTP_REQUEST_WINDOW_MS = 60 * 60 * 1000;
 const OTP_MAX_REQUESTS_PER_WINDOW = 5;
-const DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE = "این شناسه ملی شرکت قبلاً ثبت شده است";
+export const DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE = "این شناسه ملی شرکت قبلاً ثبت شده است";
 
 export class ActionError extends Error {
   constructor(
@@ -28,10 +28,10 @@ function otpPurposeForMode(mode: "user" | "admin") {
 }
 
 function generateOtp() {
-  return randomInt(1000, 10000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
-function isCompanyNationalIdUniqueError(error: unknown) {
+export function isCompanyNationalIdUniqueError(error: unknown) {
   if (!error || typeof error !== "object" || !("code" in error)) {
     return false;
   }
@@ -147,22 +147,14 @@ export async function requestOtp(input: unknown): Promise<{ next: "otp" | "regis
   return { next: "otp" };
 }
 
-export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; next?: "register" }> {
+export async function verifyOtp(input: unknown): Promise<{ redirectTo: string }> {
   const parsed = verifyOtpSchema.safeParse(input);
 
   if (!parsed.success) {
     throw new ActionError(parsed.error.issues[0]?.message || "Invalid OTP verification");
   }
 
-  const {
-    mobile,
-    code,
-    mode,
-    companyName,
-    companyNationalId,
-    companyContactFullName,
-    companyContactNationalCode,
-  } = parsed.data;
+  const { mobile, code, mode } = parsed.data;
   const purpose = otpPurposeForMode(mode);
 
   logger.info("otp_verify_started", {
@@ -210,53 +202,7 @@ export async function verifyOtp(input: unknown): Promise<{ redirectTo?: string; 
   }
 
   const existingUser = await db.user.findUnique({ where: { mobile } });
-
-  if (!existingUser && !companyNationalId) {
-    logger.info("otp_verify_requires_registration", {
-      mode,
-      mobile: maskMobile(mobile),
-    });
-    return { next: "register" };
-  }
-
-  let user = existingUser;
-
-  if (!user) {
-    const duplicateNationalId = await db.user.findFirst({
-      where: { companyNationalId },
-      select: { id: true },
-    });
-
-    if (duplicateNationalId) {
-      throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
-    }
-
-    const duplicateApplicationNationalId = await db.application.findFirst({
-      where: { companyNationalId },
-      select: { id: true },
-    });
-
-    if (duplicateApplicationNationalId) {
-      throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
-    }
-
-    try {
-      user = await db.user.create({
-        data: {
-          mobile,
-          companyName,
-          companyNationalId,
-          companyContactFullName,
-          companyContactNationalCode,
-        },
-      });
-    } catch (error) {
-      if (isCompanyNationalIdUniqueError(error)) {
-        throw new ActionError(DUPLICATE_COMPANY_NATIONAL_ID_MESSAGE, 409);
-      }
-      throw error;
-    }
-  }
+  const user = existingUser ?? (await db.user.create({ data: { mobile } }));
 
   await db.otpCode.update({
     where: { id: otp.id },

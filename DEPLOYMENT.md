@@ -1300,3 +1300,101 @@ page and uses «تلاش مجدد برای پیامک اصلاح». Repeated ret
 correction request or charge. Inspect only masked diagnostics matching
 `facilities_correction_sms_failed`; never copy provider responses or mobile numbers
 into tickets or audit metadata.
+
+## M9 controlled rollout (repository safeguards implemented; not deployed)
+
+The authoritative runbook is
+`docs/2026-09-12-facilities-m9-controlled-rollout-plan.md`; the testable contract and
+implementation checklist are under
+`openspec/changes/implement-facilities-m9-controlled-rollout`. The plan aligns with the
+M9 milestone, but production is a no-go until G0 decisions, external access/ownership,
+staging evidence, matched backup/restore, user handoffs, canary, and observation are
+real and approved. Repository examples never count as production evidence.
+
+Run `npm audit --omit=dev` on the exact candidate. Apply supported runtime fixes and
+repeat all qualification. Any remaining critical/high runtime finding is a G0/G1
+no-go unless the dependency is replaced or named security and release authorities
+record actual exposure, compensating controls, expiry, and accepted residual risk.
+At M9 implementation time, Next.js/Vitest updates are supported; the npm `xlsx` package
+still reports high advisories without a registry fix and therefore cannot be silently
+waived merely because the application uses it primarily for export.
+
+The application image now copies the readiness/reconciliation scripts and TypeScript
+path configuration required by the documented runtime commands. Prisma CLI is retained
+only in the Compose `maintenance` target used by the migration service; the runner
+removes CLI/engine/config packages and copies back only the generated runtime client.
+Build and scan both targets. Do not change the app service to the maintenance target or
+run migration commands in the application container.
+
+Validate the pending record structure safely:
+
+```bash
+npm run facilities:m9:validate
+```
+
+Copy the two pending examples from `operations/facilities-m9` to protected release
+working storage, replace pending entries with approved/evidenced records, and validate
+a required gate explicitly:
+
+```bash
+npm run facilities:m9:validate -- \
+  --decisions /protected/release/decisions.json \
+  --evidence /protected/release/evidence.json \
+  --require-gate G3
+```
+
+Do not commit the working ledgers. The validator rejects secret-bearing fields and
+out-of-order gates, but human approvers must still verify external evidence truth.
+
+After committing all release inputs, generate the manifest only from the clean exact
+candidate SHA. The command refuses any tracked or untracked worktree change and writes
+with create-only mode when an output path is supplied:
+
+```bash
+npm run facilities:m9:manifest -- --output /protected/release/candidate-manifest.json
+```
+
+Fill and independently verify the pending Linux Prisma export checksum, candidate image
+digest, actual previous deployment identity, and pushed backup-ref identity outside
+Git. Any changed source/config/artifact invalidates dependent gates.
+
+Run the read-only preflight in the protected migration-owner maintenance context while
+explicitly naming the restricted runtime role. This lets it verify migration history
+without granting that metadata to the application. G1–G5 require the disabled
+expectation; `enabled` is valid only after the final audited G6 SUPER_ADMIN action:
+
+```bash
+DATABASE_URL="...migration-owner database..." npm run facilities:m9:preflight -- \
+  --expect-programme disabled \
+  --runtime-role sana_runtime
+```
+
+This complements, not replaces, `facilities:check-readiness`, which deliberately writes,
+scans, reads, and deletes a private canary. Run that canary only in an authorized release
+window. Neither command proves signature freshness, malware detection, static-file
+privacy, scheduler/alerts, backups, load limits, or legacy behavior by itself.
+
+If production inventory shows the four approved supplier catalogue rows are absent,
+use the narrow command rather than `db:seed`:
+
+```bash
+npm run facilities:m9:provision-suppliers
+npm run facilities:m9:provision-suppliers -- --apply
+```
+
+Dry-run is the default. Apply inserts only missing approved names, creates no availability
+or other seed data, and blocks on unexpected suppliers. Record the safe result as G5
+maintenance evidence.
+
+Review `operations/facilities-m9/operator-checklist.md` and
+`monitoring-contract.md`. The Compose override, Nginx location, maintenance wrapper,
+and systemd files in that directory are examples only: pin the scanner by digest,
+validate limits/network/filesystem identities in staging, install with least privilege,
+and prove the real alert destination before G2/G6. A lock-held reconciler exit `2` is
+not a successful batch, and exit `0` does not prove more than the bounded batch drained.
+
+The user exclusively takes the current production database backup and uploads or
+redeploys the application. Codex/operators verify identities, take matched non-database
+backups where access permits, restore/rehearse in isolation, and coordinate the release.
+No production migration, upload, enablement, payment canary, or destructive restore is
+authorized by these repository changes.

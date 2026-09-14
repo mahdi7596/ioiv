@@ -81,6 +81,27 @@ function zip(entries: Array<{ name: string; contents?: Buffer; declaredUncompres
   return Buffer.concat([...locals, central, end]);
 }
 
+function jpeg(): Buffer {
+  return Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]), Buffer.from("JFIF\0"), Buffer.alloc(8), Buffer.from([0xff, 0xd9])]);
+}
+
+function png(): Buffer {
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(13, 0);
+  return Buffer.concat([signature, length, Buffer.from("IHDR"), Buffer.alloc(13), Buffer.alloc(4)]);
+}
+
+function webp(): Buffer {
+  return Buffer.concat([Buffer.from("RIFF"), Buffer.alloc(4), Buffer.from("WEBP"), Buffer.from("VP8 "), Buffer.alloc(8)]);
+}
+
+function heic(): Buffer {
+  const box = Buffer.concat([Buffer.alloc(4), Buffer.from("ftyp"), Buffer.from("heic"), Buffer.from("mif1")]);
+  box.writeUInt32BE(box.byteLength, 0);
+  return Buffer.concat([box, Buffer.alloc(8)]);
+}
+
 describe("facilities content verification", () => {
   it("uses content, not the browser MIME type, and records a bounded digest", () => {
     const verified = verifyFacilitiesUpload({ fileName: "صورت مالی.PDF", bytes: pdf() });
@@ -122,6 +143,17 @@ describe("facilities content verification", () => {
   it("accepts UTF-8 CSV but rejects binary data", () => {
     expect(verifyFacilitiesUpload({ fileName: "employees.csv", bytes: Buffer.from("نام,تعداد\nالف,1\n") }).fileType).toBe("CSV");
     expect(() => verifyFacilitiesUpload({ fileName: "not.csv", bytes: Buffer.from([0, 1, 2]) })).toThrow("CONTENT_TYPE_MISMATCH");
+  });
+
+  it("accepts document photos by content and rejects mislabeled or garbage images", () => {
+    expect(verifyFacilitiesUpload({ fileName: "کارت ملی.jpg", bytes: jpeg() }).fileType).toBe("JPG");
+    expect(verifyFacilitiesUpload({ fileName: "scan.JPEG", bytes: jpeg() }).fileType).toBe("JPG");
+    expect(verifyFacilitiesUpload({ fileName: "سند.png", bytes: png() }).fileType).toBe("PNG");
+    expect(verifyFacilitiesUpload({ fileName: "photo.webp", bytes: webp() }).fileType).toBe("WEBP");
+    expect(verifyFacilitiesUpload({ fileName: "iphone.heic", bytes: heic() }).fileType).toBe("HEIC");
+    expect(verifyFacilitiesUpload({ fileName: "iphone.heif", bytes: heic() }).fileType).toBe("HEIC");
+    expect(() => verifyFacilitiesUpload({ fileName: "mislabeled.png", bytes: jpeg() })).toThrow("CONTENT_TYPE_MISMATCH");
+    expect(() => verifyFacilitiesUpload({ fileName: "garbage.jpg", bytes: Buffer.from([0, 1, 2, 3]) })).toThrow("CONTENT_TYPE_MISMATCH");
   });
 
   it("bounds aggregate accounting and makes filename metadata safe for download headers", () => {
@@ -180,6 +212,19 @@ describe("scan and quarantine lifecycle", () => {
 
     const invalidAdapter = new ClamdInstreamFacilitiesFileScanner({ host: "127.0.0.1", port: 0 });
     await expect(invalidAdapter.scan({ storageKey: "staging/00000000-0000-4000-8000-000000000001", byteSize: 3, sha256: "a", fileType: "PDF", bytes: Buffer.from("abc") })).resolves.toEqual({ status: "UNAVAILABLE", reason: "SCANNER_UNAVAILABLE" });
+  });
+
+  it("passes files through only in non-production and only with the explicit dev opt-in", async () => {
+    const request = { storageKey: "staging/00000000-0000-4000-8000-000000000001", byteSize: 1, sha256: "a", fileType: "PDF" as const, bytes: Buffer.from("x") };
+
+    // Opted in, non-production: uploads are allowed to proceed without clamd.
+    await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "development", FACILITIES_SCANNER_DEV_PASSTHROUGH: "true" }).scan(request)).resolves.toEqual({ status: "PASSED" });
+
+    // Same opt-in in production is ignored: the scanner still fails closed.
+    await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "production", FACILITIES_SCANNER_DEV_PASSTHROUGH: "true" }).scan(request)).resolves.toMatchObject({ status: "UNAVAILABLE" });
+
+    // No opt-in outside production still fails closed.
+    await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "development" }).scan(request)).resolves.toMatchObject({ status: "UNAVAILABLE" });
   });
 
   it("retains verified staging bytes when promotion storage is temporarily unavailable", async () => {

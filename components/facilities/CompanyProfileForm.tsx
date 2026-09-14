@@ -1,20 +1,626 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Building2, FileText, Loader2, Plus, Save, Trash2, UploadCloud, UserCog, Users, Check, AlertCircle } from "lucide-react";
 import { completeFacilitiesCompanyProfile, ensureFacilitiesProfileDocumentSlot, saveFacilitiesCompanyDraft } from "@/lib/actions/facilities-company";
 import { showToast } from "@/components/ui/toast";
+import { JalaliDatePicker } from "@/components/ui/JalaliDatePicker";
+import { IRAN_PROVINCES } from "@/lib/data/iran-cities";
+import { normalizeDigits, normalizedText, CEO_POSITION } from "@/lib/validations/facilities-company";
 
 type Person = { id?: string; fullName: string; ownershipPercentage?: string; position?: string };
-type Draft = { version: number; name: string; nationalId: string; registrationNumber: string; registrationPlace: string; registrationDate: string; registeredCapitalRial: string; contactFullName: string; contactNationalCode: string; shareholders: Person[]; officers: Person[] };
-const emptyDraft: Draft = { version: 0, name: "", nationalId: "", registrationNumber: "", registrationPlace: "", registrationDate: "", registeredCapitalRial: "", contactFullName: "", contactNationalCode: "", shareholders: [], officers: [] };
-export function CompanyProfileForm({ initial, locked = false }: { initial: Draft | null; locked?: boolean }) {
-  const [draft, setDraft] = useState<Draft>(initial ?? emptyDraft);
+type Draft = {
+  version: number;
+  name: string;
+  nationalId: string;
+  registrationNumber: string;
+  registrationPlace: string;
+  registrationDate: string;
+  registeredCapitalRial: string;
+  contactFullName: string;
+  contactNationalCode: string;
+  shareholders: Person[];
+  officers: Person[];
+};
+
+type FieldErrors = Record<string, string>;
+type UploadState = { status: "uploading" | "done" | "error"; fileName?: string; message?: string };
+
+const emptyDraft: Draft = {
+  version: 0,
+  name: "",
+  nationalId: "",
+  registrationNumber: "",
+  registrationPlace: "",
+  registrationDate: "",
+  registeredCapitalRial: "",
+  contactFullName: "",
+  contactNationalCode: "",
+  shareholders: [],
+  officers: [],
+};
+
+type FieldSpec =
+  | { type: "text"; key: keyof Draft; label: string; placeholder: string }
+  | { type: "place"; label: string }
+  | { type: "date"; label: string };
+
+const fields: FieldSpec[] = [
+  { type: "text", key: "name", label: "نام شرکت", placeholder: "مثلاً: شرکت نمونه صنعت" },
+  { type: "text", key: "nationalId", label: "شناسه ملی", placeholder: "۱۰۱۲۳۴۵۶۷۸۹" },
+  { type: "text", key: "registrationNumber", label: "شماره ثبت", placeholder: "مثلاً: ۱۲۳۴۵" },
+  { type: "place", label: "محل ثبت" },
+  { type: "date", label: "تاریخ ثبت" },
+  { type: "text", key: "registeredCapitalRial", label: "سرمایه ثبت‌شده (ریال)", placeholder: "مثلاً: ۱۰۰۰۰۰۰۰۰۰" },
+  { type: "text", key: "contactFullName", label: "نام و نام خانوادگی رابط", placeholder: "مثلاً: علی رضایی" },
+  { type: "text", key: "contactNationalCode", label: "کد ملی رابط", placeholder: "۱۲۳۴۵۶۷۸۹۰" },
+];
+
+const OFFICER_ROLES = ["مدیرعامل", "رئیس هیئت‌مدیره", "نایب رئیس هیئت‌مدیره", "عضو هیئت‌مدیره", "عضو علی‌البدل هیئت‌مدیره"];
+const BOARD_MEMBER_POSITION = "عضو هیئت‌مدیره";
+
+const documentFields: Array<[string, string]> = [
+  ["incorporation-notice", "آگهی تأسیس"],
+  ["articles-of-association", "اساسنامه"],
+  ["board-changes-gazette", "روزنامه رسمی تغییرات هیئت‌مدیره"],
+  ["capital-increase-gazette", "روزنامه رسمی افزایش سرمایه"],
+];
+
+// Guarantees exactly one CEO among officers: if none is marked, the first row
+// becomes CEO; extra CEO rows are demoted so the "exactly one" invariant holds.
+function withCeoDefault(officers: Person[]): Person[] {
+  if (!officers.length) return officers;
+  if (!officers.some((officer) => normalizedText(officer.position ?? "") === CEO_POSITION)) {
+    return officers.map((officer, index) => (index === 0 ? { ...officer, position: CEO_POSITION } : officer));
+  }
+  let seen = false;
+  return officers.map((officer) => {
+    if (normalizedText(officer.position ?? "") !== CEO_POSITION) return officer;
+    if (seen) return { ...officer, position: "" };
+    seen = true;
+    return officer;
+  });
+}
+
+function initialDraft(initial: Draft | null): Draft {
+  const base = initial ?? emptyDraft;
+  // A credit report requires at least one board member besides the CEO, so a
+  // fresh profile starts with both rows to make that expectation obvious.
+  const officers = base.officers.length
+    ? withCeoDefault(base.officers)
+    : [{ fullName: "", position: CEO_POSITION }, { fullName: "", position: BOARD_MEMBER_POSITION }];
+  return { ...base, officers };
+}
+
+function validateDraft(draft: Draft): FieldErrors {
+  const errors: FieldErrors = {};
+  const requireText = (key: keyof Draft, label: string) => {
+    if (!String(draft[key] ?? "").trim()) errors[key] = `${label} الزامی است`;
+  };
+
+  requireText("name", "نام شرکت");
+
+  const nationalId = normalizeDigits(String(draft.nationalId ?? "")).trim();
+  if (!nationalId) errors.nationalId = "شناسه ملی الزامی است";
+  else if (!/^\d{11}$/.test(nationalId)) errors.nationalId = "شناسه ملی باید ۱۱ رقم باشد";
+
+  requireText("registrationNumber", "شماره ثبت");
+  requireText("registrationPlace", "محل ثبت");
+  requireText("registrationDate", "تاریخ ثبت");
+
+  const capital = normalizeDigits(String(draft.registeredCapitalRial ?? "")).trim();
+  if (!capital) errors.registeredCapitalRial = "سرمایه ثبت‌شده الزامی است";
+  else if (!/^[1-9]\d*$/.test(capital)) errors.registeredCapitalRial = "سرمایه باید عدد صحیح مثبت باشد";
+
+  requireText("contactFullName", "نام و نام خانوادگی رابط");
+
+  const contactCode = normalizeDigits(String(draft.contactNationalCode ?? "")).trim();
+  if (!contactCode) errors.contactNationalCode = "کد ملی رابط الزامی است";
+  else if (!/^\d{10}$/.test(contactCode)) errors.contactNationalCode = "کد ملی رابط باید ۱۰ رقم باشد";
+
+  draft.shareholders.forEach((person, index) => {
+    if (!person.fullName?.trim()) errors[`shareholders.${index}.fullName`] = "نام سهام‌دار الزامی است";
+    const pct = normalizeDigits(String(person.ownershipPercentage ?? "")).trim();
+    if (!pct) errors[`shareholders.${index}.second`] = "درصد مالکیت الزامی است";
+    else if (!(Number(pct) > 0 && Number(pct) <= 100)) errors[`shareholders.${index}.second`] = "درصد باید بین ۰ تا ۱۰۰ باشد";
+  });
+
+  draft.officers.forEach((person, index) => {
+    if (!person.fullName?.trim()) errors[`officers.${index}.fullName`] = "نام عضو الزامی است";
+    if (!person.position?.trim()) errors[`officers.${index}.second`] = "سمت الزامی است";
+  });
+
+  const ceoCount = draft.officers.filter((person) => normalizedText(person.position ?? "") === CEO_POSITION).length;
+  const boardMemberCount = draft.officers.filter((person) => {
+    const role = normalizedText(person.position ?? "");
+    return role !== "" && role !== CEO_POSITION;
+  }).length;
+  if (!draft.officers.length) errors["officers.section"] = "افزودن مدیرعامل و حداقل یک عضو هیئت‌مدیره الزامی است";
+  else if (ceoCount === 0) errors["officers.section"] = "یک نفر را به‌عنوان مدیرعامل انتخاب کنید";
+  else if (ceoCount > 1) errors["officers.section"] = "فقط یک نفر می‌تواند مدیرعامل باشد";
+  else if (boardMemberCount === 0) errors["officers.section"] = "افزودن حداقل یک عضو هیئت‌مدیره (غیر از مدیرعامل) برای گزارش اعتباری الزامی است";
+
+  return errors;
+}
+
+function FieldError({ message }: { message?: string }) {
+  return (
+    <span className="field-error" role={message ? "alert" : undefined} data-visible={message ? "true" : "false"}>
+      <span className="field-error__inner">{message ?? ""}</span>
+    </span>
+  );
+}
+
+export function CompanyProfileForm({ initial, documents, locked = false }: { initial: Draft | null; documents?: Record<string, { fileName: string }>; locked?: boolean }) {
+  const router = useRouter();
+  const [draft, setDraft] = useState<Draft>(() => initialDraft(initial));
   const [pending, start] = useTransition();
-  const [errors, setErrors] = useState<string[]>([]);
-  const update = (key: keyof Draft, value: string) => setDraft((current) => ({ ...current, [key]: value }));
-  async function save() { start(async () => { try { const company = await saveFacilitiesCompanyDraft(draft); setDraft((current) => ({ ...current, version: company.profileVersion })); setErrors([]); showToast({ type: "success", message: "پیش‌نویس ذخیره شد" }); } catch (e) { const message = e instanceof Error ? e.message : "ذخیره ناموفق بود"; setErrors([message]); showToast({ type: "error", message }); } }); }
-  async function upload(kind: string, officerId?: string) { try { const binding = await ensureFacilitiesProfileDocumentSlot(kind, officerId); const picker = document.createElement("input"); picker.type = "file"; picker.accept = officerId ? ".zip" : ".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip"; picker.onchange = async () => { const file = picker.files?.[0]; if (!file) return; const body = new FormData(); body.set("bindingId", binding.id); body.set("idempotencyKey", crypto.randomUUID().replaceAll("-", "")); body.set("file", file); const response = await fetch("/api/facilities/profile-files", { method: "POST", body }); const data = await response.json(); if (!response.ok || data.lifecycleStatus !== "PASSED") throw new Error(data.error || "فایل هنوز قابل استفاده نیست"); showToast({ type: "success", message: "مدرک با موفقیت بررسی و ثبت شد" }); }; picker.click(); } catch (e) { showToast({ type: "error", message: e instanceof Error ? e.message : "بارگذاری ناموفق بود" }); } }
-  function list(kind: "shareholders" | "officers") { return <fieldset className="profile-list"><legend>{kind === "shareholders" ? "سهام‌داران" : "مدیرعامل و اعضای هیئت‌مدیره"}</legend>{draft[kind].map((item, index) => <div className="profile-row" key={item.id ?? index}><input aria-label="نام" value={item.fullName} onChange={(e) => setDraft((d) => ({ ...d, [kind]: d[kind].map((x, i) => i === index ? { ...x, fullName: e.target.value } : x) }))} /> <input aria-label={kind === "shareholders" ? "درصد مالکیت" : "سمت"} inputMode={kind === "shareholders" ? "decimal" : undefined} value={kind === "shareholders" ? item.ownershipPercentage : item.position} onChange={(e) => setDraft((d) => ({ ...d, [kind]: d[kind].map((x, i) => i === index ? { ...x, [kind === "shareholders" ? "ownershipPercentage" : "position"]: e.target.value } : x) }))} />{kind === "officers" && item.id ? <button type="button" className="button button--ghost" onClick={() => upload("officer", item.id)}>ZIP هویتی</button> : null}<button type="button" className="button button--ghost" aria-label="حذف ردیف" onClick={() => setDraft((d) => ({ ...d, [kind]: d[kind].filter((_, i) => i !== index) }))}>حذف</button></div>)}<button type="button" className="button button--ghost" onClick={() => setDraft((d) => ({ ...d, [kind]: [...d[kind], kind === "shareholders" ? { fullName: "", ownershipPercentage: "" } : { fullName: "", position: "" }] }))}>افزودن</button></fieldset>; }
-  const fields: Array<[keyof Draft, string]> = [["name", "نام شرکت"], ["nationalId", "شناسه ملی"], ["registrationNumber", "شماره ثبت"], ["registrationPlace", "محل ثبت"], ["registrationDate", "تاریخ ثبت"], ["registeredCapitalRial", "سرمایه ثبت‌شده (ریال)"], ["contactFullName", "نام و نام خانوادگی رابط"], ["contactNationalCode", "کد ملی رابط"]];
-  if (locked) return <section className="panel" role="status"><h2>پروفایل شرکت موقتاً قفل است</h2><p>تا پایان پرداخت یا بررسی پرونده فعال، اطلاعات و مدارک پروفایل قابل تغییر نیست. اصلاحات درخواست تسهیلات را از صفحه همان پرونده انجام دهید.</p></section>;
-  return <form className="panel profile-form" onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>{errors.length ? <div role="alert" className="form-error">{errors.join(" ")}</div> : null}<div className="profile-grid">{fields.map(([key, label]) => <label key={key}>{label}<input value={draft[key] as string} dir={key.includes("Id") || key.includes("Capital") ? "ltr" : undefined} inputMode={key.includes("Id") || key.includes("Capital") ? "numeric" : undefined} onChange={(e) => update(key, e.target.value)} /></label>)}</div>{list("shareholders")}{list("officers")}<fieldset className="profile-list"><legend>مدارک شرکت</legend>{[["incorporation-notice", "آگهی تأسیس"], ["articles-of-association", "اساسنامه"], ["board-changes-gazette", "روزنامه رسمی تغییرات هیئت‌مدیره"], ["capital-increase-gazette", "روزنامه رسمی افزایش سرمایه"]].map(([kind, label]) => <button className="button button--ghost" type="button" key={kind} onClick={() => upload(kind)}>{label}</button>)}</fieldset><div className="sticky-actions"><button className="button button--primary" disabled={pending}>ذخیره پیش‌نویس</button><button type="button" className="button button--ghost" disabled={pending} onClick={() => start(async () => { try { await completeFacilitiesCompanyProfile({ version: draft.version }); showToast({ type: "success", message: "پروفایل شرکت کامل شد" }); } catch (e) { setErrors([e instanceof Error ? e.message : "تکمیل ناموفق بود"]); } })}>تأیید تکمیل پروفایل</button></div></form>;
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [uploads, setUploads] = useState<Record<string, UploadState>>(() =>
+    Object.fromEntries(Object.entries(documents ?? {}).map(([slot, doc]) => [slot, { status: "done", fileName: doc.fileName } as UploadState]))
+  );
+
+  const clearError = (key: string) =>
+    setFieldErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+
+  const update = (key: keyof Draft, value: string) => {
+    setDraft((current) => ({ ...current, [key]: value }));
+    clearError(key);
+  };
+
+  function runValidation(): boolean {
+    const errors = validateDraft(draft);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      setFormError("لطفاً خطاهای مشخص‌شده در فرم را برطرف کنید.");
+      showToast({ type: "error", message: "برخی فیلدها نیاز به اصلاح دارند" });
+      return false;
+    }
+    setFormError(null);
+    return true;
+  }
+
+  // Merge the server's saved version and freshly created officer ids back into
+  // the draft (matched by order), so each member's ZIP upload activates in place
+  // right after saving — no page reload needed.
+  function mergeSaved(current: Draft, company: { profileVersion: number; officers?: { id: string }[] }): Draft {
+    return {
+      ...current,
+      version: company.profileVersion,
+      officers: company.officers
+        ? current.officers.map((officer, index) => ({ ...officer, id: company.officers![index]?.id ?? officer.id }))
+        : current.officers,
+    };
+  }
+
+  async function save() {
+    if (!runValidation()) return;
+    start(async () => {
+      try {
+        const company = await saveFacilitiesCompanyDraft(draft);
+        setDraft((current) => mergeSaved(current, company));
+        setFormError(null);
+        showToast({ type: "success", message: "پیش‌نویس ذخیره شد" });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "ذخیره ناموفق بود";
+        setFormError(message);
+        showToast({ type: "error", message });
+      }
+    });
+  }
+
+  async function upload(kind: string, officerId?: string) {
+    const slot = officerId ? `officer-${officerId}` : kind;
+    try {
+      const binding = await ensureFacilitiesProfileDocumentSlot(kind, officerId);
+      const picker = document.createElement("input");
+      picker.type = "file";
+      picker.accept = officerId ? ".zip" : ".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.jpg,.jpeg,.png,.webp,.heic,.heif";
+      picker.onchange = async () => {
+        const file = picker.files?.[0];
+        if (!file) return;
+        setUploads((current) => ({ ...current, [slot]: { status: "uploading", fileName: file.name } }));
+        try {
+          const body = new FormData();
+          body.set("bindingId", binding.id);
+          body.set("idempotencyKey", crypto.randomUUID().replaceAll("-", ""));
+          body.set("file", file);
+          const response = await fetch("/api/facilities/profile-files", { method: "POST", body });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || data.lifecycleStatus !== "PASSED") throw new Error(data.error || "فایل هنوز قابل استفاده نیست");
+          setUploads((current) => ({ ...current, [slot]: { status: "done", fileName: file.name } }));
+          showToast({ type: "success", message: "مدرک با موفقیت بررسی و ثبت شد" });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "بارگذاری ناموفق بود";
+          setUploads((current) => ({ ...current, [slot]: { status: "error", fileName: file.name, message } }));
+          showToast({ type: "error", message });
+        }
+      };
+      picker.click();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "بارگذاری ناموفق بود";
+      setUploads((current) => ({ ...current, [slot]: { status: "error", message } }));
+      showToast({ type: "error", message });
+    }
+  }
+
+  function personList(kind: "shareholders" | "officers") {
+    const isOfficers = kind === "officers";
+    const title = isOfficers ? "مدیرعامل و اعضای هیئت‌مدیره" : "سهام‌داران";
+    const Icon = isOfficers ? UserCog : Users;
+    const addLabel = isOfficers ? "افزودن عضو" : "افزودن سهام‌دار";
+    const secondFieldLabel = isOfficers ? "سمت" : "درصد مالکیت";
+    const secondFieldPlaceholder = isOfficers ? "مثلاً: نایب رئیس هیئت‌مدیره" : "مثلاً: ۲۵";
+
+    const headingId = `${kind}-heading`;
+    const sectionError = isOfficers ? fieldErrors["officers.section"] : undefined;
+    return (
+      <section className="profile-list" role="group" aria-labelledby={headingId}>
+        <h3 className="section-legend" id={headingId}>
+          <Icon aria-hidden="true" size={18} strokeWidth={2} />
+          <span className="field-label">
+            {title}<span className="field-required" aria-hidden="true">*</span>
+          </span>
+          <span className="section-legend__count">{draft[kind].length} نفر</span>
+        </h3>
+        {isOfficers ? (
+          <p className="section-hint">سمت هر عضو را انتخاب کنید، سپس نامش را وارد کنید؛ یک نفر باید مدیرعامل و حداقل یک نفر عضو هیئت‌مدیره باشد (برای گزارش اعتباری تسهیلات لازم است).</p>
+        ) : null}
+        {sectionError ? (
+          <p className="section-hint section-hint--error" role="alert">
+            <AlertCircle aria-hidden="true" size={15} strokeWidth={2.2} />
+            {sectionError}
+          </p>
+        ) : null}
+        <div className="person-list">
+          {draft[kind].map((item, index) => {
+            const nameError = fieldErrors[`${kind}.${index}.fullName`];
+            const secondError = fieldErrors[`${kind}.${index}.second`];
+            const officerUpload = isOfficers && item.id ? uploads[`officer-${item.id}`] : undefined;
+            const currentRole = normalizedText(item.position ?? "");
+            const roleOptions = currentRole && !OFFICER_ROLES.includes(currentRole) ? [currentRole, ...OFFICER_ROLES] : OFFICER_ROLES;
+            const nameField = (
+              <label className="person-row__field" key="name">
+                <span>
+                  نام و نام خانوادگی<span className="field-required" aria-hidden="true">*</span>
+                </span>
+                <input
+                  placeholder="مثلاً: علی رضایی"
+                  value={item.fullName}
+                  aria-invalid={nameError ? true : undefined}
+                  onChange={(e) => {
+                    setDraft((d) => ({ ...d, [kind]: d[kind].map((x, i) => (i === index ? { ...x, fullName: e.target.value } : x)) }));
+                    clearError(`${kind}.${index}.fullName`);
+                  }}
+                />
+                <FieldError message={nameError} />
+              </label>
+            );
+            const roleField = (
+              <label className="person-row__field" key="role">
+                <span>
+                  سمت<span className="field-required" aria-hidden="true">*</span>
+                </span>
+                <select
+                  value={currentRole}
+                  data-placeholder={currentRole ? undefined : "true"}
+                  aria-invalid={secondError ? true : undefined}
+                  onChange={(e) => {
+                    const role = e.target.value;
+                    setDraft((d) => ({
+                      ...d,
+                      officers: d.officers.map((x, i) => {
+                        if (i === index) return { ...x, position: role };
+                        if (role === CEO_POSITION && normalizedText(x.position ?? "") === CEO_POSITION) return { ...x, position: "" };
+                        return x;
+                      }),
+                    }));
+                    clearError(`officers.${index}.second`);
+                    clearError("officers.section");
+                  }}
+                >
+                  <option value="">انتخاب کنید</option>
+                  {roleOptions.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+                <FieldError message={secondError} />
+              </label>
+            );
+            const percentField = (
+              <label className="person-row__field" key="pct">
+                <span>
+                  {secondFieldLabel}<span className="field-required" aria-hidden="true">*</span>
+                </span>
+                <input
+                  placeholder={secondFieldPlaceholder}
+                  inputMode="decimal"
+                  value={item.ownershipPercentage}
+                  aria-invalid={secondError ? true : undefined}
+                  onChange={(e) => {
+                    setDraft((d) => ({ ...d, shareholders: d.shareholders.map((x, i) => (i === index ? { ...x, ownershipPercentage: e.target.value } : x)) }));
+                    clearError(`${kind}.${index}.second`);
+                  }}
+                />
+                <FieldError message={secondError} />
+              </label>
+            );
+            return (
+              <div className="person-row" key={item.id ?? index}>
+                {isOfficers ? roleField : nameField}
+                {isOfficers ? nameField : percentField}
+                <div className="person-row__actions">
+                  <button
+                    type="button"
+                    className="icon-button icon-button--danger"
+                    title="حذف ردیف"
+                    aria-label="حذف ردیف"
+                    onClick={() => {
+                      setDraft((d) => {
+                        const next = d[kind].filter((_, i) => i !== index);
+                        return { ...d, [kind]: isOfficers ? withCeoDefault(next) : next };
+                      });
+                      clearError("officers.section");
+                    }}
+                  >
+                    <Trash2 aria-hidden="true" size={17} strokeWidth={2} />
+                  </button>
+                </div>
+                {isOfficers ? (
+                  <div className="member-doc" data-status={item.id ? officerUpload?.status : undefined}>
+                    <div className="member-doc__info">
+                      <span className="member-doc__label">
+                        <FileText aria-hidden="true" size={16} strokeWidth={2} />
+                        مدرک هویتی (یک فایل ZIP)<span className="field-required" aria-hidden="true">*</span>
+                      </span>
+                      <span className="member-doc__desc">
+                        همهٔ این مدارک را در یک فایل ZIP فشرده کنید و بارگذاری نمایید: روی و پشت کارت ملی، صفحهٔ اول و صفحهٔ توضیحات شناسنامه، و رزومه.
+                      </span>
+                    </div>
+                    {item.id ? (
+                      <div className="member-doc__control">
+                        {officerUpload && officerUpload.status !== "uploading" ? (
+                          <span className={`document-list__status document-list__status--${officerUpload.status}`}>
+                            {officerUpload.status === "done" ? (
+                              <>
+                                <Check aria-hidden="true" size={14} strokeWidth={2.6} />
+                                <span className="document-list__filename">{officerUpload.fileName}</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle aria-hidden="true" size={14} strokeWidth={2.2} />
+                                {officerUpload.message}
+                              </>
+                            )}
+                          </span>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="button button--ghost button--sm"
+                          disabled={officerUpload?.status === "uploading"}
+                          onClick={() => upload("officer", item.id)}
+                        >
+                          {officerUpload?.status === "uploading" ? (
+                            <>
+                              <Loader2 aria-hidden="true" size={15} strokeWidth={2.2} className="spin" />
+                              در حال بارگذاری
+                            </>
+                          ) : officerUpload?.status === "done" ? (
+                            "جایگزینی"
+                          ) : (
+                            <>
+                              <UploadCloud aria-hidden="true" size={15} strokeWidth={2} />
+                              بارگذاری ZIP
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="member-doc__control member-doc__control--pending">
+                        <button
+                          type="button"
+                          className="button button--ghost button--sm"
+                          disabled={pending}
+                          onClick={() => save()}
+                        >
+                          {pending ? (
+                            <>
+                              <Loader2 aria-hidden="true" size={15} strokeWidth={2.2} className="spin" />
+                              در حال ذخیره…
+                            </>
+                          ) : (
+                            <>
+                              <Save aria-hidden="true" size={15} strokeWidth={2} />
+                              ذخیره و فعال‌سازی بارگذاری
+                            </>
+                          )}
+                        </button>
+                        <span className="member-doc__hint">برای بارگذاری مدرک این عضو، ابتدا اطلاعات را ذخیره کنید.</span>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+          <button
+            type="button"
+            className="add-row-button"
+            onClick={() =>
+              setDraft((d) => {
+                if (!isOfficers) return { ...d, shareholders: [...d.shareholders, { fullName: "", ownershipPercentage: "" }] };
+                const hasCeo = d.officers.some((officer) => normalizedText(officer.position ?? "") === CEO_POSITION);
+                return { ...d, officers: [...d.officers, { fullName: "", position: hasCeo ? "" : CEO_POSITION }] };
+              })
+            }
+          >
+            <Plus aria-hidden="true" size={16} strokeWidth={2.4} />
+            {addLabel}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (locked) {
+    return (
+      <div className="space-y-6">
+        <section className="panel" role="status">
+          <h2>پروفایل شرکت موقتاً قفل است</h2>
+          <p>تا پایان پرداخت یا بررسی پرونده فعال، اطلاعات و مدارک پروفایل قابل تغییر نیست. اصلاحات درخواست تسهیلات را از صفحه همان پرونده انجام دهید.</p>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <form className="panel profile-form" onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
+        {formError ? <div role="alert" className="form-error">{formError}</div> : null}
+        <section className="profile-list" role="group" aria-labelledby="company-info-heading">
+          <h3 className="section-legend" id="company-info-heading">
+            <Building2 aria-hidden="true" size={18} strokeWidth={2} />
+            اطلاعات ثبتی شرکت
+          </h3>
+          <div className="profile-grid">
+            {fields.map((field) => {
+              if (field.type === "date") {
+                const error = fieldErrors.registrationDate;
+                return (
+                  <label key="registrationDate" data-invalid={error ? "true" : undefined}>
+                    <span className="field-label">
+                      {field.label}<span className="field-required" aria-hidden="true">*</span>
+                    </span>
+                    <JalaliDatePicker value={draft.registrationDate} onChange={(iso) => update("registrationDate", iso)} />
+                    <FieldError message={error} />
+                  </label>
+                );
+              }
+              if (field.type === "place") {
+                const error = fieldErrors.registrationPlace;
+                return (
+                  <label key="registrationPlace" data-invalid={error ? "true" : undefined}>
+                    <span className="field-label">
+                      {field.label}<span className="field-required" aria-hidden="true">*</span>
+                    </span>
+                    <select value={draft.registrationPlace} aria-invalid={error ? true : undefined} onChange={(e) => update("registrationPlace", e.target.value)}>
+                      <option value="">انتخاب کنید</option>
+                      {IRAN_PROVINCES.map((province) => (
+                        <option key={province} value={province}>
+                          {province}
+                        </option>
+                      ))}
+                    </select>
+                    <FieldError message={error} />
+                  </label>
+                );
+              }
+              const { key, label, placeholder } = field;
+              const error = fieldErrors[key];
+              return (
+                <label key={key} data-invalid={error ? "true" : undefined}>
+                  <span className="field-label">
+                    {label}<span className="field-required" aria-hidden="true">*</span>
+                  </span>
+                  <input
+                    value={draft[key] as string}
+                    placeholder={placeholder}
+                    dir={key.includes("Id") || key.includes("Capital") ? "ltr" : undefined}
+                    inputMode={key.includes("Id") || key.includes("Capital") ? "numeric" : undefined}
+                    aria-invalid={error ? true : undefined}
+                    onChange={(e) => update(key, e.target.value)}
+                  />
+                  <FieldError message={error} />
+                </label>
+              );
+            })}
+          </div>
+        </section>
+        {personList("shareholders")}
+        {personList("officers")}
+        <section className="profile-list" role="group" aria-labelledby="documents-heading">
+          <h3 className="section-legend" id="documents-heading">
+            <FileText aria-hidden="true" size={18} strokeWidth={2} />
+            مدارک شرکت
+          </h3>
+          <ul className="document-list">
+            {documentFields.map(([kind, label]) => {
+              const state = uploads[kind];
+              const uploading = state?.status === "uploading";
+              return (
+                <li className="document-list__item" key={kind} data-status={state?.status}>
+                  <span className="document-list__label">
+                    <FileText aria-hidden="true" size={17} strokeWidth={2} />
+                    {label}
+                  </span>
+                  {state && !uploading ? (
+                    <span className={`document-list__status document-list__status--${state.status}`}>
+                      {state.status === "done" ? (
+                        <>
+                          <Check aria-hidden="true" size={14} strokeWidth={2.6} />
+                          <span className="document-list__filename">{state.fileName}</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle aria-hidden="true" size={14} strokeWidth={2.2} />
+                          {state.message}
+                        </>
+                      )}
+                    </span>
+                  ) : null}
+                  <button className="button button--ghost button--sm" type="button" disabled={uploading} onClick={() => upload(kind)}>
+                    {uploading ? (
+                      <>
+                        <Loader2 aria-hidden="true" size={15} strokeWidth={2.2} className="spin" />
+                        در حال بارگذاری
+                      </>
+                    ) : state?.status === "done" ? (
+                      "جایگزینی"
+                    ) : (
+                      "بارگذاری"
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+        <div className="sticky-actions">
+          <button className="button button--ghost" disabled={pending}>ذخیره پیش‌نویس</button>
+          <button
+            type="button"
+            className="button button--primary"
+            disabled={pending}
+            onClick={() => {
+              if (!runValidation()) return;
+              start(async () => {
+                try {
+                  const company = await saveFacilitiesCompanyDraft(draft);
+                  setDraft((current) => mergeSaved(current, company));
+                  await completeFacilitiesCompanyProfile({ version: company.profileVersion });
+                  setFormError(null);
+                  showToast({ type: "success", message: "پروفایل شرکت کامل شد" });
+                  router.push("/dashboard");
+                } catch (e) {
+                  const message = e instanceof Error ? e.message : "تکمیل ناموفق بود";
+                  setFormError(message);
+                  showToast({ type: "error", message });
+                }
+              });
+            }}
+          >
+            تأیید تکمیل پروفایل
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }
