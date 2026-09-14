@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "facilities-m9-PENDING",
+  "candidateId": "PENDING",
+  "configurationId": "PENDING",
+  "gates": [
+    { "id": "G0", "status": "pending", "checks": [] },
+    { "id": "G1", "status": "pending", "checks": [] },
+    { "id": "G2", "status": "pending", "checks": [] },
+    { "id": "G3", "status": "pending", "checks": [] },
+    { "id": "G4", "status": "pending", "checks": [] },
+    { "id": "G5", "status": "pending", "checks": [] },
+    { "id": "G6", "status": "pending", "checks": [] },
+    { "id": "G7", "status": "pending", "checks": [] }
+  ]
+}

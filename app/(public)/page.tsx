@@ -1,9 +1,17 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { AuthFlow } from "@/components/auth/AuthFlow";
+import { getSession } from "@/lib/auth/session";
 
 const serviceName = "سامانه اعتبار سنجی سانا";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getSession();
+
+  if (session) {
+    redirect(session.kind === "admin" ? "/admin" : "/dashboard");
+  }
+
   return (
     <main className="auth-page">
       <section className="auth-info" aria-labelledby="auth-info-title">
@@ -53,6 +61,8 @@ export default function Home() {
             referrerPolicy="origin"
             src="https://trustseal.enamad.ir/logo.aspx?id=460034&Code=2JmpBGjve8PEVhflY0sJnYUKOlmzeLz9"
             alt=""
+            loading="lazy"
+            decoding="async"
             data-code="2JmpBGjve8PEVhflY0sJnYUKOlmzeLz9"
           />
         </a>

@@ -12,6 +12,29 @@ This project uses PostgreSQL with Prisma ORM.
   - `npm run db:seed`
   - `npm run db:studio`
 
+## M9 release database boundary
+
+M9 adds no migration. Production migrations still run only through the maintenance
+image with the owner credential, followed by
+`prisma/facilities-runtime-role-provision.sql`; the application uses the restricted
+runtime role and must not migrate on startup.
+
+`npm run facilities:m9:preflight -- --expect-programme disabled --runtime-role sana_runtime`
+is a read-only G1–G5 maintenance-owner check. It compares repository migrations with `_prisma_migrations`, verifies the
+explicit facilities availability expectation, reports safe intake/supplier/in-flight
+payment counts, and fails if the named runtime role is privileged/owner-linked or can mutate
+facilities audit/history rows. After the audited G6 enable action, use `enabled` only
+for the corresponding recheck. The owner credential must remain in the protected
+maintenance context; this design avoids granting the runtime access to migration history.
+It does not replace the authorized runtime private-storage and scanner readiness canary.
+
+If the four M1 catalogue rows are missing, first run
+`npm run facilities:m9:provision-suppliers` as a dry run and review its counts. The
+explicit `-- --apply` form inserts only missing approved supplier names in a transaction;
+it creates no programme, intake, template, admin, user, demo, or availability record.
+Any unexpected supplier blocks the command for investigation. Never use the broad
+development seed as an assumed production repair.
+
 ## Tables
 
 ### User

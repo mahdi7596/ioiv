@@ -11,7 +11,7 @@ export const MAX_ZIP_ENTRIES = 2_048;
 export const MAX_ZIP_UNCOMPRESSED_BYTES = 150 * 1024 * 1024;
 export const MAX_ZIP_COMPRESSION_RATIO = 100;
 
-export type FacilitiesStoredFileType = "PDF" | "DOC" | "DOCX" | "XLS" | "XLSX" | "CSV" | "ZIP";
+export type FacilitiesStoredFileType = "PDF" | "DOC" | "DOCX" | "XLS" | "XLSX" | "CSV" | "ZIP" | "JPG" | "PNG" | "WEBP" | "HEIC";
 
 export type VerifiedFacilitiesFile = {
   fileType: FacilitiesStoredFileType;
@@ -29,6 +29,12 @@ const extensionTypes: Record<string, FacilitiesStoredFileType> = {
   ".xlsx": "XLSX",
   ".csv": "CSV",
   ".zip": "ZIP",
+  ".jpg": "JPG",
+  ".jpeg": "JPG",
+  ".png": "PNG",
+  ".webp": "WEBP",
+  ".heic": "HEIC",
+  ".heif": "HEIC",
 };
 
 const mimeTypes: Record<FacilitiesStoredFileType, string> = {
@@ -39,6 +45,10 @@ const mimeTypes: Record<FacilitiesStoredFileType, string> = {
   XLSX: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   CSV: "text/csv",
   ZIP: "application/zip",
+  JPG: "image/jpeg",
+  PNG: "image/png",
+  WEBP: "image/webp",
+  HEIC: "image/heic",
 };
 
 /**
@@ -103,6 +113,9 @@ export function verifyFacilitiesUpload(input: { fileName: string; bytes: Buffer 
 function detectFacilitiesContentType(bytes: Buffer): FacilitiesStoredFileType | null {
   if (isPdf(bytes)) return "PDF";
 
+  const imageType = detectImageType(bytes);
+  if (imageType) return imageType;
+
   const compoundType = detectCompoundDocumentType(bytes);
   if (compoundType) return compoundType;
 
@@ -139,6 +152,58 @@ function isPdf(bytes: Buffer): boolean {
     && tail.includes(Buffer.from("startxref"))
     && tail.includes(Buffer.from("trailer"))
     && bytes.includes(Buffer.from(" obj"));
+}
+
+// Image formats are detected by their magic bytes only; pixel data is never
+// decoded here. The antivirus scan and the extension/content match are the
+// layered defenses, exactly as for the document formats above.
+function detectImageType(bytes: Buffer): "JPG" | "PNG" | "WEBP" | "HEIC" | null {
+  if (isJpeg(bytes)) return "JPG";
+  if (isPng(bytes)) return "PNG";
+  if (isWebp(bytes)) return "WEBP";
+  if (isHeic(bytes)) return "HEIC";
+  return null;
+}
+
+function isJpeg(bytes: Buffer): boolean {
+  if (bytes.byteLength < 4) return false;
+  // Start-of-image marker FF D8 followed by the first marker introducer FF.
+  if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) return false;
+  // The byte after SOI must begin a real JPEG marker segment (APPn, DQT, DHT,
+  // SOFn, COM, …), not arbitrary payload.
+  if (bytes[3] < 0xc0 || bytes[3] > 0xfe) return false;
+  // Require the end-of-image marker in the trailing bytes so a truncated or
+  // padded blob masquerading as JPEG is rejected.
+  return bytes.subarray(Math.max(0, bytes.byteLength - 128)).includes(Buffer.from([0xff, 0xd9]));
+}
+
+function isPng(bytes: Buffer): boolean {
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  // Every PNG opens with the 8-byte signature and an IHDR chunk header.
+  return bytes.byteLength >= 24 && bytes.subarray(0, 8).equals(signature) && bytes.subarray(12, 16).equals(Buffer.from("IHDR"));
+}
+
+function isWebp(bytes: Buffer): boolean {
+  if (bytes.byteLength < 16) return false;
+  if (!bytes.subarray(0, 4).equals(Buffer.from("RIFF")) || !bytes.subarray(8, 12).equals(Buffer.from("WEBP"))) return false;
+  const chunk = bytes.subarray(12, 16).toString("latin1");
+  return chunk === "VP8 " || chunk === "VP8L" || chunk === "VP8X";
+}
+
+const HEIF_BRANDS = new Set(["heic", "heix", "heim", "heis", "hevc", "hevx", "hevm", "hevs", "mif1", "msf1", "heif"]);
+
+function isHeic(bytes: Buffer): boolean {
+  if (bytes.byteLength < 16) return false;
+  // ISO base media file format: a 'ftyp' box at offset 4.
+  if (!bytes.subarray(4, 8).equals(Buffer.from("ftyp"))) return false;
+  const boxSize = bytes.readUInt32BE(0);
+  if (boxSize < 16 || boxSize > bytes.byteLength) return false;
+  if (HEIF_BRANDS.has(bytes.subarray(8, 12).toString("latin1"))) return true;
+  // The remainder of the ftyp box is the compatible-brands list.
+  for (let offset = 16; offset + 4 <= boxSize; offset += 4) {
+    if (HEIF_BRANDS.has(bytes.subarray(offset, offset + 4).toString("latin1"))) return true;
+  }
+  return false;
 }
 
 function detectCompoundDocumentType(bytes: Buffer): "DOC" | "XLS" | null {

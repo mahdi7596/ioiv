@@ -29,6 +29,18 @@ export class UnavailableFacilitiesFileScanner implements FacilitiesFileScanner {
   }
 }
 
+/**
+ * Development-only scanner that reports every file as clean. It exists solely so
+ * local work is not blocked when no clamd is provisioned. `createFacilitiesScannerFromEnv`
+ * only ever selects it outside production and behind an explicit opt-in flag, so a
+ * real deployment can never ship unscanned uploads by accident.
+ */
+export class PassthroughFacilitiesFileScanner implements FacilitiesFileScanner {
+  async scan(): Promise<FacilitiesScanResult> {
+    return { status: "PASSED" };
+  }
+}
+
 export type ClamdInstreamScannerOptions = {
   host: string;
   port: number;
@@ -93,6 +105,14 @@ export class ClamdInstreamFacilitiesFileScanner implements FacilitiesFileScanner
 }
 
 export function createFacilitiesScannerFromEnv(env: Partial<NodeJS.ProcessEnv> = process.env): FacilitiesFileScanner {
+  // Development escape hatch: when explicitly opted in and never in production,
+  // skip scanning so local work is not blocked without a clamd service. The server
+  // runs with NODE_ENV=production, so this branch cannot run there; provision clamd
+  // and set FACILITIES_CLAMAV_HOST/PORT instead.
+  if (env.NODE_ENV !== "production" && isDevScanBypassEnabled(env)) {
+    return new PassthroughFacilitiesFileScanner();
+  }
+
   const host = env.FACILITIES_CLAMAV_HOST?.trim();
   const port = Number(env.FACILITIES_CLAMAV_PORT);
   if (!host || !Number.isInteger(port) || port < 1 || port > 65_535) {
@@ -104,6 +124,11 @@ export function createFacilitiesScannerFromEnv(env: Partial<NodeJS.ProcessEnv> =
     return new UnavailableFacilitiesFileScanner();
   }
   return new ClamdInstreamFacilitiesFileScanner({ host, port, timeoutMs, chunkSize });
+}
+
+function isDevScanBypassEnabled(env: Partial<NodeJS.ProcessEnv>): boolean {
+  const value = env.FACILITIES_SCANNER_DEV_PASSTHROUGH?.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes";
 }
 
 function sendClamdInstreamRequest(input: {

@@ -37,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" className={`${iranyekan.variable} h-full antialiased`}>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <ToastProvider />
       </body>

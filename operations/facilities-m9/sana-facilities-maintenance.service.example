@@ -1,0 +1,24 @@
+[Unit]
+Description=Sana facilities reconciliation and readiness check
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=sana-operations
+Group=sana-operations
+WorkingDirectory=/data/apps/sana
+Environment=FACILITIES_M9_APP_DIR=/data/apps/sana
+Environment=FACILITIES_M9_STATE_DIR=/var/lib/sana-facilities-monitor
+ExecStart=/usr/local/libexec/sana/run-facilities-maintenance
+# Exit 2 is a lock-held skip, not completion. Monitoring must track repeated skips
+# and the last-reconcile-success timestamp even though systemd avoids restart loops.
+SuccessExitStatus=2
+TimeoutStartSec=290
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/sana-facilities-monitor
+
+[Install]
+WantedBy=multi-user.target

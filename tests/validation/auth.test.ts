@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  companyNationalIdSchema,
-  mobileSchema,
-  otpSchema,
-  verifyOtpSchema,
-} from "@/lib/validations/auth";
+import { mobileSchema, otpSchema, verifyOtpSchema } from "@/lib/validations/auth";
 
 describe("auth validation", () => {
   it("accepts Iranian mobile numbers", () => {
@@ -22,50 +17,21 @@ describe("auth validation", () => {
     expect(mobileSchema.safeParse("08123456789").success).toBe(false);
   });
 
-  it("requires a four digit OTP", () => {
-    expect(otpSchema.safeParse("1234").success).toBe(true);
-    expect(otpSchema.safeParse("۱۲۳۴").data).toBe("1234");
-    expect(otpSchema.safeParse("١٢٣٤").data).toBe("1234");
-    expect(otpSchema.safeParse("12345").success).toBe(false);
+  it("requires a six digit OTP", () => {
+    expect(otpSchema.safeParse("123456").success).toBe(true);
+    expect(otpSchema.safeParse("۱۲۳۴۵۶").data).toBe("123456");
+    expect(otpSchema.safeParse("١٢٣٤٥٦").data).toBe("123456");
+    expect(otpSchema.safeParse("1234").success).toBe(false);
+    expect(otpSchema.safeParse("1234567").success).toBe(false);
   });
 
-  it("accepts exactly 11 digit company national IDs", () => {
-    expect(companyNationalIdSchema.safeParse("12345678901").success).toBe(true);
-    expect(companyNationalIdSchema.safeParse("۱۲۳۴۵۶۷۸۹۰۱").data).toBe("12345678901");
-  });
-
-  it("rejects short, long, and non-digit company national IDs", () => {
-    expect(companyNationalIdSchema.safeParse("1234567890").success).toBe(false);
-    expect(companyNationalIdSchema.safeParse("123456789").success).toBe(false);
-    expect(companyNationalIdSchema.safeParse("123456789012").success).toBe(false);
-    expect(companyNationalIdSchema.safeParse("abc").success).toBe(false);
-  });
-
-  it("requires remaining registration fields when company national ID is provided", () => {
+  it("only requires mobile, code, and mode to verify an OTP", () => {
     expect(
       verifyOtpSchema.safeParse({
         mobile: "09123456789",
-        code: "1234",
+        code: "123456",
         mode: "user",
-        companyNationalId: "12345678901",
       }).success,
-    ).toBe(false);
-
-    expect(
-      verifyOtpSchema.safeParse({
-        mobile: "09123456789",
-        code: "1234",
-        mode: "user",
-        companyName: "شرکت نمونه",
-        companyNationalId: "۱۲۳۴۵۶۷۸۹۰۱",
-        companyContactFullName: "علی رضایی",
-        companyContactNationalCode: "۰۰۱۲۳۴۵۶۷۸",
-      }).data,
-    ).toMatchObject({
-      companyName: "شرکت نمونه",
-      companyNationalId: "12345678901",
-      companyContactFullName: "علی رضایی",
-      companyContactNationalCode: "0012345678",
-    });
+    ).toBe(true);
   });
 });

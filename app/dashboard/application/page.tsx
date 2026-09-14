@@ -5,6 +5,7 @@ import { ApplicationWizard } from "@/components/application/ApplicationWizard";
 import { AppShell } from "@/components/layout/AppShell";
 import type { ApplicationDraft } from "@/components/application/types";
 import { getApplicationAccess } from "@/lib/application/status";
+import { ActionError } from "@/lib/actions/auth";
 import { createOrGetDraftApplication } from "@/lib/actions/application";
 
 function arrayOrEmpty(value: unknown) {
@@ -20,7 +21,10 @@ export default async function ApplicationPage() {
 
   try {
     application = await createOrGetDraftApplication();
-  } catch {
+  } catch (error) {
+    if (error instanceof ActionError && error.status === 400) {
+      redirect("/dashboard/facilities-profile");
+    }
     redirect("/");
   }
 
@@ -43,7 +47,7 @@ export default async function ApplicationPage() {
           : "پرونده ثبت شده قابل مشاهده است. ویرایش فقط زمانی فعال می‌شود که مدیر پرونده درخواست اصلاح ثبت کند."
       }
       action={
-        <Link href="/dashboard" className="button button--ghost" aria-label="بازگشت به داشبورد" title="بازگشت به داشبورد">
+        <Link href="/dashboard" className="button button--ghost button--back" aria-label="بازگشت به داشبورد" title="بازگشت به داشبورد">
           <ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
           بازگشت
         </Link>

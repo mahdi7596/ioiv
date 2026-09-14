@@ -173,6 +173,23 @@ The initial export filters are intake, supplier, status, and date range.
   legal retention policy exists. M8 does not backfill historical events or collect new
   IP-address/user-agent data.
 
+## M9 rollout decisions still requiring approval
+
+M9 does not reinterpret unresolved product choices as deployment defaults. Before
+production qualification, record approved values and owners for the intake/window and
+canary model; exact questionnaire files/versions; payment acknowledgement/versioning;
+the conflict between all-fields correction and immutable company/intake/template
+snapshots; company-profile quota/file-count treatment; MB/MiB and archive/retry policy;
+scanner/signature operations; capacity and protected-backup retention; alert responders
+and service levels; and maintenance window, RPO/RTO, backup consistency, containment,
+observation thresholds, and unremediated critical/high runtime dependency findings.
+
+The pending decision template is
+`operations/facilities-m9/decision-register.pending.example.json`. Its presence is not
+approval. Until every security, payment, privacy, correctness, and applicant-promise
+decision is approved and the dependent gates pass, facilities remains unavailable and
+the legacy validation route remains unchanged.
+
 ## Confirmed M0 implementation decisions
 
 - A company may submit one facilities application per intake.

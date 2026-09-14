@@ -1,20 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ClipboardList, Files, LayoutDashboard, LogOut } from "lucide-react";
+import { Building2, Files, LayoutDashboard, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 
 type AppShellProps = {
   area: "user" | "admin";
-  eyebrow: string;
-  title: string;
+  eyebrow?: string;
+  title?: string;
   description?: string;
   action?: ReactNode;
+  stickyHeader?: boolean;
   children: ReactNode;
 };
 
 const userNav = [
   { href: "/dashboard", label: "داشبورد", icon: LayoutDashboard },
-  { href: "/dashboard/application", label: "ثبت مدارک", icon: ClipboardList },
+  { href: "/dashboard/facilities-profile", label: "پروفایل شرکت", icon: Building2 },
 ];
 
 const adminNav = [
@@ -22,7 +23,7 @@ const adminNav = [
   { href: "/admin/submissions", label: "پرونده‌ها", icon: Files },
 ];
 
-export function AppShell({ area, eyebrow, title, description, action, children }: AppShellProps) {
+export function AppShell({ area, eyebrow, title, description, action, stickyHeader, children }: AppShellProps) {
   const nav = area === "admin" ? adminNav : userNav;
 
   return (
@@ -64,33 +65,37 @@ export function AppShell({ area, eyebrow, title, description, action, children }
       </aside>
 
       <div className="app-shell__main">
-        <header className="app-header">
-          <div>
-            <p className="eyebrow">{eyebrow}</p>
-            <h1>{title}</h1>
-            {description ? <p className="app-header__description">{description}</p> : null}
-          </div>
-          {action ? <div className="app-header__action">{action}</div> : null}
-        </header>
+        <div className={stickyHeader ? "app-shell__top app-shell__top--sticky" : "app-shell__top"}>
+          {title ? (
+            <header className="app-header">
+              <div>
+                {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+                <h1>{title}</h1>
+                {description ? <p className="app-header__description">{description}</p> : null}
+              </div>
+              {action ? <div className="app-header__action">{action}</div> : null}
+            </header>
+          ) : null}
 
-        <nav className="mobile-nav" aria-label="ناوبری موبایل">
-          {nav.map((item) => {
-            const Icon = item.icon;
+          <nav className="mobile-nav" aria-label="ناوبری موبایل">
+            {nav.map((item) => {
+              const Icon = item.icon;
 
-            return (
-              <Link key={item.href} href={item.href} aria-label={item.label} title={item.label}>
-                <Icon aria-hidden="true" size={18} strokeWidth={2} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-          <form action="/api/auth/logout" method="post">
-            <button type="submit" aria-label="خروج" title="خروج">
-              <LogOut aria-hidden="true" size={18} strokeWidth={2} />
-              <span>خروج</span>
-            </button>
-          </form>
-        </nav>
+              return (
+                <Link key={item.href} href={item.href} aria-label={item.label} title={item.label}>
+                  <Icon aria-hidden="true" size={18} strokeWidth={2} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            <form action="/api/auth/logout" method="post">
+              <button type="submit" aria-label="خروج" title="خروج">
+                <LogOut aria-hidden="true" size={18} strokeWidth={2} />
+                <span>خروج</span>
+              </button>
+            </form>
+          </nav>
+        </div>
 
         <main className="app-content">{children}</main>
       </div>

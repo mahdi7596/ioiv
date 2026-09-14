@@ -9,6 +9,13 @@ import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
 
 const DOCUMENT_SLOTS = ["incorporation-notice", "articles-of-association", "board-changes-gazette", "capital-increase-gazette"] as const;
 
+const DOCUMENT_LABELS: Record<(typeof DOCUMENT_SLOTS)[number], string> = {
+  "incorporation-notice": "آگهی تأسیس",
+  "articles-of-association": "اساسنامه",
+  "board-changes-gazette": "روزنامه رسمی تغییرات هیئت‌مدیره",
+  "capital-increase-gazette": "روزنامه رسمی افزایش سرمایه",
+};
+
 function dateOnly(value: string) {
   const date = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 10) !== value || date > new Date()) throw new ActionError("تاریخ ثبت معتبر نیست");
@@ -21,6 +28,20 @@ export async function getFacilitiesCompanyProfile() {
   if (!company) return null;
   const activeApplication = await db.facilitiesApplication.findFirst({ where: { companyId: company.id, status: { in: ["PENDING_PAYMENT", "SUBMITTED", "UNDER_REVIEW", "NEEDS_EDIT"] } }, select: { status: true } });
   return { ...company, profileLocked: Boolean(activeApplication), activeApplicationStatus: activeApplication?.status ?? null };
+}
+
+export async function hasCompletedFacilitiesProfile() {
+  const session = await requireSession("user");
+  const company = await db.company.findUnique({ where: { userId: session.subjectId }, select: { profileCompletedAt: true } });
+  return Boolean(company?.profileCompletedAt);
+}
+
+export async function getFacilitiesDashboardSummary() {
+  const session = await requireSession("user");
+  const company = await db.company.findUnique({ where: { userId: session.subjectId }, select: { id: true, name: true, nationalId: true } });
+  if (!company) return null;
+  const latestApplication = await db.facilitiesApplication.findFirst({ where: { companyId: company.id }, orderBy: { createdAt: "desc" }, select: { status: true } });
+  return { name: company.name, nationalId: company.nationalId, status: latestApplication?.status ?? null };
 }
 
 export async function saveFacilitiesCompanyDraft(input: unknown) {
@@ -53,8 +74,19 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
       await tx.companyShareholder.deleteMany({ where: { companyId: company.id } });
       await tx.companyShareholder.createMany({ data: value.shareholders.map((s) => ({ companyId: company.id, fullName: s.fullName, ownershipPercentage: new Prisma.Decimal(s.ownershipPercentage) })) });
       await tx.companyOfficer.deleteMany({ where: { companyId: company.id, id: { notIn: retained } } });
-      for (const officer of value.officers) await tx.companyOfficer.upsert({ where: { id: officer.id ?? "__new__" }, create: { companyId: company.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: normalizedText(officer.position) === CEO_POSITION }, update: { fullName: officer.fullName, position: officer.position, isChiefExecutive: normalizedText(officer.position) === CEO_POSITION } });
-      return company;
+      // Upsert officers in submitted order and echo their ids back, so a freshly
+      // added member's identity-package upload can activate immediately after
+      // saving instead of only after a full page reload.
+      const savedOfficers: { id: string; fullName: string; position: string }[] = [];
+      for (const officer of value.officers) {
+        const saved = await tx.companyOfficer.upsert({
+          where: { id: officer.id ?? "__new__" },
+          create: { companyId: company.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: normalizedText(officer.position) === CEO_POSITION },
+          update: { fullName: officer.fullName, position: officer.position, isChiefExecutive: normalizedText(officer.position) === CEO_POSITION },
+        });
+        savedOfficers.push({ id: saved.id, fullName: saved.fullName, position: saved.position });
+      }
+      return { profileVersion: company.profileVersion, officers: savedOfficers };
     });
   } catch (error) {
     if (error instanceof ActionError) throw error;
@@ -89,8 +121,35 @@ export async function completeFacilitiesCompanyProfile(input: { version: number 
   if (!total.equals(100)) throw new ActionError("مجموع درصد سهام باید دقیقاً ۱۰۰ باشد");
   const ceos = company.officers.filter((officer) => officer.isChiefExecutive && normalizedText(officer.position) === CEO_POSITION);
   if (ceos.length !== 1 || company.officers.some((officer) => (normalizedText(officer.position) === CEO_POSITION) !== officer.isChiefExecutive)) throw new ActionError("دقیقاً یک مدیرعامل با سمت «مدیرعامل» لازم است");
-  const required = [...DOCUMENT_SLOTS.map((slot) => `profile-${slot}`), ...company.officers.map((officer) => `officer-${officer.id}-identity-package`)];
+  // A credit report requires at least one board member besides the CEO.
+  if (!company.officers.some((officer) => !officer.isChiefExecutive)) throw new ActionError("حداقل یک عضو هیئت‌مدیره (غیر از مدیرعامل) برای گزارش اعتباری لازم است");
   const ready = new Set(company.facilitiesFileBindings.filter((binding) => binding.currentUpload?.lifecycleStatus === "PASSED" && binding.currentUpload.storedFile?.scanStatus === "PASSED").map((binding) => binding.slotKey));
-  if (required.some((slot) => !ready.has(slot))) throw new ActionError("همه مدارک الزامی باید با موفقیت بررسی شده باشند");
-  return db.company.updateMany({ where: { id: company.id, profileVersion: input.version }, data: { profileCompletedAt: new Date(), profileVersion: { increment: 1 } } });
+  const missingCompanyDocs = DOCUMENT_SLOTS.filter((slot) => !ready.has(`profile-${slot}`)).map((slot) => DOCUMENT_LABELS[slot]);
+  const missingOfficerDocs = company.officers.filter((officer) => !ready.has(`officer-${officer.id}-identity-package`)).map((officer) => officer.fullName?.trim() || "عضو بدون نام");
+  if (missingCompanyDocs.length || missingOfficerDocs.length) {
+    const parts: string[] = [];
+    if (missingCompanyDocs.length) parts.push(`مدارک شرکت: ${missingCompanyDocs.join("، ")}`);
+    if (missingOfficerDocs.length) parts.push(`مدرک هویتی (ZIP) این اعضای هیئت‌مدیره: ${missingOfficerDocs.join("، ")}`);
+    throw new ActionError(`این مدارک الزامی هنوز بارگذاری و تأیید نشده‌اند — ${parts.join(" | ")}`);
+  }
+  const result = await db.company.updateMany({ where: { id: company.id, profileVersion: input.version }, data: { profileCompletedAt: new Date(), profileVersion: { increment: 1 } } });
+
+  // Mirrors the completed profile onto the legacy User fields so the untouched
+  // legacy validation route (which only reads from User) keeps working for anyone
+  // who chooses that option after finishing this profile.
+  try {
+    await db.user.update({
+      where: { id: session.subjectId },
+      data: {
+        companyName: company.name,
+        companyNationalId: company.nationalId,
+        companyContactFullName: company.contactFullName,
+        companyContactNationalCode: company.contactNationalCode,
+      },
+    });
+  } catch (error) {
+    if ((error as { code?: string }).code !== "P2002") throw error;
+  }
+
+  return result;
 }

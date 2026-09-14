@@ -38,6 +38,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: maintenance
       args:
         NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}
     # This maintenance-only file contains the migration-owner DATABASE_URL, but

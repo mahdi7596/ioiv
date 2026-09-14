@@ -15,7 +15,7 @@ export default async function FacilitiesApplicationsPage({ searchParams }: { sea
   if (!session) redirect("/admin/login");
   if (session.kind !== "admin") throw new Error("FACILITIES_ADMIN_FORBIDDEN");
   const [applications, access, exportOptions] = await Promise.all([listFacilitiesReviews(filters), getFacilitiesAdminAccess(), getFacilitiesExportOptions()]);
-  return <AppShell area="admin" eyebrow="بررسی تسهیلات" title="پرونده‌های تسهیلات" description="صف مستقل بررسی درخواست‌های تسهیلات و اصلاحات متقاضیان." action={<Link className="button button--ghost" href="/admin"><ArrowRight aria-hidden="true" size={19} />بازگشت</Link>}>
+  return <AppShell area="admin" eyebrow="بررسی تسهیلات" title="پرونده‌های تسهیلات" description="صف مستقل بررسی درخواست‌های تسهیلات و اصلاحات متقاضیان." action={<Link className="button button--ghost button--back" href="/admin"><ArrowRight aria-hidden="true" size={19} />بازگشت</Link>}>
     <form className="panel filters" action="/admin/facilities/applications">
       <label>جستجو<input name="q" defaultValue={filters.q || ""} placeholder="نام شرکت، موبایل یا شناسه ملی" /></label>
       <label>وضعیت<select name="status" defaultValue={filters.status || ""}><option value="">همه وضعیت‌ها</option><option value="SUBMITTED">در صف بررسی</option><option value="UNDER_REVIEW">در حال بررسی</option><option value="NEEDS_EDIT">نیازمند اصلاح</option><option value="VALIDATION_COMPLETED">پایان اعتبارسنجی</option></select></label>

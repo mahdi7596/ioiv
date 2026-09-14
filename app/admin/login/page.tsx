@@ -139,9 +139,9 @@ export default function AdminLoginPage() {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 value={code}
-                onChange={(event) => setCode(keepAsciiDigits(event.target.value).slice(0, 4))}
-                placeholder="1234"
-                maxLength={4}
+                onChange={(event) => setCode(keepAsciiDigits(event.target.value).slice(0, 6))}
+                placeholder="123456"
+                maxLength={6}
                 className="text-center text-xl"
               />
               {message ? <p className="field__hint">{message}</p> : null}

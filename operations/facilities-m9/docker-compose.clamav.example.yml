@@ -1,0 +1,48 @@
+# M9 example only. Do not activate until the image is pinned by digest, scanner
+# limits/signature policy are approved, and the stack passes staging G2.
+services:
+  app:
+    environment:
+      FACILITIES_CLAMAV_HOST: facilities-clamav
+      FACILITIES_CLAMAV_PORT: "3310"
+    networks:
+      - default
+      - facilities-scanner
+
+  facilities-clamav:
+    image: ${FACILITIES_CLAMAV_IMAGE:?Set an approved ClamAV image pinned by digest}
+    restart: unless-stopped
+    expose:
+      - "3310"
+    # Deliberately no host `ports`: clamd is reachable only on the Compose network.
+    networks:
+      - facilities-scanner
+    volumes:
+      - facilities-clamav-signatures:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1 --wait >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    security_opt:
+      - no-new-privileges:true
+
+  facilities-freshclam:
+    image: ${FACILITIES_CLAMAV_IMAGE:?Set an approved ClamAV image pinned by digest}
+    restart: unless-stopped
+    command: ["freshclam", "--foreground"]
+    networks:
+      - scanner-signature-egress
+    volumes:
+      - facilities-clamav-signatures:/var/lib/clamav
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  facilities-scanner:
+    internal: true
+  scanner-signature-egress: {}
+
+volumes:
+  facilities-clamav-signatures:

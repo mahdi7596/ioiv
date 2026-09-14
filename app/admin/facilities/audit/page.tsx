@@ -23,11 +23,11 @@ export default async function FacilitiesAuditPage({ searchParams }: { searchPara
   if (!session) redirect("/admin/login");
   if (session.kind !== "admin") return <main className="shell"><section className="panel" role="alert"><h1>دسترسی مجاز نیست</h1><p>مشاهده رویدادهای ممیزی فقط برای مدیر ارشد فعال است.</p></section></main>;
   const access = await getFacilitiesAdminAccess();
-  if (!access.permissions.viewFacilitiesAudit) return <main className="shell"><section className="panel" role="alert"><h1>دسترسی مجاز نیست</h1><p>مشاهده رویدادهای ممیزی فقط برای مدیر ارشد فعال است.</p><Link className="button button--ghost" href="/admin/facilities/applications">بازگشت</Link></section></main>;
+  if (!access.permissions.viewFacilitiesAudit) return <main className="shell"><section className="panel" role="alert"><h1>دسترسی مجاز نیست</h1><p>مشاهده رویدادهای ممیزی فقط برای مدیر ارشد فعال است.</p><Link className="button button--ghost button--back" href="/admin/facilities/applications">بازگشت</Link></section></main>;
   const filters = await searchParams;
   const result = await listFacilitiesAudit(filters);
   const next = new URLSearchParams(Object.entries({ ...filters, cursor: result.nextCursor ?? undefined }).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1])));
-  return <AppShell area="admin" eyebrow="امنیت و عملیات" title="رویدادهای ممیزی تسهیلات" description="مشاهده محافظت‌شده رویدادهای تغییر، خروجی، دانلود و بازیابی." action={<Link className="button button--ghost" href="/admin/facilities/applications"><ArrowRight aria-hidden="true" size={19} />بازگشت</Link>}>
+  return <AppShell area="admin" eyebrow="امنیت و عملیات" title="رویدادهای ممیزی تسهیلات" description="مشاهده محافظت‌شده رویدادهای تغییر، خروجی، دانلود و بازیابی." action={<Link className="button button--ghost button--back" href="/admin/facilities/applications"><ArrowRight aria-hidden="true" size={19} />بازگشت</Link>}>
     <form className="panel filters" action="/admin/facilities/audit">
       <label>از تاریخ<input type="date" name="from" defaultValue={filters.from || ""} /></label><label>تا تاریخ<input type="date" name="to" defaultValue={filters.to || ""} /></label>
       <label>رویداد<select name="action" defaultValue={filters.action || ""}><option value="">همه</option>{facilitiesAuditFilterOptions.actions.map((value) => <option key={value} value={value}>{actionLabels[value] || value}</option>)}</select></label>

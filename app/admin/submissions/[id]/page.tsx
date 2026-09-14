@@ -42,7 +42,7 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
       title={submission.companyNationalId}
       description="مدارک، پرداخت، سوابق و تغییر وضعیت پرونده."
       action={
-        <Link href="/admin/submissions" className="button button--ghost" aria-label="بازگشت" title="بازگشت">
+        <Link href="/admin/submissions" className="button button--ghost button--back" aria-label="بازگشت" title="بازگشت">
           <ArrowRight aria-hidden="true" size={19} strokeWidth={2} />
           بازگشت
         </Link>

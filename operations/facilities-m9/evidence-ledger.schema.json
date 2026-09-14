@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sana.ioiv.ir/schemas/facilities-m9-evidence-ledger.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "releaseId", "candidateId", "configurationId", "gates"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "releaseId": { "type": "string", "minLength": 1 },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "configurationId": { "type": "string", "minLength": 1 },
+    "gates": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "checks"],
+        "properties": {
+          "id": { "enum": ["G0", "G1", "G2", "G3", "G4", "G5", "G6", "G7"] },
+          "status": { "enum": ["pending", "passed", "failed", "invalidated"] },
+          "owner": { "type": "string" },
+          "approver": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" },
+          "incidentRef": { "type": "string" },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "result", "expected", "actual", "evidenceRef"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "result": { "enum": ["passed", "failed"] },
+                "expected": { "type": "string", "minLength": 1 },
+                "actual": { "type": "string", "minLength": 1 },
+                "evidenceRef": { "type": "string", "pattern": "^protected://" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

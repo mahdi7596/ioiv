@@ -11,7 +11,10 @@ facilities feature remains unavailable until the later milestones are accepted.
 - The legacy validation route, including its `Application` records, JSON payloads,
   file records, status flow, selectors, and uniqueness constraints, remains unchanged.
 - Facilities uses an independent `FacilitiesApplication` root. It does not extend,
-  migrate, link, or reinterpret legacy `Application` data.
+  migrate, link, or reinterpret legacy `Application` data. The one exception is the
+  shared onboarding entry point described under "Post-M0 decision: shared onboarding
+  entry point" below, which only supplies field values to a *new* legacy `Application`
+  at creation time — it never reads, migrates, or reinterprets existing legacy records.
 - One OTP-authenticated user owns one company. There is no legacy company backfill
   and no multi-user company membership in this release.
 - The seed creates only the four confirmed suppliers. No intake, schedule, template,
@@ -34,6 +37,31 @@ facilities feature remains unavailable until the later milestones are accepted.
 | Replaced files | Delete physical content; retain safe revision/audit metadata only. |
 | Export | Include all entered data; initial filters are intake, supplier, status, date range; file links require authorized admin access. |
 | Configuration | `SUPER_ADMIN` alone may manage facilities configuration. |
+
+## Post-M0 decision (2026-09-12): shared onboarding entry point
+
+After OTP login, every user — new or existing — now completes the M3 facilities
+company profile (`/dashboard/facilities-profile`) as the single mandatory onboarding
+step before reaching the dashboard. This replaces the separate, legacy-only "company
+info" collection step that previously ran inline during OTP verification and briefly
+existed as its own post-login gate; that legacy-only gate and its 4-field form are
+retired and no longer shown to anyone.
+
+Once the facilities profile is completed, its four overlapping fields (company name,
+national ID, contact full name, contact national code) are mirrored one-way onto the
+legacy `User` record, so the untouched legacy `Application`-creation code keeps
+working unmodified for applicants who choose the legacy route. This mirror only
+populates fields for a `User`'s *own* future legacy `Application`; it does not touch,
+migrate, or backfill any existing legacy `Application` records, and it does not modify
+legacy `Application`/admin/export code paths at all.
+
+After completing the profile, the dashboard (`/dashboard`) presents both service
+options for the user to choose from:
+
+1. اعتبارسنجی شرکت‌های متقاضی ورود به لیست بلند تأمین‌کنندگان وزارت نفت (the legacy
+   validation route, unchanged)
+2. تسهیلات از محل منابع ماده ۲۸ آیین‌نامه تولید، دانش‌بنیان و اشتغالزایی در صنعت نفت
+   (facilities, per this plan)
 
 ## Ordered milestones
 
@@ -93,6 +121,11 @@ the M2 private-file binding lifecycle; only a current scan-passed revision satis
 completion. The profile does not enter an intake, create an application, or expose
 supplier/payment/review/export behaviour.
 
+As of the shared onboarding entry point decision above, this profile is also the
+mandatory post-login step for every user regardless of which service (legacy or
+facilities) they end up choosing, and its completion mirrors four fields onto the
+legacy `User` record (see that section for the exact mechanism and boundary).
+
 ### M4 — Facilities configuration
 
 Build `SUPER_ADMIN` facilities intake, supplier availability, amount/payment setting,
@@ -130,6 +163,17 @@ retains scanner/storage-unavailable bytes for no more than 24 hours.
 
 Deploy facilities behind its availability controls only after the preceding milestones
 and operational checks pass.
+
+Repository-side M9 safeguards are defined in
+`docs/2026-09-12-facilities-m9-controlled-rollout-plan.md` and
+`openspec/changes/implement-facilities-m9-controlled-rollout`. They include fail-closed
+decision/evidence records, immutable candidate manifests, explicit availability-state
+preflight, narrow supplier provisioning, and reviewable scanner/proxy/scheduler/
+monitoring examples. This does not mean M9 is deployed or complete. G0 product and
+operations decisions, staging qualification, matched production backup/restore, the
+exclusive user database/deployment handoffs, controlled enablement/canary, and the
+approved observation window all remain required. Facilities must stay unavailable
+until those real gates pass.
 
 ## Engineering safeguards (not product requirements)
 

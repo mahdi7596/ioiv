@@ -26,6 +26,15 @@ RUN rm -rf node_modules/.prisma node_modules/@prisma \
   && cp -R prisma-engine-export/@prisma node_modules/@prisma \
   && npm run build
 
+# Maintenance-only image. It retains the Prisma CLI and is selected explicitly by
+# the Compose migration service; the production application image does not ship it.
+FROM base AS maintenance
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+USER node
+
 FROM base AS runner
 
 ENV HOSTNAME=0.0.0.0
@@ -34,15 +43,19 @@ ENV PORT=3000
 
 COPY package.json package-lock.json ./
 COPY --from=deps /app/node_modules ./node_modules
-RUN npm prune --omit=dev && npm cache clean --force
+RUN npm prune --omit=dev \
+  && rm -rf node_modules/prisma node_modules/@prisma \
+  && npm cache clean --force
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chmod +x ./docker-entrypoint.sh \
