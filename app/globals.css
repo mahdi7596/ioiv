@@ -2915,11 +2915,38 @@ textarea:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .services-table-wrap {
-    overflow-x: auto;
+  /* Stack each row into a small card instead of scrolling horizontally —
+     the action button must stay visible without the user hunting for it. */
+  .services-table thead {
+    display: none;
   }
-  .services-table {
-    min-width: 560px;
+  .services-table,
+  .services-table tbody,
+  .services-table tr,
+  .services-table td {
+    display: block;
+    width: 100%;
+  }
+  .services-table tr {
+    padding: 16px 18px;
+  }
+  .services-table tr + tr {
+    border-block-start: 1px solid var(--color-border);
+  }
+  .services-table td {
+    border-block-start: 0;
+    padding: 0;
+  }
+  .services-table td:nth-child(2) {
+    margin-block-start: 10px;
+  }
+  .services-table td:last-child {
+    margin-block-start: 14px;
+    text-align: stretch;
+    white-space: normal;
+  }
+  .services-table td:last-child .button {
+    width: 100%;
   }
   .profile-callout__action {
     flex: 1 1 100%;

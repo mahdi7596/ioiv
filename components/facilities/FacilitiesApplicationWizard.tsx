@@ -113,6 +113,16 @@ const statusLabels: Record<string, string> = {
   VALIDATION_COMPLETED: "پایان فرآیند اعتبارسنجی",
 };
 
+// The status-history log is append-only, so older rows can carry wording we've
+// since improved. Normalize known legacy notes for display without touching
+// the stored audit record.
+const legacyStatusNotes: Record<string, string> = {
+  "درخواست پس از تکمیل بررسی‌های سرور ارسال شد": "درخواست پس از تکمیل بررسی‌های نهایی ارسال شد",
+};
+function displayStatusNote(note: string) {
+  return legacyStatusNotes[note] ?? note;
+}
+
 type DocStatus = { state: "uploading" | "done" | "error"; name?: string; error?: string };
 
 function DocRow({ item, status, disabled, onPick }: { item: DocItem; status?: DocStatus; disabled: boolean; onPick: (file: File) => void }) {
@@ -352,7 +362,7 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
                 <div className="facilities-timeline__content">
                   <div className="facilities-timeline__row"><strong>{statusLabels[item.newStatus] || item.newStatus}</strong></div>
                   <time className="facilities-timeline__time">{new Date(item.createdAt).toLocaleString("fa-IR")}</time>
-                  {item.note ? <p className="facilities-timeline__note">{item.note}</p> : null}
+                  {item.note ? <p className="facilities-timeline__note">{displayStatusNote(item.note)}</p> : null}
                 </div>
               </li>
             ))}
@@ -565,7 +575,7 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
                 >
                   {app.status === "NEEDS_EDIT" ? "ارسال اصلاحات" : paymentEnabled ? "تأیید و ورود به پرداخت" : "ارسال نهایی درخواست"}
                 </button>
-                <p className="section-hint">{app.status === "NEEDS_EDIT" ? "ارسال اصلاحات هزینه دیگری ندارد و پرونده را به صف بررسی بازمی‌گرداند." : paymentEnabled ? "پس از تأیید موفق پرداخت، درخواست به‌صورت خودکار ارسال می‌شود." : "پس از بررسی نهایی سرور، درخواست ارسال می‌شود."}</p>
+                <p className="section-hint">{app.status === "NEEDS_EDIT" ? "ارسال اصلاحات هزینه دیگری ندارد و پرونده را به صف بررسی بازمی‌گرداند." : paymentEnabled ? "پس از تأیید موفق پرداخت، درخواست به‌صورت خودکار ارسال می‌شود." : "پس از بررسی نهایی، درخواست به‌صورت خودکار ارسال می‌شود."}</p>
               </div>
             ) : null}
           </div>
