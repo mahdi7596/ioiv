@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, Files, Settings, ShieldCheck } from "lucide-react";
+import { Building2, CheckCircle2, ClipboardList, FileClock, Files, PencilLine, Settings, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { getAdminOverview } from "@/lib/actions/admin";
 import { canManageFacilitiesConfiguration } from "@/lib/actions/facilities-config";
@@ -20,14 +20,15 @@ export default async function AdminPage() {
   }
 
   const cards = [
-    { label: "کل پرونده‌ها", value: overview.total, href: "/admin/submissions" },
-    { label: "در صف بررسی", value: overview.submitted, href: "/admin/submissions?status=SUBMITTED" },
-    { label: "در حال بررسی", value: overview.underReview, href: "/admin/submissions?status=UNDER_REVIEW" },
-    { label: "نیازمند اصلاح", value: overview.needsEdit, href: "/admin/submissions?status=NEEDS_EDIT" },
+    { label: "کل پرونده‌ها", value: overview.total, href: "/admin/submissions", icon: ClipboardList },
+    { label: "در صف بررسی", value: overview.submitted, href: "/admin/submissions?status=SUBMITTED", icon: Files },
+    { label: "در حال بررسی", value: overview.underReview, href: "/admin/submissions?status=UNDER_REVIEW", icon: FileClock },
+    { label: "نیازمند اصلاح", value: overview.needsEdit, href: "/admin/submissions?status=NEEDS_EDIT", icon: PencilLine },
     {
       label: "پایان فرآیند اعتبارسنجی",
       value: overview.validationCompleted,
       href: "/admin/submissions?status=VALIDATION_COMPLETED",
+      icon: CheckCircle2,
     },
   ];
 
@@ -42,12 +43,16 @@ export default async function AdminPage() {
       }
     >
       <section className="grid-cards">
-        {cards.map((card) => (
-          <Link key={card.label} href={card.href} className="card metric metric--link">
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-          </Link>
-        ))}
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Link key={card.label} href={card.href} className="card metric metric--link">
+              <span className="metric__icon"><Icon aria-hidden="true" size={20} strokeWidth={2} /></span>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+            </Link>
+          );
+        })}
       </section>
       <section className="panel"><div className="flex items-center justify-between gap-3 flex-wrap"><div><p className="eyebrow">تسهیلات</p><h2>صف بررسی مستقل</h2><p>{facilitiesOverview.total} پرونده؛ {facilitiesOverview.submitted} در صف، {facilitiesOverview.underReview} در حال بررسی و {facilitiesOverview.needsEdit} نیازمند اصلاح.</p></div><Link href="/admin/facilities/applications" className="button button--primary"><Building2 aria-hidden="true" size={19} />مشاهده پرونده‌های تسهیلات</Link></div></section>
     </AppShell>

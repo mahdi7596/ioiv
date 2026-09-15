@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { AuditFilters } from "@/components/admin/AuditFilters";
 import { facilitiesAuditFilterOptions, listFacilitiesAudit, type FacilitiesAuditFilters } from "@/lib/actions/facilities-audit";
 import { getFacilitiesAdminAccess } from "@/lib/admin/facilities-access";
 import { getSession } from "@/lib/auth/session";
@@ -28,14 +29,15 @@ export default async function FacilitiesAuditPage({ searchParams }: { searchPara
   const result = await listFacilitiesAudit(filters);
   const next = new URLSearchParams(Object.entries({ ...filters, cursor: result.nextCursor ?? undefined }).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1])));
   return <AppShell area="admin" eyebrow="امنیت و عملیات" title="رویدادهای ممیزی تسهیلات" description="مشاهده محافظت‌شده رویدادهای تغییر، خروجی، دانلود و بازیابی." action={<Link className="button button--ghost button--back" href="/admin/facilities/applications"><ArrowRight aria-hidden="true" size={19} />بازگشت</Link>}>
-    <form className="panel filters" action="/admin/facilities/audit">
-      <label>از تاریخ<input type="date" name="from" defaultValue={filters.from || ""} /></label><label>تا تاریخ<input type="date" name="to" defaultValue={filters.to || ""} /></label>
-      <label>رویداد<select name="action" defaultValue={filters.action || ""}><option value="">همه</option>{facilitiesAuditFilterOptions.actions.map((value) => <option key={value} value={value}>{actionLabels[value] || value}</option>)}</select></label>
-      <label>نتیجه<select name="outcome" defaultValue={filters.outcome || ""}><option value="">همه</option>{facilitiesAuditFilterOptions.outcomes.map((value) => <option key={value} value={value}>{outcomeLabels[value] || value}</option>)}</select></label>
-      <label>نوع عامل<select name="actorType" defaultValue={filters.actorType || ""}><option value="">همه</option>{facilitiesAuditFilterOptions.actorTypes.map((value) => <option key={value} value={value}>{actorLabels[value] || value}</option>)}</select></label>
-      <label>شناسه پرونده<input name="applicationId" dir="ltr" defaultValue={filters.applicationId || ""} /></label><label>شناسه موجودیت<input name="entityId" dir="ltr" defaultValue={filters.entityId || ""} /></label><label>شناسه درخواست<input name="requestId" dir="ltr" defaultValue={filters.requestId || ""} /></label>
-      <button className="button button--primary">اعمال فیلتر</button>
-    </form>
+    <AuditFilters
+      initial={{ from: filters.from, to: filters.to, action: filters.action, outcome: filters.outcome, actorType: filters.actorType, applicationId: filters.applicationId, entityId: filters.entityId, requestId: filters.requestId }}
+      actionOptions={facilitiesAuditFilterOptions.actions}
+      outcomeOptions={facilitiesAuditFilterOptions.outcomes}
+      actorTypeOptions={facilitiesAuditFilterOptions.actorTypes}
+      actionLabels={actionLabels}
+      outcomeLabels={outcomeLabels}
+      actorLabels={actorLabels}
+    />
     <section className="panel table-wrap" aria-label="فهرست رویدادهای ممیزی">
       {result.rows.length ? <table className="data-table text-sm"><thead><tr><th>زمان</th><th>رویداد</th><th>نتیجه</th><th>عامل</th><th>پرونده / موجودیت</th><th>جزئیات امن</th><th>شناسه درخواست</th></tr></thead><tbody>{result.rows.map((row) => <tr key={row.id}><td>{row.createdAt.toLocaleString("fa-IR")}</td><td>{actionLabels[row.action] || row.action}</td><td>{outcomeLabels[row.outcome] || row.outcome}</td><td>{actorLabels[row.actorType] || row.actorType}<small dir="ltr">{row.actorId || "-"}</small></td><td>{row.applicationId ? <><Link href={`/admin/facilities/applications/${row.applicationId}`} dir="ltr">{row.applicationId}</Link><small dir="ltr">{row.entityType}: {row.entityId || "-"}</small></> : <span dir="ltr">{row.entityType}: {row.entityId || "-"}</span>}</td><td><code dir="ltr">{JSON.stringify(row.metadata)}</code>{row.ipAddress ? <small dir="ltr">IP: {row.ipAddress}</small> : null}{row.userAgent ? <small dir="ltr">UA: {row.userAgent}</small> : null}</td><td><small dir="ltr">{row.requestId || "-"}</small></td></tr>)}</tbody></table> : <p role="status">رویدادی مطابق فیلترهای انتخابی پیدا نشد.</p>}
     </section>
