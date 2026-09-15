@@ -14,30 +14,36 @@ function data(paymentEnabledSnapshot: boolean, status = "DRAFT") {
 }
 
 describe("facilities application payment confirmation UI", () => {
+  // The wizard is a four-step form; the checkout controls only render on the
+  // final step, so these static renders start there via `initialStep`.
   it("keeps enabled-payment checkout disabled until the confirmation checkbox is selected", () => {
-    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true)} />);
+    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true)} initialStep={4} />);
     expect(markup).toContain("type=\"checkbox\"");
-    expect(markup).toContain("تأیید و ورود به پرداخت");
-    expect(markup).toContain("disabled=\"\"");
+    expect(markup).toMatch(/<button[^>]*disabled=""[^>]*>تأیید و ورود به پرداخت<\/button>/);
   });
 
   it("does not show a checkbox when payment is disabled", () => {
-    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(false)} />);
+    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(false)} initialStep={4} />);
     expect(markup).not.toContain("type=\"checkbox\"");
     expect(markup).toContain("ارسال نهایی درخواست");
   });
 
   it("shows an already-submitted state after returning from a successful payment", () => {
     const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true, "SUBMITTED")} notice="success" />);
-    expect(markup).toContain("پرداخت با موفقیت تأیید شد");
+    expect(markup).toContain("پرداخت تأیید شد");
     expect(markup).toContain("در صف بررسی");
   });
 
   it("shows the active correction note and resubmission action without another payment", () => {
-    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true, "NEEDS_EDIT")} />);
+    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true, "NEEDS_EDIT")} initialStep={4} />);
     expect(markup).toContain("فایل مالی را اصلاح کنید");
     expect(markup).toContain("ارسال اصلاحات");
     expect(markup).toContain("هزینه دیگری ندارد");
     expect(markup).not.toContain("تأیید و ورود به پرداخت");
+  });
+
+  it("clamps an out-of-range initial step into the wizard", () => {
+    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true)} initialStep={99} />);
+    expect(markup).toContain("مرحله 4 از 4");
   });
 });

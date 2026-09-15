@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "prisma-engine-export/**",
     "next-env.d.ts",
+    // Local Claude Code state, including git worktrees checked out under .claude/.
+    ".claude/**",
   ]),
 ]);
 

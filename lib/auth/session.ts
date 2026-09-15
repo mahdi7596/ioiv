@@ -48,7 +48,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   }
 
   try {
-    const { payload } = await jwtVerify(token, getSessionSecret());
+    const { payload } = await jwtVerify(token, getSessionSecret(), { algorithms: ["HS256"] });
 
     if (
       typeof payload.subjectId !== "string" ||

@@ -10,6 +10,7 @@ import {
   ClamdInstreamFacilitiesFileScanner,
   createFacilitiesScannerFromEnv,
   type FacilitiesFileScanner,
+  type FacilitiesScanRequest,
 } from "@/lib/facilities-files/scanner";
 import { FilesystemFacilitiesPrivateStorage, type FacilitiesPrivateStorage, type FacilitiesStorageKey } from "@/lib/facilities-files/storage";
 import {
@@ -215,7 +216,7 @@ describe("scan and quarantine lifecycle", () => {
   });
 
   it("passes files through only in non-production and only with the explicit dev opt-in", async () => {
-    const request = { storageKey: "staging/00000000-0000-4000-8000-000000000001", byteSize: 1, sha256: "a", fileType: "PDF" as const, bytes: Buffer.from("x") };
+    const request: FacilitiesScanRequest = { storageKey: "staging/00000000-0000-4000-8000-000000000001", byteSize: 1, sha256: "a", fileType: "PDF", bytes: Buffer.from("x") };
 
     // Opted in, non-production: uploads are allowed to proceed without clamd.
     await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "development", FACILITIES_SCANNER_DEV_PASSTHROUGH: "true" }).scan(request)).resolves.toEqual({ status: "PASSED" });

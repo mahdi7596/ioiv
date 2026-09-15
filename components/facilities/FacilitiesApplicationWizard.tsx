@@ -174,7 +174,7 @@ function DocRow({ item, status, disabled, onPick }: { item: DocItem; status?: Do
   );
 }
 
-export function FacilitiesApplicationWizard({ data, notice }: { data: any; notice?: string }) {
+export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: { data: any; notice?: string; initialStep?: number }) {
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   // Seed from documents already uploaded AND passed so they show as done on
@@ -187,7 +187,7 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
     }
     return seed;
   });
-  const [attachmentCount, setAttachmentCount] = useState(() =>
+  const [attachmentCount, setAttachmentCount] = useState<number>(() =>
     (data.applications[0]?.fileBindings || []).filter((binding: any) => bindingReady(binding) && binding.slotKey.startsWith("questionnaire-attachment-")).length
   );
   const [intakeId, setIntakeId] = useState(data.intakes[0]?.id || "");
@@ -201,7 +201,7 @@ export function FacilitiesApplicationWizard({ data, notice }: { data: any; notic
   const [employeeCount, setEmployeeCount] = useState(String(insuranceEvidence?.employeeCount ?? 0));
   const [boardOfficerId, setBoardOfficerId] = useState(boardEvidence?.officerId || "");
   const [confirmed, setConfirmed] = useState(false);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(Math.min(Math.max(1, initialStep), editSteps.length));
   const [busy, setBusy] = useState(false);
 
   const paymentEnabled = Boolean(app?.paymentEnabledSnapshot);
