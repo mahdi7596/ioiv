@@ -66,7 +66,7 @@ Production redeploy and reset verified on May 7, 2026:
 
 - Latest source was uploaded to `/data/apps/sana`.
 - The production `.env` was updated to the live Zarinpal values:
-  `APP_URL=https://sana.ioiv.ir`, `ZARINPAL_MERCHANT_ID=ZARINPAL_MERCHANT_ID_REDACTED`,
+  `APP_URL=https://sana.ioiv.ir`, `ZARINPAL_MERCHANT_ID=<production-zarinpal-merchant-uuid>`,
   and `ZARINPAL_SANDBOX=false`.
 - A fresh Linux AMD64 Prisma engine export was generated locally and uploaded because
   the previous `prisma-engine-export.tar.gz` was older than the current schema.
@@ -386,6 +386,15 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=...
 ```
 
+Both env files hold credentials. They must be readable only by the deploy user and never
+writable by the app container:
+
+```bash
+cd /data/apps/sana
+chmod 600 .env .env.runtime .env.migration
+ls -l .env .env.runtime .env.migration
+```
+
 The app-only `/data/apps/sana/.env.runtime` contains:
 
 ```env
@@ -393,11 +402,11 @@ DATABASE_URL=postgresql://sana_runtime:...@postgres:5432/sana
 
 UPLOAD_DIR=/app/uploads
 
-ZARINPAL_MERCHANT_ID=ZARINPAL_MERCHANT_ID_REDACTED
+ZARINPAL_MERCHANT_ID=<production-zarinpal-merchant-uuid>
 ZARINPAL_SANDBOX=false
 
 GHASEDAK_API_KEY=...
-GHASEDAK_BASE_URL=http://api.smsapp.ir/v2
+GHASEDAK_BASE_URL=https://api.smsapp.ir/v2
 GHASEDAK_OTP_TEMPLATE=sanaotp
 GHASEDAK_STATUS_TEMPLATE=sanastatus
 GHASEDAK_SUBMITTED_TEMPLATE=sanasubmitted
@@ -422,11 +431,12 @@ DATABASE_URL=postgresql://migration-owner:...@postgres:5432/sana
 Do not commit real secrets. Use the versioned `.env.production.example`,
 `.env.runtime.example`, and `.env.migration.example` files as templates only.
 
-Important: the real merchant ID is not committed into application source code. Set it on
-the server environment:
+Important: the real merchant ID is not committed into application source code (an
+earlier revision of this file did contain it; it remains in git history, so rotate it at
+Zarinpal if that is ever considered a leak). Set it on the server environment:
 
 ```env
-ZARINPAL_MERCHANT_ID=ZARINPAL_MERCHANT_ID_REDACTED
+ZARINPAL_MERCHANT_ID=<production-zarinpal-merchant-uuid>
 ZARINPAL_SANDBOX=false
 APP_URL=https://sana.ioiv.ir
 ```
@@ -449,7 +459,7 @@ Expected production output:
 
 ```env
 APP_URL=https://sana.ioiv.ir
-ZARINPAL_MERCHANT_ID=ZARINPAL_MERCHANT_ID_REDACTED
+ZARINPAL_MERCHANT_ID=<production-zarinpal-merchant-uuid>
 ZARINPAL_SANDBOX=false
 ```
 
@@ -508,7 +518,7 @@ Optional/fallback:
 Current production SMS endpoint:
 
 ```env
-GHASEDAK_BASE_URL=http://api.smsapp.ir/v2
+GHASEDAK_BASE_URL=https://api.smsapp.ir/v2
 ```
 
 This was chosen because the HTTPS certificate for `api.smsapp.ir` was expired on May 1, 2026, while the HTTP endpoint works when outbound access is allowed.
@@ -926,7 +936,7 @@ select
 '
 ```
 
-Expected fresh-test state after seeding is `3` admins and zero rows for the other listed tables.
+Expected fresh-test state after seeding is one admin per mobile listed in `SEED_ADMIN_MOBILES` (the seed no longer hardcodes any) and zero rows for the other listed tables.
 
 ## Uploads
 
@@ -995,7 +1005,7 @@ Then rebuild the app image.
 The current SMS adapter is configurable with:
 
 ```env
-GHASEDAK_BASE_URL=http://api.smsapp.ir/v2
+GHASEDAK_BASE_URL=https://api.smsapp.ir/v2
 GHASEDAK_API_KEY=...
 GHASEDAK_OTP_TEMPLATE=sanaotp
 GHASEDAK_STATUS_TEMPLATE=sanastatus
@@ -1164,7 +1174,7 @@ docker compose logs --tail=120 app
 If the root error is `CERT_HAS_EXPIRED`, avoid HTTPS for `api.smsapp.ir` and use:
 
 ```env
-GHASEDAK_BASE_URL=http://api.smsapp.ir/v2
+GHASEDAK_BASE_URL=https://api.smsapp.ir/v2
 ```
 
 If the root error is `ConnectTimeoutError`, ask the server admin to allow outbound access to the configured SMS host and port.
@@ -1462,3 +1472,58 @@ Deploy steps:
 
 4. Manual check: request an OTP, enter five wrong codes, then the right one; it
    must be rejected. Request a new code; it must work.
+
+## Security hardening phase 3 (2026-09-16): payments, SMS transport, headers, seed
+
+Closes audit items P1, P3, P4, P6, A5, A6, A7 and the gateway-credential notes.
+
+What changed:
+
+- `/payment/return` and the facilities wizard banner read the payment row instead of the
+  URL; a forged `?status=success` shows a neutral message.
+- Facilities payments record `VERIFIED` before attempting submission. If submission then
+  fails, the applicant sees "پرداخت ثبت شد؛ ارسال کامل نشد" and the next submit completes
+  it. Attempts older than 20 minutes are re-verified (with an authority) or failed (without
+  one) on the next "pay" click, so nobody is stuck on "pending". The admin detail page lists
+  every attempt with its age.
+- Zarinpal calls time out after `ZARINPAL_REQUEST_TIMEOUT_MS` (default 10 s).
+- `APP_URL` is required; there is no localhost fallback.
+- Ghasedak defaults to `https://api.smsapp.ir/v2` and refuses `http://` in production
+  unless `GHASEDAK_ALLOW_INSECURE_HTTP=true`.
+- Security headers (CSP, HSTS, nosniff, frame-ancestors, referrer, permissions) on every
+  response.
+- `/api/auth/logout` is POST-only; `/api/auth/session-reset` (GET) clears a stale cookie.
+- `npm run db:seed` requires `SEED_ADMIN_MOBILES` and never modifies existing admins.
+
+Deploy steps:
+
+1. Pre-flight the SMS provider's TLS before switching the URL:
+
+   ```bash
+   curl -vI https://api.smsapp.ir/v2/ 2>&1 | grep -E 'SSL certificate|expire|HTTP/'
+   ```
+
+   If the certificate is valid, set `GHASEDAK_BASE_URL=https://api.smsapp.ir/v2` in
+   `.env.runtime`. If it is still broken, keep the `http://` value and add
+   `GHASEDAK_ALLOW_INSECURE_HTTP=true` for now; the app logs `sms_insecure_transport` once
+   per start while the override is active. Remove the override as soon as TLS works.
+
+2. Confirm `.env.runtime` has `APP_URL=https://sana.ioiv.ir` (the app refuses to build a
+   payment callback without it) and add `SEED_ADMIN_MOBILES=<comma-separated>` before any
+   future `db:seed`.
+
+3. Rebuild and restart, then verify the headers and hydration:
+
+   ```bash
+   docker compose build app && docker compose up -d app
+   curl -sI https://sana.ioiv.ir | grep -Ei 'content-security-policy|strict-transport|x-frame|x-content-type'
+   ```
+
+   Open the login page, the facilities wizard, and the admin overview in a browser and
+   confirm there are no CSP errors in the console and the Enamad seal renders. Exactly one
+   `Strict-Transport-Security` header must appear; if a CDN adds its own, drop one.
+
+4. Sandbox payment round trip on both flows (`ZARINPAL_SANDBOX=true` on a staging copy):
+   pay, confirm the wizard banner and the admin attempts list, then load
+   `/payment/return?status=success&paymentId=<someone else's id>` and confirm the neutral
+   message.

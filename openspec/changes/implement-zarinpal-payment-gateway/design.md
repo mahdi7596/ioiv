@@ -81,7 +81,7 @@ Alternative considered: redirect directly to `/dashboard?payment=verified`. That
 
 ## Migration Plan
 
-1. Configure production environment with `ZARINPAL_MERCHANT_ID=ZARINPAL_MERCHANT_ID_REDACTED`, `ZARINPAL_SANDBOX=false`, and `APP_URL=https://sana.ioiv.ir`.
+1. Configure production environment with `ZARINPAL_MERCHANT_ID=<production-zarinpal-merchant-uuid>`, `ZARINPAL_SANDBOX=false`, and `APP_URL=https://sana.ioiv.ir`.
 2. Deploy code with the hardened callback and payment return page.
 3. Run automated payment tests and a sandbox/manual callback smoke test where possible.
 4. Switch production traffic to live Zarinpal after verifying the callback URL is reachable over HTTPS.

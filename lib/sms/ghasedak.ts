@@ -1,6 +1,27 @@
+import { logger } from "@/lib/logger";
 import type { SmsMessage } from "./index";
 
-const DEFAULT_GHASEDAK_BASE_URL = "http://api.smsapp.ir/v2";
+const DEFAULT_GHASEDAK_BASE_URL = "https://api.smsapp.ir/v2";
+let insecureTransportWarned = false;
+
+/**
+ * The API key travels in a request header, so the transport must be TLS in
+ * production. The override exists only for a provider certificate outage and
+ * is logged once per process so it cannot be forgotten.
+ */
+function resolveGhasedakBaseUrl(): string {
+  const baseUrl = process.env.GHASEDAK_BASE_URL || DEFAULT_GHASEDAK_BASE_URL;
+  if (process.env.NODE_ENV === "production" && baseUrl.startsWith("http://")) {
+    if (process.env.GHASEDAK_ALLOW_INSECURE_HTTP !== "true") {
+      throw new Error("GHASEDAK_BASE_URL must use https:// in production (set GHASEDAK_ALLOW_INSECURE_HTTP=true to override temporarily)");
+    }
+    if (!insecureTransportWarned) {
+      insecureTransportWarned = true;
+      logger.warn("sms_insecure_transport", { reason: "GHASEDAK_ALLOW_INSECURE_HTTP" });
+    }
+  }
+  return baseUrl;
+}
 
 type GhasedakResponse = {
   IsSuccess?: boolean;
@@ -13,7 +34,7 @@ type GhasedakResponse = {
 
 async function postToGhasedak(path: string, body: Record<string, unknown>) {
   const apiKey = process.env.GHASEDAK_API_KEY;
-  const baseUrl = process.env.GHASEDAK_BASE_URL || DEFAULT_GHASEDAK_BASE_URL;
+  const baseUrl = resolveGhasedakBaseUrl();
   const configuredTimeout = Number(process.env.SMS_REQUEST_TIMEOUT_MS || 10000);
   const timeoutMs = Number.isFinite(configuredTimeout) ? Math.min(30000, Math.max(1000, configuredTimeout)) : 10000;
 

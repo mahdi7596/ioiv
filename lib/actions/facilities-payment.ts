@@ -9,6 +9,7 @@ import { ActionError } from "@/lib/actions/auth";
 import { db } from "@/lib/db";
 import { requestZarinpalPayment, verifyZarinpalPayment } from "@/lib/payments/zarinpal";
 import { logger } from "@/lib/logger";
+import { requireAppUrl } from "@/lib/app-url";
 import { checkFacilitiesSubmissionReadiness, facilitiesSubmissionInclude, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot, type FacilitiesSubmissionInput } from "@/lib/facilities/submission";
 
 const ACTIVE_PAYMENT_STATES: FacilitiesPaymentStatus[] = [
@@ -17,6 +18,14 @@ const ACTIVE_PAYMENT_STATES: FacilitiesPaymentStatus[] = [
   FacilitiesPaymentStatus.PENDING,
 ];
 const LOCKED_PAYMENT_STATES: FacilitiesPaymentStatus[] = [...ACTIVE_PAYMENT_STATES, FacilitiesPaymentStatus.TIMED_OUT];
+
+/**
+ * An open attempt older than this is treated as abandoned: without an authority
+ * nothing reached the gateway and it is failed; with one it is re-verified so a
+ * payment whose callback never arrived (or whose post-verify submission failed)
+ * completes instead of blocking the applicant forever.
+ */
+const STALE_PAYMENT_ATTEMPT_MS = 20 * 60 * 1000;
 
 const PAYMENT_PENDING_MESSAGE = "وضعیت پرداخت هنوز مشخص نیست. لطفاً کمی بعد دوباره صفحه را بررسی کنید.";
 const PAYMENT_FAILED_MESSAGE = "پرداخت انجام نشد. می‌توانید دوباره تلاش کنید.";
@@ -41,7 +50,12 @@ export type FacilitiesSubmissionResult =
   | { ok: true; state: "already-submitted"; redirectTo: string };
 
 function appUrl(path: string) {
-  return new URL(path, process.env.APP_URL || "http://localhost:3000").toString();
+  return new URL(path, requireAppUrl()).toString();
+}
+
+function isStaleAttempt(updatedAt: Date | string | null | undefined, now: number) {
+  const timestamp = updatedAt ? new Date(updatedAt).getTime() : Number.NaN;
+  return Number.isFinite(timestamp) && now - timestamp >= STALE_PAYMENT_ATTEMPT_MS;
 }
 
 function safePaymentMetadata(reasonCode: string, status: FacilitiesPaymentStatus) {
@@ -185,8 +199,27 @@ export async function startFacilitiesPayment(input: { applicationId: string; con
     }
 
     const activePayment = application.payments.find((payment) => LOCKED_PAYMENT_STATES.includes(payment.status as FacilitiesPaymentStatus));
-    if (activePayment) return { kind: "active" as const, payment: activePayment, mobile: application.user.mobile };
-    if (application.status !== ApplicationStatus.DRAFT) return { kind: "active" as const, payment: { status: FacilitiesPaymentStatus.PENDING, authority: null, amountToman: application.paymentAmountTomanSnapshot!, id: "pending", applicationId: application.id }, mobile: application.user.mobile };
+    if (activePayment) {
+      const stale = isStaleAttempt(activePayment.updatedAt, Date.now());
+      if (stale && !activePayment.authority) {
+        // Nothing reached the gateway, so no money can have moved: close the
+        // attempt and let the applicant start a fresh one.
+        await tx.facilitiesPaymentAttempt.update({ where: { id: activePayment.id }, data: { status: FacilitiesPaymentStatus.FAILED, safeMetadata: safePaymentMetadata("STALE_NO_AUTHORITY", FacilitiesPaymentStatus.FAILED) } });
+        await tx.facilitiesAuditLog.create({ data: { applicationId: application.id, actorType: AuditActorType.SYSTEM, action: FacilitiesAuditAction.PAYMENT_FAILED, outcome: AuditOutcome.FAILED, entityType: "FacilitiesPaymentAttempt", entityId: activePayment.id, metadata: { paymentAttemptId: activePayment.id, status: FacilitiesPaymentStatus.FAILED, reasonCode: "STALE_NO_AUTHORITY" } } });
+        await returnPaymentApplicationToDraft(tx, application.id);
+        return { kind: "stale-failed" as const, payment: activePayment };
+      }
+      if (stale && activePayment.authority) return { kind: "reverify" as const, payment: activePayment };
+      return { kind: "active" as const, payment: activePayment, mobile: application.user.mobile };
+    }
+    if (application.status === ApplicationStatus.PENDING_PAYMENT) {
+      // No open attempt but still awaiting payment (for example a crash before the
+      // attempt row was written): return to draft and start a fresh attempt.
+      await returnPaymentApplicationToDraft(tx, application.id);
+      application = await loadFacilitiesSubmissionApplication(tx, application.id);
+      if (!application) throw new ActionError("پرونده پیدا نشد", 404);
+    }
+    if (application.status !== ApplicationStatus.DRAFT) throw new ActionError("این درخواست در حال حاضر قابل پرداخت نیست", 409);
 
     const payment = await tx.facilitiesPaymentAttempt.create({
       data: {
@@ -217,6 +250,19 @@ export async function startFacilitiesPayment(input: { applicationId: string; con
   if (reservation.kind === "submitted") {
     revalidatePath("/dashboard/facilities-application");
     return { ok: true, state: "submitted", redirectTo: reservation.submitted.redirectTo };
+  }
+  if (reservation.kind === "stale-failed") {
+    logger.warn("facilities_payment_stale_attempt_failed", { applicationId: input.applicationId, paymentAttemptId: reservation.payment.id, previousStatus: reservation.payment.status });
+    revalidatePath("/dashboard/facilities-application");
+    return { ok: false, state: "failed", message: PAYMENT_FAILED_MESSAGE };
+  }
+  if (reservation.kind === "reverify") {
+    logger.info("facilities_payment_stale_attempt_reverify", { applicationId: input.applicationId, paymentAttemptId: reservation.payment.id, previousStatus: reservation.payment.status });
+    const outcome = await verifyFacilitiesPaymentCallback({ paymentId: reservation.payment.id, authority: reservation.payment.authority!, gatewayStatus: "OK" });
+    revalidatePath("/dashboard/facilities-application");
+    if (outcome.state === "success") return { ok: true, state: "submitted", redirectTo: "/dashboard/facilities-application?payment=success" };
+    if (outcome.state === "failed") return { ok: false, state: "failed", message: PAYMENT_FAILED_MESSAGE };
+    return { ok: true, state: "pending", message: PAYMENT_PENDING_MESSAGE };
   }
   if (reservation.kind === "active") {
     if (reservation.payment.authority && reservation.payment.status === FacilitiesPaymentStatus.REDIRECT_READY) {
@@ -258,11 +304,47 @@ export async function startFacilitiesPayment(input: { applicationId: string; con
   }
 }
 
+/**
+ * Second phase of a verified payment: move the application to SUBMITTED. The
+ * money is already confirmed and recorded, so a failure here (readiness drift,
+ * database error) is logged and audited but still reported as a successful
+ * payment; the wizard then shows "paid, not submitted" and the next submit click
+ * completes it through the verified-payment branch of startFacilitiesPayment.
+ */
+async function completeVerifiedFacilitiesSubmission(input: { paymentAttemptId: string; applicationId: string; amountToman: number }): Promise<{ state: "success" }> {
+  try {
+    await db.$transaction(async (tx) => {
+      const application = await lockFacilitiesApplication(tx, input.applicationId);
+      if (!application) throw new ActionError("درخواست پیدا نشد", 404);
+      if (application.status !== ApplicationStatus.DRAFT && application.status !== ApplicationStatus.PENDING_PAYMENT) return;
+      if (input.amountToman !== application.paymentAmountTomanSnapshot) throw new ActionError("اطلاعات پرداخت معتبر نیست", 400);
+      const submissionInput = { employeeCount: application.evidence.find((item) => item.kind === "insurance")?.employeeCount ?? -1, boardOfficerId: application.evidence.find((item) => item.kind === "credit-board")?.officerId ?? "" };
+      const readiness = checkFacilitiesSubmissionReadiness(application, submissionInput);
+      if (!readiness.ready) throw new ActionError(SUBMISSION_VALIDATION_MESSAGE, 409);
+      await materializeFacilitiesEvidence(tx, application, submissionInput);
+      await recordStatusChange(tx, application.id, application.status, ApplicationStatus.SUBMITTED, AuditActorType.SYSTEM, "system", "پرداخت با موفقیت تأیید و درخواست ارسال شد");
+      await tx.facilitiesAuditLog.create({ data: { applicationId: application.id, actorType: AuditActorType.SYSTEM, actorId: "system", action: FacilitiesAuditAction.APPLICATION_SUBMITTED, outcome: AuditOutcome.SUCCEEDED, entityType: "FacilitiesApplication", entityId: application.id, metadata: { previousStatus: application.status, newStatus: ApplicationStatus.SUBMITTED, paymentAttemptId: input.paymentAttemptId } } });
+    });
+  } catch (error) {
+    logger.error("facilities_post_verify_submission_failed", error, { paymentAttemptId: input.paymentAttemptId, applicationId: input.applicationId });
+    await db.facilitiesAuditLog.create({ data: { applicationId: input.applicationId, actorType: AuditActorType.SYSTEM, actorId: "system", action: FacilitiesAuditAction.APPLICATION_SUBMITTED, outcome: AuditOutcome.FAILED, entityType: "FacilitiesApplication", entityId: input.applicationId, metadata: { paymentAttemptId: input.paymentAttemptId, reasonCode: "POST_VERIFY_SUBMISSION_FAILED" } } }).catch(() => undefined);
+  }
+  return { state: "success" as const };
+}
+
 export async function verifyFacilitiesPaymentCallback(input: { paymentId: string; authority: string; gatewayStatus: string | null }) {
   const payment = await db.facilitiesPaymentAttempt.findUnique({ where: { id: input.paymentId }, include: { application: { include: facilitiesSubmissionInclude } } });
   if (!payment || payment.authority !== input.authority) return { state: "failed" as const };
-  if (payment.status === FacilitiesPaymentStatus.VERIFIED) return { state: "success" as const };
-  if (!LOCKED_PAYMENT_STATES.includes(payment.status)) return { state: payment.status === FacilitiesPaymentStatus.TIMED_OUT ? "pending" as const : "failed" as const };
+  if (payment.status === FacilitiesPaymentStatus.VERIFIED) {
+    // Idempotent re-delivery. If an earlier post-verify submission failed, this retries it.
+    return completeVerifiedFacilitiesSubmission({ paymentAttemptId: payment.id, applicationId: payment.applicationId, amountToman: payment.amountToman });
+  }
+  if (!LOCKED_PAYMENT_STATES.includes(payment.status)) {
+    // The attempt was already closed (for example failed by a stale re-verify while
+    // the applicant lingered on the gateway page). Support reconciles from this log.
+    logger.warn("facilities_callback_for_terminal_attempt", { paymentAttemptId: payment.id, applicationId: payment.applicationId, status: payment.status, gatewayStatus: input.gatewayStatus });
+    return { state: "failed" as const };
+  }
 
   let verified: { referenceId: string };
   try {
@@ -283,30 +365,23 @@ export async function verifyFacilitiesPaymentCallback(input: { paymentId: string
     return { state: "failed" as const };
   }
 
+  // First phase: record the confirmed payment on its own, with no business-rule
+  // preconditions, so a later submission problem can never lose the fact that
+  // the gateway captured the money.
   try {
     await db.$transaction(async (tx) => {
       const current = await lockFacilitiesPayment(tx, payment.id);
       if (!current) throw new ActionError("پرداخت پیدا نشد", 404);
       if (current.status === FacilitiesPaymentStatus.VERIFIED) return;
       if (!LOCKED_PAYMENT_STATES.includes(current.status)) throw new ActionError("وضعیت پرداخت معتبر نیست", 409);
-      const application = await loadFacilitiesSubmissionApplication(tx, current.applicationId);
-      if (!application) throw new ActionError("درخواست پیدا نشد", 404);
-      if (current.authority !== input.authority || current.amountToman !== application.paymentAmountTomanSnapshot) throw new ActionError("اطلاعات پرداخت معتبر نیست", 400);
-      const readiness = checkFacilitiesSubmissionReadiness(application, { employeeCount: application.evidence.find((item) => item.kind === "insurance")?.employeeCount ?? -1, boardOfficerId: application.evidence.find((item) => item.kind === "credit-board")?.officerId ?? "" });
-      if (!readiness.ready) throw new ActionError(SUBMISSION_VALIDATION_MESSAGE, 409);
-      if (current.status !== FacilitiesPaymentStatus.TIMED_OUT && current.status !== FacilitiesPaymentStatus.PENDING) {
-        await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: FacilitiesPaymentStatus.PENDING, safeMetadata: { status: FacilitiesPaymentStatus.PENDING } } });
-        await tx.facilitiesAuditLog.create({ data: { applicationId: current.applicationId, actorType: AuditActorType.SYSTEM, action: FacilitiesAuditAction.PAYMENT_PENDING, outcome: AuditOutcome.REJECTED, entityType: "FacilitiesPaymentAttempt", entityId: current.id, metadata: { paymentAttemptId: current.id, status: FacilitiesPaymentStatus.PENDING } } });
-      }
+      if (current.authority !== input.authority) throw new ActionError("اطلاعات پرداخت معتبر نیست", 400);
       await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: FacilitiesPaymentStatus.VERIFIED, referenceId: verified.referenceId, safeMetadata: { status: FacilitiesPaymentStatus.VERIFIED } } });
       await tx.facilitiesAuditLog.create({ data: { applicationId: current.applicationId, actorType: AuditActorType.SYSTEM, action: FacilitiesAuditAction.PAYMENT_VERIFIED, outcome: AuditOutcome.SUCCEEDED, entityType: "FacilitiesPaymentAttempt", entityId: current.id, metadata: { paymentAttemptId: current.id, status: FacilitiesPaymentStatus.VERIFIED } } });
-      await materializeFacilitiesEvidence(tx, application, { employeeCount: application.evidence.find((item) => item.kind === "insurance")?.employeeCount ?? 0, boardOfficerId: application.evidence.find((item) => item.kind === "credit-board")?.officerId ?? "" });
-      await recordStatusChange(tx, application.id, application.status, ApplicationStatus.SUBMITTED, AuditActorType.SYSTEM, "system", "پرداخت با موفقیت تأیید و درخواست ارسال شد");
-      await tx.facilitiesAuditLog.create({ data: { applicationId: application.id, actorType: AuditActorType.SYSTEM, actorId: "system", action: FacilitiesAuditAction.APPLICATION_SUBMITTED, outcome: AuditOutcome.SUCCEEDED, entityType: "FacilitiesApplication", entityId: application.id, metadata: { previousStatus: application.status, newStatus: ApplicationStatus.SUBMITTED } } });
     });
-    return { state: "success" as const };
   } catch (error) {
-    if (error instanceof ActionError && error.status === 409) return { state: "pending" as const };
+    logger.error("facilities_payment_verification_record_failed", error, { paymentAttemptId: payment.id, applicationId: payment.applicationId });
     return { state: "pending" as const };
   }
+
+  return completeVerifiedFacilitiesSubmission({ paymentAttemptId: payment.id, applicationId: payment.applicationId, amountToman: payment.amountToman });
 }

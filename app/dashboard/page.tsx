@@ -8,6 +8,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { canEditApplication } from "@/lib/application/status";
 import { isFacilitiesApplicationEditable } from "@/lib/facilities/review-status";
 import { getCurrentUserApplication } from "@/lib/actions/application";
+import { ActionError } from "@/lib/actions/auth";
 import { getFacilitiesDashboardSummary, hasCompletedFacilitiesProfile } from "@/lib/actions/facilities-company";
 
 type ServiceRow = {
@@ -25,12 +26,15 @@ export default async function DashboardPage() {
 
   try {
     data = await getCurrentUserApplication();
-  } catch {
+  } catch (error) {
     // The session cookie is a self-contained JWT, so it can stay valid after
     // the underlying user is gone (e.g. the DB was reseeded). Redirecting to
     // "/" would bounce straight back here because "/" trusts the cookie, so
-    // clear the cookie via the logout route to break the redirect loop.
-    redirect("/api/auth/logout");
+    // clear the cookie via the session-reset route to break the redirect loop.
+    if (error instanceof ActionError && error.status === 404) redirect("/api/auth/session-reset");
+    // An expired or missing session simply goes back to the login page.
+    if (error instanceof Error && error.message === "Unauthorized") redirect("/");
+    throw error;
   }
 
   if (!(await hasCompletedFacilitiesProfile())) {

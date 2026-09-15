@@ -34,7 +34,7 @@ describe("Ghasedak SMS adapter", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://api.smsapp.ir/v2/send/verify",
+      "https://api.smsapp.ir/v2/send/verify",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
@@ -57,7 +57,7 @@ describe("Ghasedak SMS adapter", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://api.smsapp.ir/v2/send/verify",
+      "https://api.smsapp.ir/v2/send/verify",
       expect.any(Object),
     );
     expect(fetchMock.mock.calls[0][1].body).toBe(
@@ -98,5 +98,17 @@ describe("Ghasedak SMS adapter", () => {
         template: "sanastatus",
       }),
     ).rejects.toThrow("bad template");
+  });
+
+  it("refuses a plain-http base URL in production unless explicitly overridden", async () => {
+    process.env = { ...originalEnv, NODE_ENV: "production", GHASEDAK_API_KEY: "test-api-key", GHASEDAK_BASE_URL: "http://api.smsapp.ir/v2" };
+    const fetchMock = mockSuccessfulFetch();
+
+    await expect(sendGhasedakSms({ to: "09123456789", text: "x", template: "sanaotp", params: { code: "1" } })).rejects.toThrow(/https:\/\/ in production/);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    process.env.GHASEDAK_ALLOW_INSECURE_HTTP = "true";
+    await sendGhasedakSms({ to: "09123456789", text: "x", template: "sanaotp", params: { code: "1" } });
+    expect(fetchMock).toHaveBeenCalledWith("http://api.smsapp.ir/v2/send/verify", expect.any(Object));
   });
 });

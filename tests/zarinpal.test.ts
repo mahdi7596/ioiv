@@ -80,6 +80,30 @@ describe("zarinpal payment adapter", () => {
       paymentUrl: "https://sandbox.zarinpal.com/pg/StartPay/A000000000000000000000000000000123456",
     });
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [firstInit, secondInit] = fetchMock.mock.calls.map((call) => call[1] as RequestInit);
+    expect(firstInit.signal).toBeInstanceOf(AbortSignal);
+    expect(secondInit.signal).toBeInstanceOf(AbortSignal);
+    expect(firstInit.signal).not.toBe(secondInit.signal);
+  });
+
+  it("bounds each gateway call with a timeout and retries a timeout only once", async () => {
+    const timeout = () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
+    const fetchMock = vi.fn().mockRejectedValueOnce(timeout()).mockRejectedValueOnce(timeout()).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { authority: "A000000000000000000000000000000123456" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { requestZarinpalPayment } = await import("@/lib/payments/zarinpal");
+
+    await expect(
+      requestZarinpalPayment({
+        amountToman: 3000000,
+        description: "ثبت پرونده",
+        callbackUrl: "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1",
+        mobile: "09123456789",
+      }),
+    ).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("verifies production payments and returns the reference id", async () => {

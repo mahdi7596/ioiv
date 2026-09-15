@@ -57,7 +57,7 @@ export const facilitiesSubmissionInclude = {
   officers: true,
   fileBindings: { include: { currentUpload: { include: { storedFile: { select: { id: true, originalName: true, fileType: true, byteSize: true, scanStatus: true } } } } } },
   evidence: true,
-  payments: { select: { id: true, amountToman: true, status: true, authority: true, referenceId: true } },
+  payments: { select: { id: true, amountToman: true, status: true, authority: true, referenceId: true, createdAt: true, updatedAt: true } },
   user: { select: { mobile: true } },
   correctionRequests: { orderBy: { sequence: "desc" as const }, select: { id: true, sequence: true, note: true, openedAt: true, resolvedAt: true, smsStatus: true } },
   history: { orderBy: { createdAt: "desc" as const }, select: { id: true, previousStatus: true, newStatus: true, note: true, createdAt: true } },

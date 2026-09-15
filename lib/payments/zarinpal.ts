@@ -2,6 +2,13 @@ const ZARINPAL_PRODUCTION_URL = "https://payment.zarinpal.com";
 const ZARINPAL_SANDBOX_URL = "https://sandbox.zarinpal.com";
 const ZARINPAL_MERCHANT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ZARINPAL_NETWORK_RETRY_DELAYS_MS = [300, 900];
+const ZARINPAL_DEFAULT_TIMEOUT_MS = 10_000;
+const ZARINPAL_MAX_TIMEOUT_RETRIES = 1;
+
+function requestTimeoutMs() {
+  const configured = Number(process.env.ZARINPAL_REQUEST_TIMEOUT_MS || ZARINPAL_DEFAULT_TIMEOUT_MS);
+  return Number.isFinite(configured) ? Math.min(30_000, Math.max(1_000, configured)) : ZARINPAL_DEFAULT_TIMEOUT_MS;
+}
 
 function getBaseUrl() {
   return process.env.ZARINPAL_SANDBOX === "true" ? ZARINPAL_SANDBOX_URL : ZARINPAL_PRODUCTION_URL;
@@ -38,14 +45,22 @@ async function postZarinpal<T>(path: string, body: Record<string, unknown>) {
 
 async function fetchWithNetworkRetry(input: string, init: RequestInit) {
   let lastError: unknown;
+  let timeoutRetries = 0;
 
   for (let attempt = 0; attempt <= ZARINPAL_NETWORK_RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      return await fetch(input, init);
+      // A fresh signal per attempt: an aborted signal would abort every retry.
+      return await fetch(input, { ...init, signal: AbortSignal.timeout(requestTimeoutMs()) });
     } catch (error) {
       lastError = error;
 
-      if (!isTransientFetchError(error) || attempt === ZARINPAL_NETWORK_RETRY_DELAYS_MS.length) {
+      const timedOut = isTimeoutError(error);
+      if (timedOut) timeoutRetries += 1;
+      if (
+        (!timedOut && !isTransientFetchError(error)) ||
+        attempt === ZARINPAL_NETWORK_RETRY_DELAYS_MS.length ||
+        timeoutRetries > ZARINPAL_MAX_TIMEOUT_RETRIES
+      ) {
         throw error;
       }
 
@@ -58,6 +73,10 @@ async function fetchWithNetworkRetry(input: string, init: RequestInit) {
 
 function isTransientFetchError(error: unknown) {
   return error instanceof TypeError && error.message === "fetch failed";
+}
+
+function isTimeoutError(error: unknown) {
+  return error instanceof Error && error.name === "TimeoutError";
 }
 
 function wait(ms: number) {

@@ -4,7 +4,9 @@ const transitions: Record<FacilitiesPaymentStatus, readonly FacilitiesPaymentSta
   [FacilitiesPaymentStatus.INITIATED]: [FacilitiesPaymentStatus.REDIRECT_READY, FacilitiesPaymentStatus.PENDING, FacilitiesPaymentStatus.FAILED, FacilitiesPaymentStatus.CANCELLED, FacilitiesPaymentStatus.TIMED_OUT],
   [FacilitiesPaymentStatus.REDIRECT_READY]: [FacilitiesPaymentStatus.PENDING, FacilitiesPaymentStatus.VERIFIED, FacilitiesPaymentStatus.FAILED, FacilitiesPaymentStatus.CANCELLED, FacilitiesPaymentStatus.TIMED_OUT],
   [FacilitiesPaymentStatus.PENDING]: [FacilitiesPaymentStatus.VERIFIED, FacilitiesPaymentStatus.FAILED, FacilitiesPaymentStatus.CANCELLED, FacilitiesPaymentStatus.TIMED_OUT],
-  [FacilitiesPaymentStatus.TIMED_OUT]: [FacilitiesPaymentStatus.VERIFIED],
+  // A delayed callback can still verify a timed-out attempt; a stale attempt that
+  // never reached the gateway is failed so the applicant can start over.
+  [FacilitiesPaymentStatus.TIMED_OUT]: [FacilitiesPaymentStatus.VERIFIED, FacilitiesPaymentStatus.FAILED],
   [FacilitiesPaymentStatus.VERIFIED]: [],
   [FacilitiesPaymentStatus.FAILED]: [],
   [FacilitiesPaymentStatus.CANCELLED]: [],

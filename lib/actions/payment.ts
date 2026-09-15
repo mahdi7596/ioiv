@@ -2,6 +2,7 @@
 
 import { ApplicationStatus, PaymentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
+import { requireAppUrl } from "@/lib/app-url";
 import { requireSession } from "@/lib/auth/session";
 import { logger } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
@@ -109,7 +110,7 @@ export async function startPayment(input: unknown): Promise<PaymentStartResult> 
     data: persistedDraft,
   });
 
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
+  const appUrl = requireAppUrl();
   const payment = await db.payment.create({
     data: {
       applicationId: application.id,

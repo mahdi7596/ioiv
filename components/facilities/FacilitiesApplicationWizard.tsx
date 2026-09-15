@@ -102,6 +102,7 @@ const paymentNotices: Record<string, { tone: NoticeTone; title: string; descript
   success: { tone: "success", title: "پرداخت تأیید شد", description: "پرداخت شما با موفقیت انجام و درخواست تسهیلات ارسال شد." },
   failed: { tone: "error", title: "پرداخت ناموفق بود", description: "پرداخت انجام نشد؛ پس از بررسی اطلاعات می‌توانید دوباره تلاش کنید." },
   pending: { tone: "pending", title: "در انتظار نتیجه پرداخت", description: "نتیجه پرداخت هنوز مشخص نیست؛ کمی بعد دوباره صفحه را بررسی کنید." },
+  "paid-unsubmitted": { tone: "pending", title: "پرداخت ثبت شد؛ ارسال کامل نشد", description: "پرداخت شما تأیید شده است. برای تکمیل، دکمه ارسال را دوباره بزنید؛ هزینه‌ای کسر نمی‌شود." },
 };
 
 const statusLabels: Record<string, string> = {

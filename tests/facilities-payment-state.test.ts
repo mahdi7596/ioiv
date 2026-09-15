@@ -9,6 +9,8 @@ describe("facilities payment state machine", () => {
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.REDIRECT_READY, FacilitiesPaymentStatus.PENDING)).toBe(true);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.PENDING, FacilitiesPaymentStatus.VERIFIED)).toBe(true);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.TIMED_OUT, FacilitiesPaymentStatus.VERIFIED)).toBe(true);
+    expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.TIMED_OUT, FacilitiesPaymentStatus.FAILED)).toBe(true);
+    expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.TIMED_OUT, FacilitiesPaymentStatus.CANCELLED)).toBe(false);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.VERIFIED, FacilitiesPaymentStatus.FAILED)).toBe(false);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.CANCELLED, FacilitiesPaymentStatus.INITIATED)).toBe(false);
   });

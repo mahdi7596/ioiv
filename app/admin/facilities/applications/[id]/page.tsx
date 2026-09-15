@@ -3,7 +3,7 @@ import { ArrowRight, Download } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 
 import { FacilitiesReviewActions } from "@/components/admin/FacilitiesReviewActions";
-import { PaymentStatusBadge } from "@/components/admin/PaymentStatusBadge";
+import { PaymentStatusBadge, openPaymentStates } from "@/components/admin/PaymentStatusBadge";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { StatusHistoryTimeline } from "@/components/admin/StatusHistoryTimeline";
 import { AppShell } from "@/components/layout/AppShell";
@@ -14,6 +14,19 @@ const slotLabels: Record<string, string> = {
   "profile-incorporation-notice": "آگهی تأسیس", "profile-articles-of-association": "اساسنامه", "profile-board-changes-gazette": "روزنامه تغییرات هیئت‌مدیره", "profile-capital-increase-gazette": "روزنامه افزایش سرمایه",
   questionnaire: "پرسشنامه تکمیل‌شده", licences: "مجوزها و گواهی‌ها", "active-contracts": "قراردادهای فعال", insurance: "لیست بیمه", "trial-general": "تراز کل ۱۴۰۵", "trial-subsidiary": "تراز معین ۱۴۰۵", "credit-company": "گزارش اعتباری شرکت", "credit-ceo": "گزارش اعتباری مدیرعامل", "credit-board": "گزارش اعتباری عضو هیئت‌مدیره",
 };
+
+function formatAttemptAge(createdAt: Date, now = Date.now()) {
+  const minutes = Math.max(0, Math.round((now - createdAt.getTime()) / 60_000));
+  if (minutes < 60) return `${minutes.toLocaleString("fa-IR")} دقیقه پیش`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours.toLocaleString("fa-IR")} ساعت پیش`;
+  return `${Math.round(hours / 24).toLocaleString("fa-IR")} روز پیش`;
+}
+
+function PaymentAttempts({ payments }: { payments: Array<{ id: string; status: string; gateway: string; amountToman: number; referenceId: string | null; createdAt: Date }> }) {
+  if (!payments.length) return <p role="status">تلاش پرداختی ثبت نشده است.</p>;
+  return <ul className="file-list">{payments.map((attempt) => <li key={attempt.id}><div><PaymentStatusBadge status={attempt.status} /><small>{attempt.gateway} — {attempt.amountToman.toLocaleString("fa-IR")} تومان — {attempt.createdAt.toLocaleString("fa-IR")}</small><small dir="ltr">{attempt.referenceId || "-"}</small></div>{openPaymentStates.has(attempt.status) ? <span className="status-badge" data-variant="warning" title="این تلاش هنوز به نتیجه نرسیده است">{formatAttemptAge(attempt.createdAt)}</span> : null}</li>)}</ul>;
+}
 
 function EvidenceList({ applicationId, bindings, canDownload }: { applicationId: string; bindings: Array<{ id: string; slotKey: string; currentUpload: { lifecycleStatus: string; storedFile: { id: string; originalName: string; fileType: string; byteSize: number; scanStatus: string } | null } | null }>; canDownload: boolean }) {
   const ready = bindings.filter((binding) => binding.currentUpload?.lifecycleStatus === "PASSED" && binding.currentUpload.storedFile?.scanStatus === "PASSED");
@@ -40,6 +53,7 @@ export default async function FacilitiesReviewDetailPage({ params }: { params: P
     <section className="panel"><h2>اطلاعات ثبت‌شده شرکت</h2><div className="detail-grid"><div><p className="stat-label">شماره ثبت</p><p>{application.companySnapshot?.registrationNumber || "-"}</p></div><div><p className="stat-label">محل ثبت</p><p>{application.companySnapshot?.registrationPlace || "-"}</p></div><div><p className="stat-label">سرمایه ثبت‌شده</p><p>{application.companySnapshot?.registeredCapitalRial?.toString() || "-"} ریال</p></div><div><p className="stat-label">رابط شرکت</p><p>{application.companySnapshot?.contactFullName || "-"}</p></div></div><h3>سهامداران</h3><ul>{application.shareholders.map((item) => <li key={item.id}>{item.fullName} — {item.ownershipPercentage.toString()}٪</li>)}</ul><h3>مدیرعامل و اعضا</h3><ul>{application.officers.map((item) => <li key={item.id}>{item.fullName} — {item.position}</li>)}</ul></section>
     <section className="panel"><h2>مدارک جاری پروفایل شرکت</h2><EvidenceList applicationId={application.id} bindings={application.company.facilitiesFileBindings} canDownload={permissions.canDownload} /></section>
     <section className="panel"><h2>مدارک درخواست</h2><EvidenceList applicationId={application.id} bindings={application.fileBindings} canDownload={permissions.canDownload} /></section>
+    <section className="panel"><h2>تلاش‌های پرداخت</h2><PaymentAttempts payments={application.payments} /></section>
     <section className="panel"><h2>چرخه‌های اصلاح</h2>{application.correctionRequests.length ? <ol className="facilities-timeline">{application.correctionRequests.map((item) => <li key={item.id}><strong>اصلاح شماره {item.sequence}</strong><span>{item.openedAt.toLocaleString("fa-IR")} — {item.resolvedAt ? "ارسال‌شده" : "باز"}</span><p>{item.note}</p><small>کارشناس: {item.reviewer.name} — پیامک: {item.smsStatus === "SENT" ? "ارسال شد" : item.smsStatus === "FAILED" ? "ناموفق" : "در انتظار"}</small></li>)}</ol> : <p>درخواست اصلاحی ثبت نشده است.</p>}</section>
     <section className="panel"><h2>سوابق وضعیت</h2><StatusHistoryTimeline items={application.history} /></section>
     {permissions.canMutate ? <FacilitiesReviewActions applicationId={application.id} status={application.status} failedCorrectionId={failedCorrection?.id} /> : <section className="panel" role="status">دسترسی شما برای مشاهده این پرونده فقط خواندنی است.</section>}

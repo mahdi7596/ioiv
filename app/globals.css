@@ -319,6 +319,10 @@ textarea:focus-visible {
   color: var(--color-success);
 }
 
+.payment-return-panel__icon[data-state="unknown"] {
+  color: var(--color-muted, #78716c);
+}
+
 .payment-return-panel__icon[data-state="failed"] {
   background: rgb(194 65 53 / 0.11);
   color: var(--color-danger);

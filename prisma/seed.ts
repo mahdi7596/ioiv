@@ -16,7 +16,6 @@ const nationalCode = "0012345678";
 const applicationId = "seed-app-09108119122-1403";
 const userId = "seed-user-09108119122";
 const paymentId = "seed-payment-09108119122-verified";
-const defaultAdminMobiles = ["09390649614", "09127670204", "09132974595"];
 const validationCertificateFieldKey = "validationCertificate";
 const facilitySupplierNames = [
   "شرکت ملی نفت ایران",
@@ -210,7 +209,11 @@ function seedAdminMobiles() {
     .map((mobile) => mobile.trim())
     .filter(Boolean);
 
-  return [...new Set([...defaultAdminMobiles, ...envMobiles])];
+  const mobiles = [...new Set(envMobiles)];
+  if (!mobiles.length) {
+    throw new Error("SEED_ADMIN_MOBILES (comma-separated) is required; admin mobiles are no longer hardcoded");
+  }
+  return mobiles;
 }
 
 async function main() {
@@ -233,10 +236,9 @@ async function main() {
     adminMobiles.map((mobile) =>
       prisma.admin.upsert({
         where: { mobile },
-        update: {
-          role: UserRole.SUPER_ADMIN,
-          active: true,
-        },
+        // Never touch existing admins: a reseed must not re-promote or reactivate
+        // an account an operator deliberately demoted or disabled.
+        update: {},
         create: {
           name: "مدیر سامانه",
           mobile,
