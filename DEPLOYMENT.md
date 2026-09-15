@@ -168,9 +168,18 @@ The production stack uses Docker Compose:
 - App container: `sana-app`
 - Database container: `sana-postgres`
 - App image: `sana-app`
-- App port: `3000`
-- PostgreSQL external host port: `55433`
+- App port: `3000`, bound to `127.0.0.1` only (nginx proxies to it)
+- PostgreSQL host port: `55433`, bound to `127.0.0.1` only
 - PostgreSQL internal port: `5432`
+- App memory limit: `1g` (`mem_limit` in `docker-compose.yml`)
+- App healthcheck: `GET /api/health` (returns 503 when the database ping fails)
+
+Neither port is reachable from outside the host. To use `psql` from a workstation,
+open an SSH tunnel first:
+
+```bash
+ssh -L 55433:127.0.0.1:55433 <server>
+```
 
 Useful commands:
 
@@ -397,6 +406,11 @@ SMS_SEND_IN_DEVELOPMENT=false
 ADMIN_ALERT_MOBILE=...
 SEED_ADMIN_MOBILES=...
 SEED_DEMO_DATA=false
+
+# Optional. OTP requests per client address per hour (default 30). Only lower
+# this after confirming X-Real-IP carries end-user addresses (see the hardening
+# phase 2 notes).
+OTP_MAX_REQUESTS_PER_IP_PER_WINDOW=30
 ```
 
 The maintenance-only `/data/apps/sana/.env.migration` contains:
@@ -1028,10 +1042,11 @@ cd /data/apps/sana
 docker compose ps
 ```
 
-Local app health:
+Local app health (the same endpoint the Compose healthcheck polls; `503` means
+the database ping failed):
 
 ```bash
-curl -I http://127.0.0.1:3000
+curl -i http://127.0.0.1:3000/api/health
 ```
 
 Public app health:
@@ -1398,3 +1413,52 @@ redeploys the application. Codex/operators verify identities, take matched non-d
 backups where access permits, restore/rehearse in isolation, and coordinate the release.
 No production migration, upload, enablement, payment canary, or destructive restore is
 authorized by these repository changes.
+
+## Security hardening phase 2 (2026-09-16): upload traversal, ports, OTP limits
+
+Closes audit items U1, U2, A1, A2, A3, A9 from
+`docs/2026-09-15-architecture-and-security-audit.md`.
+
+What changed:
+
+- `/api/uploads` only accepts the wizard's known `fieldKey` values and a
+  single-segment `applicationId`; the storage layer also refuses any path outside
+  `UPLOAD_DIR`.
+- `docker-compose.yml` binds ports `3000` and `55433` to `127.0.0.1`, sets
+  `mem_limit: 1g` on the app, and polls `/api/health`.
+- OTP verification allows five wrong guesses per code and consumes the code
+  atomically. OTP requests are additionally capped per client address per hour
+  (`OTP_MAX_REQUESTS_PER_IP_PER_WINDOW`, default 30).
+
+Deploy steps:
+
+1. Pull, then run the migration with the migration profile (adds
+   `OtpCode.attemptCount`, `OtpCode.requestIp`, one index; additive):
+
+   ```bash
+   cd /data/apps/sana
+   docker compose --profile migration run --rm migrate
+   ```
+
+2. Rebuild and restart the app, then confirm the new port binding and health:
+
+   ```bash
+   docker compose build app
+   docker compose up -d app
+   docker compose ps
+   curl -i http://127.0.0.1:3000/api/health
+   curl -I https://sana.ioiv.ir
+   ```
+
+3. Confirm the client address reaches the app. With nginx directly in front,
+   `X-Real-IP` is the end-user address. If a CDN or another proxy terminates TLS,
+   `X-Real-IP` is the proxy's address and the per-address OTP cap is shared by all
+   users: leave the default at 30 or higher and configure nginx `real_ip` before
+   lowering it. Watch for `otp_ip_limit_hit` in the app logs after deploy:
+
+   ```bash
+   docker compose logs app --since 1h | grep otp_ip_limit_hit
+   ```
+
+4. Manual check: request an OTP, enter five wrong codes, then the right one; it
+   must be rejected. Request a new code; it must work.

@@ -1,10 +1,11 @@
 import { ActionError, requestOtp } from "@/lib/actions/auth";
+import { getClientIp } from "@/lib/http/client-ip";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
     const input = await request.json();
-    const result = await requestOtp(input);
+    const result = await requestOtp(input, { clientIp: getClientIp(request.headers) });
 
     return Response.json(result);
   } catch (error) {

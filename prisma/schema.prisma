@@ -766,15 +766,20 @@ model Admin {
 }
 
 model OtpCode {
-  id         String     @id @default(cuid())
-  mobile     String
-  codeHash   String
-  purpose    OtpPurpose
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime   @default(now())
+  id           String     @id @default(cuid())
+  mobile       String
+  codeHash     String
+  purpose      OtpPurpose
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  /// Wrong-code verifications against this code; the code is unusable once it reaches the cap.
+  attemptCount Int        @default(0)
+  /// Client address that requested the code, for the per-IP request cap.
+  requestIp    String?
+  createdAt    DateTime   @default(now())
 
   @@index([mobile, purpose])
+  @@index([requestIp, createdAt])
 }
 
 model Application {

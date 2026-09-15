@@ -63,7 +63,7 @@ describe("auth actions", () => {
     mocks.db.application.findFirst.mockResolvedValue(null);
     mocks.db.otpCode.findFirst.mockResolvedValue(null);
     mocks.db.otpCode.count.mockResolvedValue(0);
-    mocks.db.otpCode.updateMany.mockResolvedValue({ count: 0 });
+    mocks.db.otpCode.updateMany.mockResolvedValue({ count: 1 });
     mocks.db.otpCode.create.mockResolvedValue({ id: "otp-1" });
     mocks.db.otpCode.update.mockResolvedValue({ id: "otp-1" });
     mocks.bcryptCompare.mockResolvedValue(true);
@@ -199,5 +199,83 @@ describe("auth actions", () => {
 
     expect(mocks.db.user.create).not.toHaveBeenCalled();
     expect(mocks.createSession).toHaveBeenCalledWith({ subjectId: "user-1", kind: "user" });
+  });
+
+  it("records the requesting address and rejects an address over the hourly cap", async () => {
+    await requestOtp({ mobile: "09123456789", mode: "user" }, { clientIp: "203.0.113.5" });
+    expect(mocks.db.otpCode.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ requestIp: "203.0.113.5" }),
+    });
+
+    vi.clearAllMocks();
+    mocks.db.otpCode.findFirst.mockResolvedValue(null);
+    // First count is the per-mobile window, second is the per-address window.
+    mocks.db.otpCode.count.mockResolvedValueOnce(0).mockResolvedValueOnce(30);
+
+    await expect(
+      requestOtp({ mobile: "09120000001", mode: "user" }, { clientIp: "203.0.113.5" }),
+    ).rejects.toMatchObject({ status: 429 });
+    expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
+    expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+
+  it("applies rate limits before revealing whether an admin mobile exists", async () => {
+    mocks.db.admin.findUnique.mockResolvedValue(null);
+    mocks.db.otpCode.count.mockResolvedValue(5);
+
+    await expect(
+      requestOtp({ mobile: "09123456789", mode: "admin" }),
+    ).rejects.toMatchObject({ status: 429 });
+    expect(mocks.db.admin.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("only selects codes that still have verification attempts left", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp", attemptCount: 0 });
+
+    await verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" });
+
+    expect(mocks.db.otpCode.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ attemptCount: { lt: 5 } }) }),
+    );
+  });
+
+  it("counts a wrong code against the OTP and does not create a session", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp", attemptCount: 2 });
+    mocks.bcryptCompare.mockResolvedValue(false);
+
+    await expect(
+      verifyOtp({ mobile: "09123456789", code: "000000", mode: "user" }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(mocks.db.otpCode.updateMany).toHaveBeenCalledWith({
+      where: { id: "otp-1", consumedAt: null },
+      data: { attemptCount: { increment: 1 } },
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.db.user.create).not.toHaveBeenCalled();
+  });
+
+  it("does not mint a session when the code was consumed concurrently", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp", attemptCount: 0 });
+    mocks.db.otpCode.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(mocks.db.otpCode.updateMany).toHaveBeenCalledWith({
+      where: { id: "otp-1", consumedAt: null },
+      data: { consumedAt: new Date("2026-04-29T10:00:00.000Z") },
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.db.user.create).not.toHaveBeenCalled();
+  });
+
+  it("runs a dummy hash comparison when no usable code exists", async () => {
+    mocks.db.otpCode.findFirst.mockResolvedValue(null);
+
+    await expect(
+      verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(mocks.bcryptCompare).toHaveBeenCalledOnce();
+    expect(mocks.db.otpCode.updateMany).not.toHaveBeenCalled();
   });
 });

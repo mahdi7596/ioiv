@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/session";
 import { canEditApplication } from "@/lib/application/status";
 import { logger } from "@/lib/logger";
 import { storeUploadFile } from "@/lib/uploads/storage";
+import { INVALID_UPLOAD_REQUEST_MESSAGE, LEGACY_UPLOAD_FIELD_KEY_PATTERN, SAFE_PATH_ID_PATTERN } from "@/lib/validations/shared";
 
 export async function POST(request: Request) {
   try {
@@ -12,8 +13,13 @@ export async function POST(request: Request) {
     const fieldKey = String(formData.get("fieldKey") || "");
     const file = formData.get("file");
 
-    if (!applicationId || !fieldKey || !(file instanceof File)) {
-      return Response.json({ error: "درخواست بارگذاری معتبر نیست" }, { status: 400 });
+    if (
+      !SAFE_PATH_ID_PATTERN.test(applicationId) ||
+      !LEGACY_UPLOAD_FIELD_KEY_PATTERN.test(fieldKey) ||
+      !(file instanceof File)
+    ) {
+      logger.warn("upload_rejected_invalid_request", { hasFile: file instanceof File });
+      return Response.json({ error: INVALID_UPLOAD_REQUEST_MESSAGE }, { status: 400 });
     }
 
     const application = await db.application.findUnique({ where: { id: applicationId } });
@@ -56,6 +62,7 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "";
     const knownMessages = [
       "Unauthorized",
+      INVALID_UPLOAD_REQUEST_MESSAGE,
       "نوع فایل مجاز نیست",
       "حجم فایل نباید بیشتر از ۲۰ مگابایت باشد",
     ];

@@ -18,18 +18,23 @@ services:
       NODE_ENV: production
       PORT: 3000
       UPLOAD_DIR: /app/uploads
+    # Loopback only: nginx on the same host proxies to 127.0.0.1:3000. Publishing
+    # on all interfaces would let anyone bypass nginx's body-size limits.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    mem_limit: 1g
+    memswap_limit: 1g
     volumes:
       - sana-uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   migrate:
     # Run only as an explicit maintenance operation:
@@ -59,8 +64,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-sana}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    # Loopback only. Reach it from a workstation through an SSH tunnel:
+    #   ssh -L 55433:127.0.0.1:55433 <server>
     ports:
-      - "55433:5432"
+      - "127.0.0.1:55433:5432"
     volumes:
       - sana-postgres-data:/var/lib/postgresql/data
     healthcheck:

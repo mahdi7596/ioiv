@@ -1,7 +1,14 @@
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { ALLOWED_UPLOAD_EXTENSIONS, MAX_UPLOAD_SIZE_BYTES } from "@/lib/validations/shared";
+import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
+import {
+  ALLOWED_UPLOAD_EXTENSIONS,
+  INVALID_UPLOAD_REQUEST_MESSAGE,
+  LEGACY_UPLOAD_FIELD_KEY_PATTERN,
+  MAX_UPLOAD_SIZE_BYTES,
+  SAFE_PATH_ID_PATTERN,
+} from "@/lib/validations/shared";
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
@@ -25,6 +32,10 @@ export type StoredUpload = {
 
 export function getUploadDir() {
   return process.env.UPLOAD_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "uploads");
+}
+
+export function isLegacyUploadFieldKey(fieldKey: string) {
+  return LEGACY_UPLOAD_FIELD_KEY_PATTERN.test(fieldKey) || fieldKey === VALIDATION_CERTIFICATE_FIELD_KEY;
 }
 
 export function validateUploadFile(file: File) {
@@ -67,10 +78,20 @@ export async function storeUploadFile(input: {
     validateUploadFile(input.file);
   }
 
+  if (!SAFE_PATH_ID_PATTERN.test(input.applicationId) || !isLegacyUploadFieldKey(input.fieldKey)) {
+    throw new Error(INVALID_UPLOAD_REQUEST_MESSAGE);
+  }
+
   const extension = path.extname(input.file.name).toLowerCase();
   const generatedName = `${randomUUID()}${extension}`;
-  const directory = path.join(getUploadDir(), input.applicationId, input.fieldKey);
+  const root = path.resolve(getUploadDir());
+  const directory = path.resolve(root, input.applicationId, input.fieldKey);
   const storagePath = path.join(directory, generatedName);
+  // Defence in depth: the key patterns above already exclude separators, but
+  // never write outside the upload root even if they are loosened later.
+  if (!storagePath.startsWith(root + path.sep)) {
+    throw new Error(INVALID_UPLOAD_REQUEST_MESSAGE);
+  }
   const bytes = Buffer.from(await input.file.arrayBuffer());
 
   await mkdir(directory, { recursive: true });
