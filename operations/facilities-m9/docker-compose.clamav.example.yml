@@ -14,6 +14,10 @@ services:
     restart: unless-stopped
     expose:
       - "3310"
+    # clamd's default StreamMaxLength is 25M (25,000,000 bytes), below the app's
+    # 25 MiB (26,214,400) file limit; set it to at least 26M in clamd.conf so a
+    # valid maximum-size upload is not rejected as UNAVAILABLE. The app also caps
+    # concurrent scans (FACILITIES_SCAN_CONCURRENCY, default 4) below MaxThreads.
     # Deliberately no host `ports`: clamd is reachable only on the Compose network.
     networks:
       - facilities-scanner

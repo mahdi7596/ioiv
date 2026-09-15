@@ -1527,3 +1527,45 @@ Deploy steps:
    pay, confirm the wizard banner and the admin attempts list, then load
    `/payment/return?status=success&paymentId=<someone else's id>` and confirm the neutral
    message.
+
+## Security hardening phase 4 (2026-09-16): uploads
+
+Closes audit items U3, U5, U6, U7, U8, U12 (U1 shipped in phase 2).
+
+What changed:
+
+- Company-registration uploads (`/api/uploads` and the admin certificate) are verified
+  by content with the facilities verifier: the browser-declared MIME type is ignored,
+  the detected type is stored, and mismatched or corrupt files are rejected with a
+  specific Persian message. CSV is only required to be non-empty text (Persian Excel
+  exports are often Windows-1256).
+- Legacy uploads are virus-scanned whenever a scanner is configured
+  (`FACILITIES_CLAMAV_HOST`/`PORT`). With no scanner configured the upload proceeds and
+  the app logs `legacy_upload_unscanned`; with a scanner configured, a flagged or
+  unscannable file is rejected (422 / 503).
+- Re-uploading a legacy field replaces the previous row and file instead of adding one.
+- Legacy downloads send `X-Content-Type-Options: nosniff`, `Cache-Control: private,
+  no-store`, and fall back to `application/octet-stream` for rows that still carry a
+  browser-declared type.
+- ZIP uploads may only contain PDF, image, and Office members; nested archives and
+  executables are rejected. Identity packages must be a ZIP by content.
+- The PDF check accepts cross-reference-stream PDFs (PDF 1.5+), which the previous
+  check rejected.
+- Scans are limited to `FACILITIES_SCAN_CONCURRENCY` (default 4) at a time; a wait over
+  `FACILITIES_SCAN_QUEUE_TIMEOUT_MS` (default 20 s) is reported as UNAVAILABLE. Set
+  clamd `StreamMaxLength` to at least `26M`.
+- The admin certificate replacement goes through `/api/admin/submissions/certificate`
+  instead of a server action, lifting the 1 MB action body limit.
+
+Deploy steps:
+
+1. Rebuild and restart the app. No migration.
+2. Watch upload rejections for the first week and confirm they are genuine:
+
+   ```bash
+   docker compose logs app --since 24h | grep -E 'upload_failed|legacy_upload_unscanned|legacy_upload_scan_rejected'
+   ```
+
+3. If clamd is provisioned (optional overlay in `operations/facilities-m9/`), confirm
+   `legacy_upload_unscanned` no longer appears and that a maximum-size (20 MB) legacy
+   PDF uploads successfully.

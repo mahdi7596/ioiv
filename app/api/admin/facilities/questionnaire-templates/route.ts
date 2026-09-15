@@ -6,6 +6,7 @@ import { templateLabelSchema } from "@/lib/validations/facilities-config";
 import { createAdminQuestionnaireTemplateBinding, scheduleUnpublishedTemplateDeletion, storeOwnedFacilitiesFile } from "@/lib/facilities-files/service";
 import { FilesystemFacilitiesPrivateStorage } from "@/lib/facilities-files/storage";
 import { createFacilitiesScannerFromEnv } from "@/lib/facilities-files/scanner";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +33,10 @@ export async function POST(request: Request) {
     }); } catch (error) { await scheduleUnpublishedTemplateDeletion(uploadId).catch(() => undefined); throw error; }
     return Response.json({ id: template.id, lifecycleStatus: "PASSED" }, { status: 201 });
   } catch (error) {
-    const status = error instanceof ActionError ? error.status : 400;
-    return Response.json({ error: error instanceof Error ? error.message : "ثبت پرسشنامه ناموفق بود" }, { status });
+    // Only ActionError messages are written for users; anything else may carry
+    // filesystem paths or provider output and is logged instead of returned.
+    if (error instanceof ActionError) return Response.json({ error: error.message }, { status: error.status });
+    logger.error("questionnaire_template_publish_failed", error);
+    return Response.json({ error: "ثبت پرسشنامه ناموفق بود" }, { status: 400 });
   }
 }

@@ -104,6 +104,72 @@ export class ClamdInstreamFacilitiesFileScanner implements FacilitiesFileScanner
   }
 }
 
+export type Semaphore = {
+  /** Resolves a release function, or null when the queue wait exceeded `timeoutMs`. */
+  acquire(timeoutMs: number): Promise<(() => void) | null>;
+};
+
+export function createSemaphore(limit: number): Semaphore {
+  let active = 0;
+  const waiters: Array<() => void> = [];
+  const release = () => {
+    active -= 1;
+    waiters.shift()?.();
+  };
+  return {
+    acquire(timeoutMs) {
+      if (active < limit) {
+        active += 1;
+        return Promise.resolve(release);
+      }
+      return new Promise((resolve) => {
+        const grant = () => {
+          clearTimeout(timer);
+          active += 1;
+          resolve(release);
+        };
+        const timer = setTimeout(() => {
+          const index = waiters.indexOf(grant);
+          if (index >= 0) waiters.splice(index, 1);
+          resolve(null);
+        }, timeoutMs);
+        waiters.push(grant);
+      });
+    },
+  };
+}
+
+/**
+ * Bounds how many scans run at once so a burst of uploads cannot exhaust clamd's
+ * worker threads (default MaxThreads is about 10). A request that waits longer
+ * than the queue timeout reports UNAVAILABLE, which the lifecycle already treats
+ * as "retained, retry later".
+ */
+export function limitScannerConcurrency(scanner: FacilitiesFileScanner, semaphore: Semaphore, queueTimeoutMs: number): FacilitiesFileScanner {
+  return {
+    async scan(request) {
+      const release = await semaphore.acquire(queueTimeoutMs);
+      if (!release) return { status: "UNAVAILABLE", reason: "SCANNER_UNAVAILABLE" };
+      try {
+        return await scanner.scan(request);
+      } finally {
+        release();
+      }
+    },
+  };
+}
+
+function positiveInteger(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+// Process-wide: the factory is called per request, so the limiter must not live
+// on the scanner instance. One Node process serves the container.
+const DEFAULT_SCAN_CONCURRENCY = 4;
+const DEFAULT_SCAN_QUEUE_TIMEOUT_MS = 20_000;
+const scanSemaphore = createSemaphore(positiveInteger(process.env.FACILITIES_SCAN_CONCURRENCY, DEFAULT_SCAN_CONCURRENCY));
+
 export function createFacilitiesScannerFromEnv(env: Partial<NodeJS.ProcessEnv> = process.env): FacilitiesFileScanner {
   // Development escape hatch: when explicitly opted in and never in production,
   // skip scanning so local work is not blocked without a clamd service. The server
@@ -123,7 +189,11 @@ export function createFacilitiesScannerFromEnv(env: Partial<NodeJS.ProcessEnv> =
   if ((timeoutMs !== undefined && (!Number.isInteger(timeoutMs) || timeoutMs < 1)) || (chunkSize !== undefined && (!Number.isInteger(chunkSize) || chunkSize < 1))) {
     return new UnavailableFacilitiesFileScanner();
   }
-  return new ClamdInstreamFacilitiesFileScanner({ host, port, timeoutMs, chunkSize });
+  return limitScannerConcurrency(
+    new ClamdInstreamFacilitiesFileScanner({ host, port, timeoutMs, chunkSize }),
+    scanSemaphore,
+    positiveInteger(env.FACILITIES_SCAN_QUEUE_TIMEOUT_MS, DEFAULT_SCAN_QUEUE_TIMEOUT_MS),
+  );
 }
 
 function isDevScanBypassEnabled(env: Partial<NodeJS.ProcessEnv>): boolean {

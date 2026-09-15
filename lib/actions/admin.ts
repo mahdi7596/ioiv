@@ -15,6 +15,7 @@ import { logger, maskMobile } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
 import { createStatusChangeSmsMessage } from "@/lib/sms/messages";
 import { storeUploadFile } from "@/lib/uploads/storage";
+import { removeSupersededUploads } from "@/lib/uploads/replace";
 import { ActionError } from "./auth";
 
 async function requireActiveAdmin(permission: AdminPermission = "viewAdminPanel") {
@@ -148,6 +149,9 @@ export async function changeSubmissionStatus(formData: FormData) {
   }
 
   await db.$transaction(operations);
+  if (certificateRecord) {
+    await removeSupersededUploads({ applicationId: application.id, fieldKey: VALIDATION_CERTIFICATE_FIELD_KEY, keepStoragePath: certificateRecord.storagePath });
+  }
 
   try {
     await sendSms(createStatusChangeSmsMessage(application.mobile));
@@ -221,6 +225,7 @@ export async function replaceValidationCertificate(formData: FormData) {
   await db.applicationFile.create({
     data: certificateRecord,
   });
+  await removeSupersededUploads({ applicationId: application.id, fieldKey: VALIDATION_CERTIFICATE_FIELD_KEY, keepStoragePath: certificateRecord.storagePath });
 
   logger.info("validation_certificate_replaced", {
     applicationId: application.id,

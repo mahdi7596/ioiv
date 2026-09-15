@@ -3,7 +3,6 @@
 import { Download, FileCheck2, Upload } from "lucide-react";
 import { useState, useTransition } from "react";
 import { showToast } from "@/components/ui/toast";
-import { replaceValidationCertificate } from "@/lib/actions/admin";
 import type { ValidationCertificateFile } from "@/lib/application/certificate";
 
 const numberFormatter = new Intl.NumberFormat("fa-IR", {
@@ -81,7 +80,13 @@ export function ValidationCertificatePanel({
 
             startTransition(async () => {
               try {
-                await replaceValidationCertificate(formData);
+                // Route handler instead of the server action: actions cap the
+                // request body at 1 MB, well below the 20 MB certificate limit.
+                const response = await fetch("/api/admin/submissions/certificate", { method: "POST", body: formData });
+                if (!response.ok) {
+                  const data = (await response.json().catch(() => null)) as { error?: string } | null;
+                  throw new Error(data?.error || "بارگذاری گواهی ناموفق بود");
+                }
                 setMessage("گواهی با موفقیت ذخیره شد");
                 showToast({ type: "success", message: "گواهی با موفقیت ذخیره شد" });
               } catch (error) {

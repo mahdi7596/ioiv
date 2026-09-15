@@ -135,6 +135,7 @@ function detectFacilitiesContentType(bytes: Buffer): FacilitiesStoredFileType | 
       }
       return "XLSX";
     }
+    assertZipMemberPolicy(zip.names);
     return "ZIP";
   }
 
@@ -144,14 +145,15 @@ function detectFacilitiesContentType(bytes: Buffer): FacilitiesStoredFileType | 
 
 function isPdf(bytes: Buffer): boolean {
   if (bytes.byteLength < 15 || !bytes.subarray(0, 5).equals(Buffer.from("%PDF-"))) return false;
-  // Require the bounded structural markers every non-linearized PDF has. This
-  // deliberately rejects uncertain input rather than handing it to the scanner
-  // as a nominal PDF; contents are never rendered by this verifier.
+  // Require bounded structural markers. Every PDF ends with startxref/%%EOF and
+  // holds at least one object; the cross-reference is either a classic
+  // `trailer` dictionary or (PDF 1.5+, including most linearized and
+  // Acrobat-optimised files) a `/XRef` stream object. Contents are never rendered.
   const tail = bytes.subarray(Math.max(0, bytes.byteLength - 8_192));
   return tail.includes(Buffer.from("%%EOF"))
     && tail.includes(Buffer.from("startxref"))
-    && tail.includes(Buffer.from("trailer"))
-    && bytes.includes(Buffer.from(" obj"));
+    && bytes.includes(Buffer.from(" obj"))
+    && (tail.includes(Buffer.from("trailer")) || bytes.includes(Buffer.from("/XRef")));
 }
 
 // Image formats are detected by their magic bytes only; pixel data is never
@@ -228,6 +230,24 @@ function detectCompoundDocumentType(bytes: Buffer): "DOC" | "XLS" | null {
   if (names.has("worddocument")) return "DOC";
   if (names.has("workbook") || names.has("book")) return "XLS";
   throw new FacilitiesFileError("CONTENT_CORRUPT");
+}
+
+/**
+ * Members allowed inside an applicant ZIP (identity packages, licences, contracts,
+ * VAT declarations): documents and scans only. Nested archives, executables,
+ * scripts, and extension-less blobs are rejected as ZIP_UNSAFE. Directory entries
+ * and the metadata files every desktop ZIP tool adds are ignored.
+ */
+export const ZIP_MEMBER_ALLOWED_EXTENSIONS = new Set([".pdf", ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".doc", ".docx", ".xls", ".xlsx", ".csv"]);
+const ZIP_MEMBER_IGNORED_BASENAMES = new Set([".ds_store", "thumbs.db", "desktop.ini"]);
+
+function assertZipMemberPolicy(names: Set<string>): void {
+  for (const name of names) {
+    if (name.endsWith("/") || name.startsWith("__macosx/")) continue;
+    const baseName = name.split("/").at(-1) ?? "";
+    if (ZIP_MEMBER_IGNORED_BASENAMES.has(baseName)) continue;
+    if (!ZIP_MEMBER_ALLOWED_EXTENSIONS.has(path.extname(baseName))) throw new FacilitiesFileError("ZIP_UNSAFE");
+  }
 }
 
 type ZipInspection = { names: Set<string>; entries: Map<string, { compressionMethod: number; data: Buffer }> };

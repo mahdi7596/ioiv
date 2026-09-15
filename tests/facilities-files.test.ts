@@ -31,6 +31,11 @@ function pdf(): Buffer {
   return Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\nstartxref\n0\n%%EOF\n");
 }
 
+function xrefStreamPdf(): Buffer {
+  // PDF 1.5+ cross-reference stream: no `trailer` keyword anywhere.
+  return Buffer.from("%PDF-1.5\n1 0 obj\n<</Type /Catalog>>\nendobj\n2 0 obj\n<</Type /XRef /Size 3 /W [1 2 1]>>\nstream\n\nendstream\nendobj\nstartxref\n41\n%%EOF\n");
+}
+
 function compound(kind: "doc" | "xls"): Buffer {
   const value = Buffer.alloc(512);
   Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]).copy(value);
@@ -110,9 +115,29 @@ describe("facilities content verification", () => {
     expect(verified.sha256).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it("accepts PDFs that use cross-reference streams instead of a trailer dictionary", () => {
+    expect(verifyFacilitiesUpload({ fileName: "optimised.pdf", bytes: xrefStreamPdf() }).fileType).toBe("PDF");
+  });
+
   it("rejects extension/content mismatches and incomplete PDFs", () => {
     expect(() => verifyFacilitiesUpload({ fileName: "not-a-pdf.pdf", bytes: zip([{ name: "a.txt", contents: Buffer.from("a") }]) })).toThrow(FacilitiesFileError);
     expect(() => verifyFacilitiesUpload({ fileName: "incomplete.pdf", bytes: Buffer.from("%PDF-1.7\n") })).toThrow("CONTENT_TYPE_MISMATCH");
+  });
+
+  it("allows only documents and scans inside applicant ZIPs", () => {
+    const accepted = zip([
+      { name: "docs/", contents: Buffer.alloc(0) },
+      { name: "docs/licence.pdf", contents: Buffer.from("x") },
+      { name: "docs/card-front.JPG", contents: Buffer.from("x") },
+      { name: "__MACOSX/._licence.pdf", contents: Buffer.from("x") },
+      { name: ".DS_Store", contents: Buffer.from("x") },
+      { name: "docs/Thumbs.db", contents: Buffer.from("x") },
+    ]);
+    expect(verifyFacilitiesUpload({ fileName: "package.zip", bytes: accepted }).fileType).toBe("ZIP");
+
+    for (const member of ["inner.zip", "run.exe", "setup.msi", "script.js", "README", "notes.txt"]) {
+      expect(() => verifyFacilitiesUpload({ fileName: "package.zip", bytes: zip([{ name: "a.pdf", contents: Buffer.from("x") }, { name: member, contents: Buffer.from("x") }]) })).toThrow("ZIP_UNSAFE");
+    }
   });
 
   it("uses a structural Compound File parser for legacy Office files", () => {
@@ -133,7 +158,7 @@ describe("facilities content verification", () => {
     XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([["safe"]]), "Sheet1");
     const xlsx = XLSX.write(book, { type: "buffer", bookType: "xlsx" });
     expect(verifyFacilitiesUpload({ fileName: "list.xlsx", bytes: xlsx }).fileType).toBe("XLSX");
-    expect(verifyFacilitiesUpload({ fileName: "evidence.zip", bytes: zip([{ name: "evidence.txt", contents: Buffer.from("x") }]) }).fileType).toBe("ZIP");
+    expect(verifyFacilitiesUpload({ fileName: "evidence.zip", bytes: zip([{ name: "evidence.pdf", contents: Buffer.from("x") }]) }).fileType).toBe("ZIP");
     expect(() => verifyFacilitiesUpload({ fileName: "unsafe.zip", bytes: zip([{ name: "../secret", contents: Buffer.from("x") }]) })).toThrow("ZIP_UNSAFE");
     expect(() => verifyFacilitiesUpload({ fileName: "bomb.zip", bytes: zip([{ name: "large", contents: Buffer.from("x"), declaredUncompressedSize: 151 * 1024 * 1024 }]) })).toThrow("ZIP_UNSAFE");
     const corrupt = Buffer.from(fakeDocx);

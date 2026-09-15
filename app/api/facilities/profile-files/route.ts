@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
 import { ActionError } from "@/lib/actions/auth";
 import { facilitiesUploadRecoveryMessage, facilitiesUploadRecoveryState } from "@/lib/facilities-files/retention";
+import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
+import { FacilitiesFileError, describeFacilitiesFileError } from "@/lib/facilities-files/errors";
 
 export async function POST(request: Request) {
   try {
@@ -17,13 +19,23 @@ export async function POST(request: Request) {
     if (typeof bindingId !== "string" || typeof idempotencyKey !== "string" || !(file instanceof File)) return Response.json({ error: "درخواست بارگذاری معتبر نیست" }, { status: 400 });
     if (file.size > 25 * 1024 * 1024) return Response.json({ error: "حجم فایل بیش از حد مجاز است" }, { status: 400 });
     const binding = await db.facilitiesFileBinding.findFirst({ where: { id: bindingId, userId: session.subjectId, scope: "COMPANY_PROFILE" } });
-    if (!binding || (binding.slotKey.endsWith("-identity-package") && !file.name.toLowerCase().endsWith(".zip"))) return Response.json({ error: "دسترسی یا نوع فایل معتبر نیست" }, { status: 400 });
+    if (!binding) return Response.json({ error: "دسترسی یا نوع فایل معتبر نیست" }, { status: 400 });
     if (!binding.companyId) return Response.json({ error: "دسترسی امکان‌پذیر نیست" }, { status: 403 });
     await assertFacilitiesProfileEditable(db, binding.companyId);
-    const result = await storeOwnedFacilitiesFile({ userId: session.subjectId, bindingId, idempotencyKey, fileName: file.name, bytes: Buffer.from(await file.arrayBuffer()), storage: new FilesystemFacilitiesPrivateStorage(), scanner: createFacilitiesScannerFromEnv() });
+    const bytes = Buffer.from(await file.arrayBuffer());
+    if (binding.slotKey.endsWith("-identity-package")) {
+      // Identity packages must be a real ZIP by content, not just by file name.
+      // Verifier rejections fall through to storeOwnedFacilitiesFile, which records
+      // them with the right lifecycle status and recovery message.
+      let detectedType: string | null = null;
+      try { detectedType = verifyFacilitiesUpload({ fileName: file.name, bytes }).fileType; } catch { /* handled below */ }
+      if (detectedType !== null && detectedType !== "ZIP") return Response.json({ error: "بسته هویتی باید یک فایل ZIP باشد" }, { status: 400 });
+    }
+    const result = await storeOwnedFacilitiesFile({ userId: session.subjectId, bindingId, idempotencyKey, fileName: file.name, bytes, storage: new FilesystemFacilitiesPrivateStorage(), scanner: createFacilitiesScannerFromEnv() });
     if (result.lifecycleStatus !== "PASSED") return Response.json({ lifecycleStatus: result.lifecycleStatus, recoveryState: facilitiesUploadRecoveryState(result.lifecycleStatus), uploadId: result.uploadId, error: facilitiesUploadRecoveryMessage(result.lifecycleStatus) }, { status: result.lifecycleStatus === "UNAVAILABLE" ? 503 : 422 });
     return Response.json({ lifecycleStatus: result.lifecycleStatus, uploadId: result.uploadId });
   } catch (error) {
+    if (error instanceof FacilitiesFileError) return Response.json({ error: describeFacilitiesFileError(error.code), code: error.code }, { status: 422 });
     const message = error instanceof Error && (error.message === "FACILITIES_FILE_FORBIDDEN" || error.message.includes("پروفایل شرکت")) ? error.message === "FACILITIES_FILE_FORBIDDEN" ? "دسترسی امکان‌پذیر نیست" : error.message : "بارگذاری فایل ناموفق بود";
     return Response.json({ error: message }, { status: error instanceof ActionError ? error.status : 400 });
   }

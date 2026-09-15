@@ -4,6 +4,7 @@ import { FilesystemFacilitiesPrivateStorage } from "@/lib/facilities-files/stora
 import { createFacilitiesScannerFromEnv } from "@/lib/facilities-files/scanner";
 import { storeOwnedFacilitiesFile } from "@/lib/facilities-files/service";
 import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
+import { FacilitiesFileError, describeFacilitiesFileError } from "@/lib/facilities-files/errors";
 import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
 import { facilitiesUploadRecoveryMessage, facilitiesUploadRecoveryState } from "@/lib/facilities-files/retention";
 
@@ -24,5 +25,8 @@ export async function POST(request: Request) {
     const result = await storeOwnedFacilitiesFile({ userId: session.subjectId, bindingId, idempotencyKey, fileName: file.name, bytes, storage: new FilesystemFacilitiesPrivateStorage(), scanner: createFacilitiesScannerFromEnv() });
     if (result.lifecycleStatus !== "PASSED") return Response.json({ lifecycleStatus: result.lifecycleStatus, recoveryState: facilitiesUploadRecoveryState(result.lifecycleStatus), uploadId: result.uploadId, error: facilitiesUploadRecoveryMessage(result.lifecycleStatus) }, { status: result.lifecycleStatus === "UNAVAILABLE" ? 503 : 422 });
     return Response.json({ lifecycleStatus: result.lifecycleStatus, uploadId: result.uploadId });
-  } catch { return Response.json({ error: "بارگذاری فایل ناموفق بود؛ دوباره تلاش کنید" }, { status: 400 }); }
+  } catch (error) {
+    if (error instanceof FacilitiesFileError) return Response.json({ error: describeFacilitiesFileError(error.code), code: error.code }, { status: 422 });
+    return Response.json({ error: "بارگذاری فایل ناموفق بود؛ دوباره تلاش کنید" }, { status: 400 });
+  }
 }

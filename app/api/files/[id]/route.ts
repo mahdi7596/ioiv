@@ -5,6 +5,19 @@ import { getSession } from "@/lib/auth/session";
 import { hasAdminPermission } from "@/lib/admin/permissions";
 import { logger } from "@/lib/logger";
 
+// Only types the verifier can produce are served as-is; rows written before
+// content verification carry browser-declared types and fall back to a generic
+// binary type so nothing is rendered inline as HTML or script.
+const SERVABLE_CONTENT_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
+  "application/zip",
+]);
+
 export async function GET(_request: Request, context: RouteContext<"/api/files/[id]">) {
   try {
     const { id } = await context.params;
@@ -47,9 +60,11 @@ export async function GET(_request: Request, context: RouteContext<"/api/files/[
 
     return new Response(new Uint8Array(bytes), {
       headers: {
-        "Content-Type": file.mimeType,
+        "Content-Type": SERVABLE_CONTENT_TYPES.has(file.mimeType) ? file.mimeType : "application/octet-stream",
         "Content-Length": String(file.size),
         "Content-Disposition": `attachment; filename*=UTF-8''${encodedName}`,
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "private, no-store",
       },
     });
   } catch (error) {

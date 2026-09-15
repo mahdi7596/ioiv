@@ -2,8 +2,12 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { canEditApplication } from "@/lib/application/status";
 import { logger } from "@/lib/logger";
-import { storeUploadFile } from "@/lib/uploads/storage";
+import { UPLOAD_MALWARE_MESSAGE, UPLOAD_SCAN_UNAVAILABLE_MESSAGE, storeUploadFile } from "@/lib/uploads/storage";
+import { describeFacilitiesFileError, type FacilitiesFileErrorCode } from "@/lib/facilities-files/errors";
+import { removeSupersededUploads } from "@/lib/uploads/replace";
 import { INVALID_UPLOAD_REQUEST_MESSAGE, LEGACY_UPLOAD_FIELD_KEY_PATTERN, SAFE_PATH_ID_PATTERN } from "@/lib/validations/shared";
+
+const verifierMessages = (["FILE_EMPTY", "FILE_TOO_LARGE", "UNSUPPORTED_FILENAME", "CONTENT_TYPE_MISMATCH", "CONTENT_CORRUPT", "ZIP_UNSAFE"] as FacilitiesFileErrorCode[]).map(describeFacilitiesFileError);
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +48,8 @@ export async function POST(request: Request) {
       },
     });
 
+    await removeSupersededUploads({ applicationId, fieldKey, keepStoragePath: stored.storagePath });
+
     logger.info("upload_succeeded", {
       applicationId,
       fieldKey,
@@ -65,9 +71,12 @@ export async function POST(request: Request) {
       INVALID_UPLOAD_REQUEST_MESSAGE,
       "نوع فایل مجاز نیست",
       "حجم فایل نباید بیشتر از ۲۰ مگابایت باشد",
+      UPLOAD_MALWARE_MESSAGE,
+      UPLOAD_SCAN_UNAVAILABLE_MESSAGE,
+      ...verifierMessages,
     ];
     const safeMessage = knownMessages.includes(message) ? message : "بارگذاری فایل ناموفق بود";
-    const status = message === "Unauthorized" ? 401 : 400;
+    const status = message === "Unauthorized" ? 401 : message === UPLOAD_SCAN_UNAVAILABLE_MESSAGE ? 503 : message === UPLOAD_MALWARE_MESSAGE ? 422 : 400;
 
     return Response.json({ error: safeMessage }, { status });
   }

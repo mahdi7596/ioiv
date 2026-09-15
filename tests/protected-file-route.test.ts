@@ -77,6 +77,19 @@ describe("protected file route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("application/pdf");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("Content-Disposition")).toContain("attachment");
+  });
+
+  it("never serves a browser-declared type that could render inline", async () => {
+    vi.mocked(getSession).mockResolvedValue({ kind: "user", subjectId: "user-1" });
+    vi.mocked(db.applicationFile.findUnique).mockResolvedValue({ ...fileRecord, mimeType: "text/html" });
+
+    const response = await GET(new Request("http://test.local/api/files/file-1"), context());
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/octet-stream");
   });
 
   it("rejects another user downloading a validation certificate", async () => {
