@@ -9,14 +9,14 @@ import { getCurrentAdminPermissions, listSubmissions } from "@/lib/actions/admin
 export default async function AdminSubmissionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; sort?: string; cursor?: string }>;
 }) {
   const params = await searchParams;
-  let submissions: Awaited<ReturnType<typeof listSubmissions>>;
+  let page: Awaited<ReturnType<typeof listSubmissions>>;
   let permissions: Awaited<ReturnType<typeof getCurrentAdminPermissions>>;
 
   try {
-    [submissions, permissions] = await Promise.all([
+    [page, permissions] = await Promise.all([
       listSubmissions(params),
       getCurrentAdminPermissions(),
     ]);
@@ -24,6 +24,7 @@ export default async function AdminSubmissionsPage({
     redirect("/admin/login");
   }
 
+  // The cursor is deliberately excluded from export links: exports cover the whole filter.
   const exportQuery = new URLSearchParams({
     ...(params.q ? { q: params.q } : {}),
     ...(params.status ? { status: params.status } : {}),
@@ -69,7 +70,15 @@ export default async function AdminSubmissionsPage({
           </Link>
         </section>
       ) : null}
-      <SubmissionsTable submissions={submissions} />
+      <SubmissionsTable submissions={page.rows} />
+      {page.nextCursor ? (
+        <Link
+          className="button button--ghost"
+          href={`/admin/submissions?${new URLSearchParams({ ...Object.fromEntries(exportQuery), cursor: page.nextCursor }).toString()}`}
+        >
+          صفحه بعد
+        </Link>
+      ) : null}
     </AppShell>
   );
 }

@@ -16,6 +16,7 @@ import { sendSms } from "@/lib/sms";
 import { createStatusChangeSmsMessage } from "@/lib/sms/messages";
 import { storeUploadFile } from "@/lib/uploads/storage";
 import { removeSupersededUploads } from "@/lib/uploads/replace";
+import { ADMIN_PAGE_SIZE, decodeKeysetCursor, keysetWhere, sliceKeysetPage } from "@/lib/pagination";
 import { ActionError } from "./auth";
 
 async function requireActiveAdmin(permission: AdminPermission = "viewAdminPanel") {
@@ -56,32 +57,42 @@ export async function listSubmissions(input?: {
   q?: string;
   status?: string;
   sort?: string;
+  cursor?: string;
 }) {
   await requireActiveAdmin("viewEntries");
   const q = input?.q?.trim();
   const status = input?.status as ApplicationStatus | undefined;
+  const direction = input?.sort === "oldest" ? "asc" : "desc";
+  const cursor = decodeKeysetCursor(input?.cursor);
 
-  return db.application.findMany({
-    where: {
-      ...(status && Object.values(ApplicationStatus).includes(status) ? { status } : {}),
-      ...(q
-        ? {
-            OR: [
-              { mobile: { contains: q } },
-              { companyName: { contains: q } },
-              { companyNationalId: { contains: q } },
-              { companyContactFullName: { contains: q } },
-              { companyContactNationalCode: { contains: q } },
-              { nationalCode: { contains: q } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { createdAt: input?.sort === "oldest" ? "asc" : "desc" },
+  const where: Prisma.ApplicationWhereInput = {
+    ...(status && Object.values(ApplicationStatus).includes(status) ? { status } : {}),
+    ...(q
+      ? {
+          OR: [
+            { mobile: { contains: q } },
+            { companyName: { contains: q } },
+            { companyNationalId: { contains: q } },
+            { companyContactFullName: { contains: q } },
+            { companyContactNationalCode: { contains: q } },
+            { nationalCode: { contains: q } },
+          ],
+        }
+      : {}),
+    ...(cursor ? { AND: [keysetWhere("createdAt", cursor, direction) as Prisma.ApplicationWhereInput] } : {}),
+  };
+
+  const found = await db.application.findMany({
+    where,
+    // The id tiebreaker keeps the keyset cursor stable when timestamps collide.
+    orderBy: [{ createdAt: direction }, { id: direction }],
+    take: ADMIN_PAGE_SIZE + 1,
     include: {
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
     },
   });
+
+  return sliceKeysetPage(found, (row) => row.createdAt);
 }
 
 export async function getSubmission(id: string) {

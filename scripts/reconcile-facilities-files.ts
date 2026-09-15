@@ -6,6 +6,7 @@ import { createFacilitiesScannerFromEnv } from "@/lib/facilities-files/scanner";
 import { reconcileFacilitiesDeletion, reconcileTerminalFacilitiesQuarantine, retryUnavailableFacilitiesScan } from "@/lib/facilities-files/service";
 import { FilesystemFacilitiesPrivateStorage } from "@/lib/facilities-files/storage";
 import { FACILITIES_UNAVAILABLE_RETENTION_MS } from "@/lib/facilities-files/retention";
+import { purgeOrphanedFacilitiesObjects } from "@/lib/facilities-files/orphans";
 
 const BATCH_SIZE = 100;
 const RECONCILIATION_LOCK_ID = 730_180_800;
@@ -62,8 +63,13 @@ async function reconcile() {
 
   const ttl = Number(process.env.FACILITIES_ORPHAN_TTL_MS ?? FACILITIES_UNAVAILABLE_RETENTION_MS);
   const known = new Set((await db.storedFile.findMany({ select: { storageKey: true } })).map((file) => file.storageKey));
-  let orphanedPurged = 0;
-  if (Number.isSafeInteger(ttl) && ttl >= 60_000) for (const key of await storage.listKeysOlderThan(ttl)) if (!known.has(key)) { await storage.remove(key); orphanedPurged += 1; }
+  const maxCandidates = process.env.FACILITIES_ORPHAN_PURGE_MAX ? Number(process.env.FACILITIES_ORPHAN_PURGE_MAX) : undefined;
+  const orphans = await purgeOrphanedFacilitiesObjects({ storage, ttlMs: ttl, known, maxCandidates: Number.isSafeInteger(maxCandidates) && maxCandidates! > 0 ? maxCandidates : undefined });
+  const orphanedPurged = orphans.purged;
+  if (orphans.skipped) {
+    // Not an infrastructure failure: nothing was deleted. Monitoring should alert on this event.
+    console.warn(JSON.stringify({ event: "facilities_orphan_purge_skipped", requestId, reasonCode: orphans.skipped, candidates: orphans.candidates, knownFiles: known.size }));
+  }
 
   const counts = { expired: expired.length, expiredPurged, rescanned, quarantinesPurged, deleted, orphanedPurged, expiryPurgeFailures, retryFailures, quarantinePurgeFailures, deletionFailures };
   const infrastructureFailures = expiryPurgeFailures + retryFailures + quarantinePurgeFailures + deletionFailures;
@@ -72,7 +78,7 @@ async function reconcile() {
     throw new Error("FACILITIES_RECONCILIATION_DEPENDENCY_FAILURE");
   }
   await writeFacilitiesAudit(db, { actorType: AuditActorType.SYSTEM, action: FacilitiesAuditAction.RECONCILIATION_COMPLETED, entityType: "FacilitiesFileReconciliation", entityId: requestId, metadata: { recordCount: Object.values(counts).reduce((sum, value) => sum + value, 0), retentionHours: 24 }, requestId });
-  console.info(JSON.stringify({ event: "facilities_file_reconciliation_completed", requestId, durationMs: Date.now() - startedAt, backlogAgeMs, ...counts }));
+  console.info(JSON.stringify({ event: "facilities_file_reconciliation_completed", requestId, durationMs: Date.now() - startedAt, backlogAgeMs, orphanPurgeSkipped: orphans.skipped ?? null, ...counts }));
   return true;
 }
 

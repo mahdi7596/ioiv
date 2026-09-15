@@ -104,7 +104,7 @@ describe("admin action permissions", () => {
       needsEdit: 0,
       validationCompleted: 0,
     });
-    await expect(listSubmissions({ q: "0912", status: "SUBMITTED" })).resolves.toEqual([]);
+    await expect(listSubmissions({ q: "0912", status: "SUBMITTED" })).resolves.toEqual({ rows: [], nextCursor: null });
     await expect(getSubmission("app-1")).resolves.toMatchObject({ id: "app-1" });
   });
 

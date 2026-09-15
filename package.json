@@ -20,6 +20,7 @@
     "test:db:m9-suppliers": "sh prisma/tests/test-facilities-m9-supplier-provisioning.sh",
     "facilities:reconcile-files": "tsx scripts/reconcile-facilities-files.ts",
     "facilities:check-readiness": "tsx scripts/check-facilities-readiness.ts",
+    "auth:prune-otp": "tsx scripts/prune-otp-codes.ts",
     "facilities:m9:validate": "tsx scripts/validate-facilities-m9-release.ts --decisions operations/facilities-m9/decision-register.pending.example.json --evidence operations/facilities-m9/evidence-ledger.pending.example.json",
     "facilities:m9:manifest": "tsx scripts/create-facilities-m9-candidate-manifest.ts",
     "facilities:m9:preflight": "tsx scripts/check-facilities-m9-preflight.ts",

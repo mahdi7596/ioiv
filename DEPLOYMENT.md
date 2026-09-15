@@ -325,7 +325,21 @@ docker compose exec app npm run facilities:reconcile-files
 Schedule it only after the scanner and private storage are ready. It retries scanner-
 unavailable quarantined uploads, purges terminal quarantine objects, retries deletion
 tombstones, and reaps untracked opaque objects older than `FACILITIES_ORPHAN_TTL_MS`;
-it logs record counts only.
+it logs record counts only. The orphan reaper refuses to run (logging
+`facilities_orphan_purge_skipped`) when the database knows no stored files or when
+candidates outnumber `max(50, known files)`; raise the ceiling for one run with
+`FACILITIES_ORPHAN_PURGE_MAX` after confirming the database is the right one.
+
+OTP retention is a separate, cheap command that the example maintenance script runs on
+every tick; it deletes `OtpCode` rows older than 24 hours in batches:
+
+```bash
+docker compose exec app npm run auth:prune-otp
+```
+
+Audit rows (`FacilitiesAuditLog`, `AuditLog`) are never deleted by the application; they
+are the compliance record. Retention beyond the database's own backup policy is a manual
+DBA decision and must not be automated through the runtime role.
 Do not run it against production to inject failures. Controlled scanner/storage/DB
 failure tests belong only to local, test, or staging environments.
 
@@ -398,7 +412,7 @@ ls -l .env .env.runtime .env.migration
 The app-only `/data/apps/sana/.env.runtime` contains:
 
 ```env
-DATABASE_URL=postgresql://sana_runtime:...@postgres:5432/sana
+DATABASE_URL=postgresql://sana_runtime:...@postgres:5432/sana?connection_limit=10&pool_timeout=10
 
 UPLOAD_DIR=/app/uploads
 
@@ -1569,3 +1583,42 @@ Deploy steps:
 3. If clamd is provisioned (optional overlay in `operations/facilities-m9/`), confirm
    `legacy_upload_unscanned` no longer appears and that a maximum-size (20 MB) legacy
    PDF uploads successfully.
+
+## Security hardening phase 5 (2026-09-16): operations
+
+Closes audit items S1, S2, S6, S8, U9, U11.
+
+What changed:
+
+- Admin lists (`/admin/submissions`, `/admin/facilities/applications`) are paginated 50
+  rows at a time with a forward "صفحه بعد" link; exports still cover the whole filter.
+- The company-registration export refuses more than 5,000 rows with a 422, like the
+  facilities export, and sends `Cache-Control: private, no-store`.
+- The orphan reaper has a safety guard (see the M2 maintenance section).
+- `npm run auth:prune-otp` deletes day-old OTP rows; the maintenance example script runs it.
+- `DATABASE_URL` carries `connection_limit=10&pool_timeout=10`.
+- The nginx upload location example covers all three upload routes.
+
+Deploy steps:
+
+1. Run the migration (four additive indexes: `Application(userId)`,
+   `Application(createdAt, id)`, `Payment(applicationId)`,
+   `FacilitiesApplication(updatedAt, id)`):
+
+   ```bash
+   cd /data/apps/sana
+   docker compose --profile migration run --rm migrate
+   ```
+
+2. Append `?connection_limit=10&pool_timeout=10` to `DATABASE_URL` in `.env.runtime`,
+   rebuild, restart. Confirm the runtime role may delete OTP rows:
+
+   ```bash
+   docker compose exec app npm run auth:prune-otp
+   ```
+
+3. Replace the facilities upload `location` block in nginx with the updated example and
+   `nginx -t && systemctl reload nginx`.
+
+4. Manual check: with more than 50 company-registration applications, the submissions
+   page shows a "صفحه بعد" link and the second page continues without repeats.

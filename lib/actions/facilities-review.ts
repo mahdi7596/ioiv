@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { ActionError } from "@/lib/actions/auth";
 import { requireFacilitiesAdmin, getFacilitiesAdminAccess } from "@/lib/admin/facilities-access";
 import { db } from "@/lib/db";
+import { ADMIN_PAGE_SIZE, decodeKeysetCursor, keysetWhere, sliceKeysetPage } from "@/lib/pagination";
 import { logger, maskMobile } from "@/lib/logger";
 import { sendSms } from "@/lib/sms";
 import { createFacilitiesCorrectionSmsMessage } from "@/lib/sms/messages";
@@ -132,13 +133,17 @@ export async function getFacilitiesReviewOverview() {
   return { total, submitted, underReview, needsEdit, validationCompleted };
 }
 
-export async function listFacilitiesReviews(input?: { q?: string; status?: string }) {
+export async function listFacilitiesReviews(input?: { q?: string; status?: string; cursor?: string }) {
   await requireFacilitiesAdmin();
   const q = input?.q?.trim();
   const status = FACILITIES_REVIEW_VISIBLE_STATUSES.includes(input?.status as ApplicationStatus)
     ? input?.status as ApplicationStatus
     : undefined;
-  return db.facilitiesApplication.findMany({
+  const cursor = decodeKeysetCursor(input?.cursor);
+  // Ordered by last activity on purpose (a review queue wants recently changed
+  // cases first); a row edited mid-pagination may move between pages, which is
+  // acceptable for a human paging a queue.
+  const found = await db.facilitiesApplication.findMany({
     where: {
       status: status ?? { in: FACILITIES_REVIEW_VISIBLE_STATUSES },
       ...(q ? {
@@ -148,8 +153,10 @@ export async function listFacilitiesReviews(input?: { q?: string; status?: strin
           { companySnapshot: { is: { nationalId: { contains: q } } } },
         ],
       } : {}),
+      ...(cursor ? { AND: [keysetWhere("updatedAt", cursor, "desc") as Prisma.FacilitiesApplicationWhereInput] } : {}),
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    take: ADMIN_PAGE_SIZE + 1,
     select: {
       id: true, status: true, facilityType: true, requestedAmountRial: true, submittedAt: true, updatedAt: true,
       user: { select: { mobile: true } },
@@ -159,6 +166,7 @@ export async function listFacilitiesReviews(input?: { q?: string; status?: strin
       correctionRequests: { where: { resolvedAt: null }, select: { smsStatus: true }, take: 1 },
     },
   });
+  return sliceKeysetPage(found, (row) => row.updatedAt);
 }
 
 export async function getFacilitiesReview(applicationId: string) {

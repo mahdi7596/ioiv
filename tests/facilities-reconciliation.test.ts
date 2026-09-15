@@ -16,6 +16,7 @@ vi.mock("@/lib/db", () => ({ db: {
 } }));
 
 import { reconcileFacilitiesDeletion, reconcileTerminalFacilitiesQuarantine } from "@/lib/facilities-files/service";
+import { purgeOrphanedFacilitiesObjects } from "@/lib/facilities-files/orphans";
 import type { FacilitiesPrivateStorage } from "@/lib/facilities-files/storage";
 
 function storage(remove: () => Promise<void>): FacilitiesPrivateStorage {
@@ -54,5 +55,34 @@ describe("facilities reconciliation recovery", () => {
     mocks.uploadFind.mockResolvedValue({ id: "upload-1", storedFileId: "file-1", lifecycleStatus: "FAILED", storedFile: { storageKey: "staging/00000000-0000-4000-8000-000000000001" } });
     await expect(reconcileTerminalFacilitiesQuarantine({ uploadId: "upload-1", storage: storage(async () => { throw new Error("storage unavailable"); }) })).resolves.toBe(false);
     expect(mocks.transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("orphan purge guard", () => {
+  const keys = (count: number) => Array.from({ length: count }, (_, index) => `ready/${String(index).padStart(8, "0")}-0000-4000-8000-000000000000` as const);
+  function orphanStorage(listed: string[]) {
+    const remove = vi.fn(async () => undefined);
+    return { storage: { listKeysOlderThan: async () => listed as never, remove }, remove };
+  }
+
+  it("refuses to purge when the database knows no files at all", async () => {
+    const { storage, remove } = orphanStorage(keys(1));
+    await expect(purgeOrphanedFacilitiesObjects({ storage, ttlMs: 86_400_000, known: new Set() })).resolves.toEqual({ purged: 0, candidates: 1, skipped: "NO_KNOWN_FILES" });
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it("trips when orphan candidates outnumber known files by more than the threshold", async () => {
+    const { storage, remove } = orphanStorage(keys(60));
+    await expect(purgeOrphanedFacilitiesObjects({ storage, ttlMs: 86_400_000, known: new Set(keys(10).slice(0, 10).map((key) => `${key}-known`)) })).resolves.toMatchObject({ purged: 0, skipped: "TRIPWIRE" });
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it("purges only unknown keys under normal conditions and rejects a short TTL", async () => {
+    const listed = keys(3);
+    const { storage, remove } = orphanStorage(listed);
+    await expect(purgeOrphanedFacilitiesObjects({ storage, ttlMs: 86_400_000, known: new Set([listed[0]]) })).resolves.toEqual({ purged: 2, candidates: 2 });
+    expect(remove).toHaveBeenCalledTimes(2);
+    expect(remove).not.toHaveBeenCalledWith(listed[0]);
+    await expect(purgeOrphanedFacilitiesObjects({ storage, ttlMs: 1_000, known: new Set([listed[0]]) })).resolves.toMatchObject({ skipped: "TTL_INVALID" });
   });
 });

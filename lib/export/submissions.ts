@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus, type Prisma } from "@prisma/client";
 import { applicationStatusLabels } from "@/components/admin/StatusBadge";
 import { db } from "@/lib/db";
 
@@ -8,6 +8,36 @@ type ExportFilters = {
   status?: string;
   sort?: string;
 };
+
+/** Same ceiling as the facilities export; the workbook is built in memory. */
+export const MAX_SUBMISSION_EXPORT_ROWS = 5_000;
+
+export class SubmissionExportError extends Error {
+  constructor(message: string, public readonly status: 422) {
+    super(message);
+    this.name = "SubmissionExportError";
+  }
+}
+
+function whereFor(filters: ExportFilters): Prisma.ApplicationWhereInput {
+  const q = filters.q?.trim();
+  const status = filters.status as ApplicationStatus | undefined;
+  return {
+    ...(status && Object.values(ApplicationStatus).includes(status) ? { status } : {}),
+    ...(q
+      ? {
+          OR: [
+            { mobile: { contains: q } },
+            { companyName: { contains: q } },
+            { companyNationalId: { contains: q } },
+            { companyContactFullName: { contains: q } },
+            { companyContactNationalCode: { contains: q } },
+            { nationalCode: { contains: q } },
+          ],
+        }
+      : {}),
+  };
+}
 
 type SubmissionExportApplication = {
   createdAt: Date;
@@ -48,24 +78,14 @@ function getEmployeeCount(value: unknown) {
 }
 
 export async function getSubmissionExportRows(filters: ExportFilters) {
-  const q = filters.q?.trim();
-  const status = filters.status as ApplicationStatus | undefined;
+  const where = whereFor(filters);
+  const count = await db.application.count({ where });
+  if (count > MAX_SUBMISSION_EXPORT_ROWS) {
+    throw new SubmissionExportError("تعداد پرونده‌ها بیش از حد مجاز است؛ فیلترها را محدودتر کنید", 422);
+  }
+
   const applications = await db.application.findMany({
-    where: {
-      ...(status && Object.values(ApplicationStatus).includes(status) ? { status } : {}),
-      ...(q
-        ? {
-            OR: [
-              { mobile: { contains: q } },
-              { companyName: { contains: q } },
-              { companyNationalId: { contains: q } },
-              { companyContactFullName: { contains: q } },
-              { companyContactNationalCode: { contains: q } },
-              { nationalCode: { contains: q } },
-            ],
-          }
-        : {}),
-    },
+    where,
     orderBy: { createdAt: filters.sort === "oldest" ? "asc" : "desc" },
     include: {
       payments: { orderBy: { createdAt: "desc" }, take: 1 },

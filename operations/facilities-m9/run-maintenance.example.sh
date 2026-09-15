@@ -12,6 +12,10 @@ started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 docker compose exec -T app npm run facilities:reconcile-files
 reconcile_exit=$?
 
+# OTP rows are only needed for the one-hour rate-limit windows; prune daily-old
+# rows on every run. Cheap, idempotent, and never blocks the facilities checks.
+docker compose exec -T app npm run auth:prune-otp || printf '{"event":"otp_prune_nonzero_exit","startedAt":"%s"}\n' "$started_at" >&2
+
 if [ "$reconcile_exit" -eq 0 ]; then
   date -u +%s > "$FACILITIES_M9_STATE_DIR/last-reconcile-success.epoch"
   docker compose exec -T app npm run facilities:check-readiness

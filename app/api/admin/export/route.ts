@@ -3,10 +3,13 @@ import { getSession } from "@/lib/auth/session";
 import { hasAdminPermission } from "@/lib/admin/permissions";
 import { logger } from "@/lib/logger";
 import {
+  SubmissionExportError,
   createSubmissionsCsv,
   createSubmissionsXlsx,
   getSubmissionExportRows,
 } from "@/lib/export/submissions";
+
+const privateHeaders = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
 
 export async function GET(request: Request) {
   try {
@@ -39,6 +42,7 @@ export async function GET(request: Request) {
     if (format === "csv") {
       return new Response(createSubmissionsCsv(rows), {
         headers: {
+          ...privateHeaders,
           "Content-Type": "text/csv; charset=utf-8",
           "Content-Disposition": "attachment; filename=submissions.csv",
         },
@@ -49,12 +53,17 @@ export async function GET(request: Request) {
 
     return new Response(new Uint8Array(workbook), {
       headers: {
+        ...privateHeaders,
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": "attachment; filename=submissions.xlsx",
       },
     });
   } catch (error) {
+    if (error instanceof SubmissionExportError) {
+      logger.warn("admin_export_rejected", { reason: "EXPORT_LIMIT" });
+      return Response.json({ error: error.message }, { status: error.status, headers: privateHeaders });
+    }
     logger.error("admin_export_failed", error);
-    return Response.json({ error: "Export failed" }, { status: 500 });
+    return Response.json({ error: "Export failed" }, { status: 500, headers: privateHeaders });
   }
 }

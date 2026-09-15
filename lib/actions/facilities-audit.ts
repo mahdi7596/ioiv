@@ -5,6 +5,7 @@ import { requireFacilitiesAdmin } from "@/lib/admin/facilities-access";
 import { facilitiesRequestId, safeFilterKeys, writeFacilitiesAudit } from "@/lib/audit/facilities";
 import { db } from "@/lib/db";
 import { parseTehranDateBoundary } from "@/lib/export/facilities";
+import { decodeKeysetCursor, encodeKeysetCursor } from "@/lib/pagination";
 
 const IDENTIFIER = /^[A-Za-z0-9_-]{1,100}$/;
 const PAGE_SIZE = 50;
@@ -14,17 +15,12 @@ export type FacilitiesAuditFilters = { from?: string; to?: string; action?: stri
 type Cursor = { createdAt: string; id: string };
 
 export function encodeFacilitiesAuditCursor(cursor: Cursor) {
-  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+  return encodeKeysetCursor({ at: cursor.createdAt, id: cursor.id });
 }
 
 export function decodeFacilitiesAuditCursor(value?: string) {
-  if (!value || value.length > 300) return undefined;
-  try {
-    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as Cursor;
-    const createdAt = new Date(parsed.createdAt);
-    if (!IDENTIFIER.test(parsed.id) || Number.isNaN(createdAt.getTime())) throw new Error();
-    return { createdAt, id: parsed.id };
-  } catch { throw new ActionError("نشانگر صفحه معتبر نیست", 400); }
+  const cursor = decodeKeysetCursor(value);
+  return cursor ? { createdAt: cursor.at, id: cursor.id } : undefined;
 }
 
 export function maskAuditIp(value: string | null) {

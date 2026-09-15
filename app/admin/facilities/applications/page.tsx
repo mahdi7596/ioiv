@@ -9,12 +9,14 @@ import { getSession } from "@/lib/auth/session";
 import { getFacilitiesAdminAccess } from "@/lib/admin/facilities-access";
 import { getFacilitiesExportOptions } from "@/lib/export/facilities";
 
-export default async function FacilitiesApplicationsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+export default async function FacilitiesApplicationsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; cursor?: string }> }) {
   const filters = await searchParams;
   const session = await getSession();
   if (!session) redirect("/admin/login");
   if (session.kind !== "admin") throw new Error("FACILITIES_ADMIN_FORBIDDEN");
-  const [applications, access, exportOptions] = await Promise.all([listFacilitiesReviews(filters), getFacilitiesAdminAccess(), getFacilitiesExportOptions()]);
+  const [page, access, exportOptions] = await Promise.all([listFacilitiesReviews(filters), getFacilitiesAdminAccess(), getFacilitiesExportOptions()]);
+  const applications = page.rows;
+  const nextPage = new URLSearchParams(Object.entries({ q: filters.q, status: filters.status, cursor: page.nextCursor ?? undefined }).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1])));
   return <AppShell area="admin" eyebrow="بررسی تسهیلات" title="پرونده‌های تسهیلات" description="صف مستقل بررسی درخواست‌های تسهیلات و اصلاحات متقاضیان." action={<Link className="button button--ghost button--back" href="/admin"><ArrowRight aria-hidden="true" size={19} />بازگشت</Link>}>
     <form className="panel filters" action="/admin/facilities/applications">
       <label>جستجو<input name="q" defaultValue={filters.q || ""} placeholder="نام شرکت، موبایل یا شناسه ملی" /></label>
@@ -32,5 +34,6 @@ export default async function FacilitiesApplicationsPage({ searchParams }: { sea
     <div className="panel table-wrap">
       {applications.length ? <table className="data-table text-sm"><thead><tr><th>شرکت</th><th>موبایل</th><th>تأمین‌کننده</th><th>وضعیت</th><th>آخرین فعالیت</th><th>جزئیات</th></tr></thead><tbody>{applications.map((application) => <tr key={application.id}><td><strong>{application.companySnapshot?.name || "-"}</strong><small dir="ltr">{application.companySnapshot?.nationalId || "-"}</small></td><td dir="ltr">{application.user.mobile}</td><td>{application.intakeSupplier.supplier.name}</td><td><StatusBadge status={application.status} />{application.correctionRequests[0]?.smsStatus === "FAILED" ? <small className="form-error">پیامک ناموفق</small> : null}</td><td>{application.updatedAt.toLocaleString("fa-IR")}</td><td><Link className="icon-button" href={`/admin/facilities/applications/${application.id}`} aria-label={`مشاهده پرونده ${application.companySnapshot?.nationalId || ""}`}><Eye aria-hidden="true" size={18} /></Link></td></tr>)}</tbody></table> : <p role="status">پرونده‌ای مطابق فیلترهای انتخابی پیدا نشد.</p>}
     </div>
+    {page.nextCursor ? <Link className="button button--ghost" href={`/admin/facilities/applications?${nextPage.toString()}`}>صفحه بعد</Link> : null}
   </AppShell>;
 }

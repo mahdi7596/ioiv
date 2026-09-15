@@ -24,6 +24,9 @@ vi.mock("@/lib/db", () => ({
 }));
 
 vi.mock("@/lib/export/submissions", () => ({
+  SubmissionExportError: class SubmissionExportError extends Error {
+    constructor(message: string, public readonly status: 422) { super(message); }
+  },
   createSubmissionsCsv: mocks.createSubmissionsCsv,
   createSubmissionsXlsx: mocks.createSubmissionsXlsx,
   getSubmissionExportRows: mocks.getSubmissionExportRows,
@@ -32,6 +35,7 @@ vi.mock("@/lib/export/submissions", () => ({
 vi.mock("@/lib/logger", () => ({
   logger: {
     info: mocks.loggerInfo,
+    warn: vi.fn(),
     error: mocks.loggerError,
   },
 }));
@@ -72,7 +76,22 @@ describe("admin export route permissions", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Disposition")).toContain("submissions.csv");
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(mocks.getSubmissionExportRows).toHaveBeenCalledOnce();
     expect(mocks.createSubmissionsCsv).toHaveBeenCalledOnce();
+  });
+
+  it("returns 422 with the message when the export exceeds the row cap", async () => {
+    const { SubmissionExportError } = await import("@/lib/export/submissions");
+    mocks.getSubmissionExportRows.mockRejectedValue(new SubmissionExportError("تعداد پرونده‌ها بیش از حد مجاز است", 422));
+    const { GET } = await import("@/app/api/admin/export/route");
+
+    const response = await GET(new Request("https://sana.ioiv.ir/api/admin/export?format=xlsx"));
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({ error: "تعداد پرونده‌ها بیش از حد مجاز است" });
+    expect(mocks.createSubmissionsXlsx).not.toHaveBeenCalled();
+    expect(mocks.loggerError).not.toHaveBeenCalled();
   });
 });

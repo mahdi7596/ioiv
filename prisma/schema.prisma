@@ -541,6 +541,7 @@ model FacilitiesApplication {
   @@index([status, createdAt, id])
   @@index([intakeId, createdAt, id])
   @@index([intakeSupplierId, createdAt, id])
+  @@index([updatedAt, id])
 }
 
 model FacilitiesApplicationCompanySnapshot {
@@ -812,6 +813,8 @@ model Application {
   @@unique([mobile, companyNationalId, applicationRound])
   @@index([status])
   @@index([companyNationalId])
+  @@index([userId])
+  @@index([createdAt, id])
 }
 
 model ApplicationFile {
@@ -840,6 +843,8 @@ model Payment {
   rawData       Json?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([applicationId])
 }
 
 model StatusHistory {
