@@ -1553,16 +1553,32 @@ What changed:
   the detected type is stored, and mismatched or corrupt files are rejected with a
   specific Persian message. CSV is only required to be non-empty text (Persian Excel
   exports are often Windows-1256).
-- Legacy uploads are virus-scanned whenever a scanner is configured
-  (`FACILITIES_CLAMAV_HOST`/`PORT`). With no scanner configured the upload proceeds and
-  the app logs `legacy_upload_unscanned`; with a scanner configured, a flagged or
-  unscannable file is rejected (422 / 503).
+- Legacy uploads are virus-scanned and fail closed exactly like the facilities pipeline:
+  with no scanner configured (`FACILITIES_CLAMAV_HOST`/`PORT` unset or invalid) every
+  legacy upload is rejected with 503 and the app logs
+  `legacy_upload_scanner_not_configured`; a flagged or unscannable file is rejected
+  (422 / 503). clamd is therefore required in production for both flows.
+- `xlsx` (SheetJS) is pinned to 0.20.3 from the vendor registry
+  (`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`, closes CVE-2023-30533 and
+  CVE-2024-22363); `npm ci` fetches that tarball URL directly, so the build host needs
+  access to `cdn.sheetjs.com` in addition to the npm registry. Workbook verification
+  reads only sheet names (`bookSheets`), never cell data, and the application-files
+  route checks slot ownership before parsing any file content.
 - Re-uploading a legacy field replaces the previous row and file instead of adding one.
 - Legacy downloads send `X-Content-Type-Options: nosniff`, `Cache-Control: private,
   no-store`, and fall back to `application/octet-stream` for rows that still carry a
   browser-declared type.
 - ZIP uploads may only contain PDF, image, and Office members; nested archives and
-  executables are rejected. Identity packages must be a ZIP by content.
+  executables are rejected. Identity packages must be a ZIP by content. Member names are
+  not trusted on their own: the head of every member (a bounded, truncated inflate for
+  deflated members; nothing is extracted) must carry the magic bytes its extension
+  implies, and `.docx`/`.xlsx` members must open with a known Office part, so a ZIP or
+  executable renamed to `scan.pdf` or `report.docx` is rejected as `ZIP_UNSAFE`. A member
+  that is a genuine OOXML container whose later parts hide something else is still caught
+  only by clamd, which scans archive contents.
+- Admin multipart routes (`/api/admin/submissions/certificate` and `/status`) check the
+  admin session and permission before reading the request body; the shared guard lives in
+  `lib/admin/require-admin.ts` (a plain module, not a server action).
 - The PDF check accepts cross-reference-stream PDFs (PDF 1.5+), which the previous
   check rejected.
 - Scans are limited to `FACILITIES_SCAN_CONCURRENCY` (default 4) at a time; a wait over
@@ -1570,6 +1586,57 @@ What changed:
   clamd `StreamMaxLength` to at least `26M`.
 - The admin certificate replacement goes through `/api/admin/submissions/certificate`
   instead of a server action, lifting the 1 MB action body limit.
+- Every upload route checks the declared `Content-Length` before reading the body
+  (413 above the file limit plus 1 MiB multipart overhead) and, for authenticated
+  uploads, passes an admission gate before `formData()` buffers anything. The gate is
+  process-local (`lib/uploads/rate-limit.ts`) and returns 429 with `Retry-After` on:
+  `UPLOAD_MAX_IN_FLIGHT_PER_USER` (default 2) and `UPLOAD_MAX_IN_FLIGHT_GLOBAL`
+  (default 6) bodies buffered at once, and `UPLOAD_MAX_PER_USER_PER_HOUR` (default 60)
+  / `UPLOAD_MAX_PER_IP_PER_HOUR` (default 120) uploads in a sliding hour. The global
+  in-flight cap is the memory bound: about two copies of a 25 MiB file per request,
+  so 6 in flight is roughly 300 MiB against the 1 GiB container limit. Counters reset
+  on restart; the durable quota remains the database trigger. Log events:
+  `upload_request_too_large`, `upload_rate_limited` (with `reason`).
+- The upload pipeline no longer re-copies the file at each stage (`asBuffer` in
+  `lib/facilities-files/verification.ts`); previously each request held about five
+  copies.
+- The legacy submission SMS helpers live in `lib/payments/legacy-notifications.ts`, a
+  plain module, so they are no longer registered as callable server actions.
+- Gateway answers are classified in `lib/payments/zarinpal-errors.ts`: only an explicit
+  Zarinpal rejection (`errors.code`, for example -51/-53/-54) closes a payment attempt.
+  HTTP 5xx, non-JSON bodies, missing fields, timeouts and network errors are "unknown"
+  in both flows: the attempt stays open (`INITIATED` / `PENDING` / `TIMED_OUT`) and is
+  re-verified later instead of being marked failed.
+- Company-registration (legacy) payments are settled by `lib/payments/legacy-settlement.ts`.
+  Verification and persistence are separate steps: if Zarinpal confirms the capture but
+  the database write fails, the app logs `payment_verification_persist_failed`, leaves
+  the row `INITIATED` with its authority, and sends the applicant to
+  `/payment/return?status=pending`. The next "pay" click re-verifies that authority
+  (Zarinpal answers "already verified", code 101) and completes the submission with no
+  new fee; only an explicit rejection creates a fresh attempt. The return page renders a
+  pending state for an `INITIATED` row and never invites a second payment for it. Watch
+  for `payment_verification_persist_failed` and `payment_verification_unavailable` in
+  production logs; each is a payment that needs the applicant's next retry (or manual
+  reconciliation against the Zarinpal panel) to settle.
+- Legacy callbacks are idempotent under concurrency: the row is claimed with a
+  conditional update (`status <> VERIFIED`) inside one transaction, so two deliveries of
+  the same callback produce one history row and one set of SMS
+  (`payment_verification_already_settled` marks the loser).
+- Duplicate captures are never verified, in either flow. When a callback arrives for an
+  attempt whose application already holds a verified payment, the attempt is closed with
+  reason `DUPLICATE_NOT_VERIFIED` (legacy: `duplicate_payment_not_verified`) and the
+  applicant is shown the paid state; Zarinpal reverses an unverified capture to the payer
+  on its own. Log events: `payment_duplicate_capture_declined`,
+  `facilities_duplicate_capture_declined`.
+- Facilities late capture (migration `20260916150000_facilities_payment_late_capture`,
+  backwards compatible: it only relaxes the trigger). A callback with `Status=OK` for an
+  attempt that was already closed (stale re-verify, earlier rejection) is verified with
+  the gateway; a confirmed capture moves FAILED/CANCELLED → VERIFIED with reason
+  `LATE_CAPTURE` and completes the submission (`facilities_payment_late_capture_recorded`).
+  The same migration legalises TIMED_OUT → FAILED, which the stale-attempt cleanup already
+  wrote but the original trigger did not permit. Manual reconciliation is needed only for
+  `facilities_late_capture_verification_unavailable` (gateway unreachable for a closed
+  attempt; nothing re-verifies it automatically).
 
 Deploy steps:
 

@@ -8,6 +8,7 @@ import { requireSession } from "@/lib/auth/session";
 import { ActionError } from "@/lib/actions/auth";
 import { db } from "@/lib/db";
 import { requestZarinpalPayment, verifyZarinpalPayment } from "@/lib/payments/zarinpal";
+import { isZarinpalRejection } from "@/lib/payments/zarinpal-errors";
 import { logger } from "@/lib/logger";
 import { requireAppUrl } from "@/lib/app-url";
 import { checkFacilitiesSubmissionReadiness, deriveFacilitiesSubmissionInput, facilitiesSubmissionInclude, isCorrectionAddressed, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot } from "@/lib/facilities/submission";
@@ -71,16 +72,17 @@ function safePaymentMetadata(reasonCode: string, status: FacilitiesPaymentStatus
   return { reasonCode, status } satisfies Prisma.InputJsonObject;
 }
 
+// Only an explicit gateway rejection closes an attempt. Network errors, timeouts,
+// 5xx answers and malformed bodies are "unknown": the money may have moved, so
+// the attempt stays open (TIMED_OUT / PENDING) and is re-verified later.
 function classifyStartFailure(error: unknown): "failed" | "timed-out" {
-  const message = error instanceof Error ? error.message : "";
-  if (message.startsWith("Zarinpal request failed") || message.includes("MERCHANT_ID")) return "failed";
+  if (isZarinpalRejection(error)) return "failed";
+  if (error instanceof Error && error.message.includes("MERCHANT_ID")) return "failed";
   return "timed-out";
 }
 
 function classifyVerificationFailure(error: unknown): "failed" | "pending" {
-  const message = error instanceof Error ? error.message : "";
-  if (message.startsWith("Zarinpal request failed")) return "failed";
-  return "pending";
+  return isZarinpalRejection(error) ? "failed" : "pending";
 }
 
 async function lockFacilitiesApplication(tx: Prisma.TransactionClient, applicationId: string) {
@@ -346,6 +348,37 @@ async function completeVerifiedFacilitiesSubmission(input: { paymentAttemptId: s
   return { state: "success" as const };
 }
 
+function closedStatusFor(status: FacilitiesPaymentStatus) {
+  // TIMED_OUT may only move to VERIFIED or FAILED; every other open state cancels.
+  return status === FacilitiesPaymentStatus.TIMED_OUT ? FacilitiesPaymentStatus.FAILED : FacilitiesPaymentStatus.CANCELLED;
+}
+
+/**
+ * The application already holds a verified payment, so this attempt's money is
+ * deliberately not claimed: an unverified capture is reversed by the gateway,
+ * whereas verifying it would require a manual refund (and the one-verified index
+ * would reject the row anyway). The attempt is closed and audited, and the
+ * applicant is shown the paid state they already have.
+ */
+async function declineDuplicateFacilitiesCapture(payment: { id: string; applicationId: string; status: FacilitiesPaymentStatus }, verifiedAttemptId: string, gatewayStatus: string | null) {
+  logger.warn("facilities_duplicate_capture_declined", { paymentAttemptId: payment.id, applicationId: payment.applicationId, verifiedAttemptId, status: payment.status, gatewayStatus });
+  try {
+    await db.$transaction(async (tx) => {
+      const current = await lockFacilitiesPayment(tx, payment.id);
+      if (!current) return;
+      const open = LOCKED_PAYMENT_STATES.includes(current.status);
+      const nextStatus = open ? closedStatusFor(current.status) : current.status;
+      if (open) {
+        await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: nextStatus, safeMetadata: safePaymentMetadata("DUPLICATE_NOT_VERIFIED", nextStatus) } });
+      }
+      await tx.facilitiesAuditLog.create({ data: { applicationId: current.applicationId, actorType: AuditActorType.SYSTEM, action: nextStatus === FacilitiesPaymentStatus.FAILED ? FacilitiesAuditAction.PAYMENT_FAILED : FacilitiesAuditAction.PAYMENT_CANCELLED, outcome: AuditOutcome.REJECTED, entityType: "FacilitiesPaymentAttempt", entityId: current.id, metadata: { paymentAttemptId: current.id, status: nextStatus, reasonCode: "DUPLICATE_NOT_VERIFIED" } } });
+    });
+  } catch (error) {
+    logger.error("facilities_duplicate_capture_close_failed", error, { paymentAttemptId: payment.id, applicationId: payment.applicationId });
+  }
+  return { state: "success" as const };
+}
+
 export async function verifyFacilitiesPaymentCallback(input: { paymentId: string; authority: string; gatewayStatus: string | null }) {
   const payment = await db.facilitiesPaymentAttempt.findUnique({ where: { id: input.paymentId }, include: { application: { include: facilitiesSubmissionInclude } } });
   if (!payment || payment.authority !== input.authority) return { state: "failed" as const };
@@ -353,10 +386,17 @@ export async function verifyFacilitiesPaymentCallback(input: { paymentId: string
     // Idempotent re-delivery. If an earlier post-verify submission failed, this retries it.
     return completeVerifiedFacilitiesSubmission({ paymentAttemptId: payment.id, applicationId: payment.applicationId, amountToman: payment.amountToman });
   }
-  if (!LOCKED_PAYMENT_STATES.includes(payment.status)) {
-    // The attempt was already closed (for example failed by a stale re-verify while
-    // the applicant lingered on the gateway page). Support reconciles from this log.
-    logger.warn("facilities_callback_for_terminal_attempt", { paymentAttemptId: payment.id, applicationId: payment.applicationId, status: payment.status, gatewayStatus: input.gatewayStatus });
+
+  const otherVerified = (payment.application?.payments ?? []).find((candidate) => candidate.id !== payment.id && candidate.status === FacilitiesPaymentStatus.VERIFIED);
+  if (otherVerified) return declineDuplicateFacilitiesCapture(payment, otherVerified.id, input.gatewayStatus);
+
+  // A closed attempt (failed by a stale re-verify or an earlier rejection while
+  // the applicant was still on the bank page) can still be paid afterwards. With
+  // Status=OK the gateway is asked; a confirmed capture is recorded as a late
+  // capture and completes the submission. Anything else leaves it closed.
+  const lateCapture = !LOCKED_PAYMENT_STATES.includes(payment.status);
+  if (lateCapture && input.gatewayStatus !== "OK") {
+    logger.warn("facilities_callback_for_terminal_attempt", { paymentAttemptId: payment.id, applicationId: payment.applicationId, status: payment.status, gatewayStatus: input.gatewayStatus, reasonCode: "GATEWAY_NOT_OK" });
     return { state: "failed" as const };
   }
 
@@ -365,6 +405,16 @@ export async function verifyFacilitiesPaymentCallback(input: { paymentId: string
     verified = await verifyZarinpalPayment({ amountToman: payment.amountToman, authority: input.authority });
   } catch (error) {
     const failure = classifyVerificationFailure(error);
+    if (lateCapture) {
+      if (failure === "pending") {
+        // No trustworthy answer for an attempt nothing will re-verify automatically:
+        // support reconciles this against the gateway panel.
+        logger.error("facilities_late_capture_verification_unavailable", error, { paymentAttemptId: payment.id, applicationId: payment.applicationId, status: payment.status });
+        return { state: "pending" as const };
+      }
+      logger.warn("facilities_callback_for_terminal_attempt", { paymentAttemptId: payment.id, applicationId: payment.applicationId, status: payment.status, gatewayStatus: input.gatewayStatus, reasonCode: "VERIFICATION_REJECTED" });
+      return { state: "failed" as const };
+    }
     if (failure === "pending") return { state: "pending" as const };
     if (payment.status === FacilitiesPaymentStatus.TIMED_OUT) return { state: "pending" as const };
     await db.$transaction(async (tx) => {
@@ -381,16 +431,19 @@ export async function verifyFacilitiesPaymentCallback(input: { paymentId: string
 
   // First phase: record the confirmed payment on its own, with no business-rule
   // preconditions, so a later submission problem can never lose the fact that
-  // the gateway captured the money.
+  // the gateway captured the money. The status is re-read under the row lock:
+  // a closed attempt confirmed by the gateway is recorded as a late capture.
   try {
     await db.$transaction(async (tx) => {
       const current = await lockFacilitiesPayment(tx, payment.id);
       if (!current) throw new ActionError("پرداخت پیدا نشد", 404);
       if (current.status === FacilitiesPaymentStatus.VERIFIED) return;
-      if (!LOCKED_PAYMENT_STATES.includes(current.status)) throw new ActionError("وضعیت پرداخت معتبر نیست", 409);
       if (current.authority !== input.authority) throw new ActionError("اطلاعات پرداخت معتبر نیست", 400);
-      await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: FacilitiesPaymentStatus.VERIFIED, referenceId: verified.referenceId, safeMetadata: { status: FacilitiesPaymentStatus.VERIFIED } } });
-      await tx.facilitiesAuditLog.create({ data: { applicationId: current.applicationId, actorType: AuditActorType.SYSTEM, action: FacilitiesAuditAction.PAYMENT_VERIFIED, outcome: AuditOutcome.SUCCEEDED, entityType: "FacilitiesPaymentAttempt", entityId: current.id, metadata: { paymentAttemptId: current.id, status: FacilitiesPaymentStatus.VERIFIED } } });
+      const late = !LOCKED_PAYMENT_STATES.includes(current.status);
+      const metadata = late ? { status: FacilitiesPaymentStatus.VERIFIED, reasonCode: "LATE_CAPTURE" } : { status: FacilitiesPaymentStatus.VERIFIED };
+      await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: FacilitiesPaymentStatus.VERIFIED, referenceId: verified.referenceId, safeMetadata: metadata } });
+      await tx.facilitiesAuditLog.create({ data: { applicationId: current.applicationId, actorType: AuditActorType.SYSTEM, action: FacilitiesAuditAction.PAYMENT_VERIFIED, outcome: AuditOutcome.SUCCEEDED, entityType: "FacilitiesPaymentAttempt", entityId: current.id, metadata: { paymentAttemptId: current.id, ...metadata } } });
+      if (late) logger.warn("facilities_payment_late_capture_recorded", { paymentAttemptId: current.id, applicationId: current.applicationId, previousStatus: current.status });
     });
   } catch (error) {
     logger.error("facilities_payment_verification_record_failed", error, { paymentAttemptId: payment.id, applicationId: payment.applicationId });

@@ -8,8 +8,11 @@ const transitions: Record<FacilitiesPaymentStatus, readonly FacilitiesPaymentSta
   // never reached the gateway is failed so the applicant can start over.
   [FacilitiesPaymentStatus.TIMED_OUT]: [FacilitiesPaymentStatus.VERIFIED, FacilitiesPaymentStatus.FAILED],
   [FacilitiesPaymentStatus.VERIFIED]: [],
-  [FacilitiesPaymentStatus.FAILED]: [],
-  [FacilitiesPaymentStatus.CANCELLED]: [],
+  // Late capture: the gateway confirms an attempt that was closed while the
+  // applicant was still on the bank page. Mirrors the database trigger
+  // (migration 20260916150000_facilities_payment_late_capture).
+  [FacilitiesPaymentStatus.FAILED]: [FacilitiesPaymentStatus.VERIFIED],
+  [FacilitiesPaymentStatus.CANCELLED]: [FacilitiesPaymentStatus.VERIFIED],
 };
 
 export function isLegalFacilitiesPaymentTransition(from: FacilitiesPaymentStatus, to: FacilitiesPaymentStatus) {

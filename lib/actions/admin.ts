@@ -3,12 +3,8 @@
 import { ApplicationStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requireSession } from "@/lib/auth/session";
-import {
-  getAdminPermissions,
-  hasAdminPermission,
-  type AdminPermission,
-} from "@/lib/admin/permissions";
+import { getAdminPermissions } from "@/lib/admin/permissions";
+import { requireActiveAdmin } from "@/lib/admin/require-admin";
 import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { getAllowedNextApplicationStatuses } from "@/lib/application/status-transitions";
 import { logger, maskMobile } from "@/lib/logger";
@@ -18,21 +14,6 @@ import { storeUploadFile } from "@/lib/uploads/storage";
 import { removeSupersededUploads } from "@/lib/uploads/replace";
 import { ADMIN_PAGE_SIZE, decodeKeysetCursor, keysetWhere, sliceKeysetPage } from "@/lib/pagination";
 import { ActionError } from "./auth";
-
-async function requireActiveAdmin(permission: AdminPermission = "viewAdminPanel") {
-  const session = await requireSession("admin");
-  const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
-
-  if (!admin?.active) {
-    throw new ActionError("دسترسی مدیریت فعال نیست", 403);
-  }
-
-  if (!hasAdminPermission(admin.role, permission)) {
-    throw new ActionError("برای این عملیات دسترسی لازم را ندارید", 403);
-  }
-
-  return admin;
-}
 
 export async function getCurrentAdminPermissions() {
   const admin = await requireActiveAdmin("viewAdminPanel");

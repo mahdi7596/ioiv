@@ -12,6 +12,10 @@ describe("facilities payment state machine", () => {
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.TIMED_OUT, FacilitiesPaymentStatus.FAILED)).toBe(true);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.TIMED_OUT, FacilitiesPaymentStatus.CANCELLED)).toBe(false);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.VERIFIED, FacilitiesPaymentStatus.FAILED)).toBe(false);
+    // Late capture: a closed attempt the gateway confirms afterwards.
+    expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.FAILED, FacilitiesPaymentStatus.VERIFIED)).toBe(true);
+    expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.CANCELLED, FacilitiesPaymentStatus.VERIFIED)).toBe(true);
+    expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.FAILED, FacilitiesPaymentStatus.REDIRECT_READY)).toBe(false);
     expect(isLegalFacilitiesPaymentTransition(FacilitiesPaymentStatus.CANCELLED, FacilitiesPaymentStatus.INITIATED)).toBe(false);
   });
 

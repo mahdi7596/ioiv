@@ -5,13 +5,22 @@ import { logger } from "@/lib/logger";
 import { UPLOAD_MALWARE_MESSAGE, UPLOAD_SCAN_UNAVAILABLE_MESSAGE, storeUploadFile } from "@/lib/uploads/storage";
 import { describeFacilitiesFileError, type FacilitiesFileErrorCode } from "@/lib/facilities-files/errors";
 import { removeSupersededUploads } from "@/lib/uploads/replace";
-import { INVALID_UPLOAD_REQUEST_MESSAGE, LEGACY_UPLOAD_FIELD_KEY_PATTERN, SAFE_PATH_ID_PATTERN } from "@/lib/validations/shared";
+import { INVALID_UPLOAD_REQUEST_MESSAGE, LEGACY_UPLOAD_FIELD_KEY_PATTERN, MAX_UPLOAD_SIZE_BYTES, SAFE_PATH_ID_PATTERN } from "@/lib/validations/shared";
+import { admitUpload, rejectOversizedUploadRequest } from "@/lib/uploads/request-guards";
 
 const verifierMessages = (["FILE_EMPTY", "FILE_TOO_LARGE", "UNSUPPORTED_FILENAME", "CONTENT_TYPE_MISMATCH", "CONTENT_CORRUPT", "ZIP_UNSAFE"] as FacilitiesFileErrorCode[]).map(describeFacilitiesFileError);
 
 export async function POST(request: Request) {
+  let release: (() => void) | undefined;
   try {
     const session = await requireSession("user");
+    // Both gates run before the body is buffered: the declared length bounds a
+    // single request, admission bounds how many bodies are held at once.
+    const oversized = rejectOversizedUploadRequest(request, MAX_UPLOAD_SIZE_BYTES);
+    if (oversized) return oversized;
+    const gate = admitUpload(request, session.subjectId);
+    if (!gate.ok) return gate.response;
+    release = gate.release;
     const formData = await request.formData();
     const applicationId = String(formData.get("applicationId") || "");
     const fieldKey = String(formData.get("fieldKey") || "");
@@ -79,5 +88,7 @@ export async function POST(request: Request) {
     const status = message === "Unauthorized" ? 401 : message === UPLOAD_SCAN_UNAVAILABLE_MESSAGE ? 503 : message === UPLOAD_MALWARE_MESSAGE ? 422 : 400;
 
     return Response.json({ error: safeMessage }, { status });
+  } finally {
+    release?.();
   }
 }

@@ -1,6 +1,9 @@
 import { replaceValidationCertificate } from "@/lib/actions/admin";
 import { ActionError } from "@/lib/actions/auth";
 import { logger } from "@/lib/logger";
+import { requireActiveAdmin } from "@/lib/admin/require-admin";
+import { rejectOversizedUploadRequest } from "@/lib/uploads/request-guards";
+import { MAX_UPLOAD_SIZE_BYTES } from "@/lib/validations/shared";
 
 /**
  * Route handler rather than a direct server action call so the upload is not
@@ -8,6 +11,10 @@ import { logger } from "@/lib/logger";
  */
 export async function POST(request: Request) {
   try {
+    const oversized = rejectOversizedUploadRequest(request, MAX_UPLOAD_SIZE_BYTES);
+    if (oversized) return oversized;
+    // Authenticate before buffering the multipart body; the action re-checks.
+    await requireActiveAdmin("manageValidationCertificates");
     const formData = await request.formData();
     await replaceValidationCertificate(formData);
 

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ replaceValidationCertificate: vi.fn(), loggerError: vi.fn() }));
+const mocks = vi.hoisted(() => ({ replaceValidationCertificate: vi.fn(), requireActiveAdmin: vi.fn(), loggerError: vi.fn() }));
 
 vi.mock("@/lib/actions/admin", () => ({ replaceValidationCertificate: mocks.replaceValidationCertificate }));
+vi.mock("@/lib/admin/require-admin", () => ({ requireActiveAdmin: mocks.requireActiveAdmin }));
 vi.mock("@/lib/actions/auth", () => ({
   ActionError: class ActionError extends Error {
     status: number;
@@ -20,6 +21,18 @@ function request() {
 
 describe("admin certificate replace route", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("authenticates before reading the body and never reaches the action when denied", async () => {
+    const { ActionError } = await import("@/lib/actions/auth");
+    const { POST } = await import("@/app/api/admin/submissions/certificate/route");
+    mocks.requireActiveAdmin.mockRejectedValueOnce(new ActionError("Unauthorized", 401));
+
+    const response = await POST(request());
+
+    expect(response.status).toBe(401);
+    expect(mocks.requireActiveAdmin).toHaveBeenCalledWith("manageValidationCertificates");
+    expect(mocks.replaceValidationCertificate).not.toHaveBeenCalled();
+  });
 
   it("forwards the multipart form to the action and reports success", async () => {
     const { POST } = await import("@/app/api/admin/submissions/certificate/route");

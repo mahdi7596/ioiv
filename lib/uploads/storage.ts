@@ -90,15 +90,14 @@ function sha256Of(bytes: Buffer) {
 }
 
 /**
- * Scans when a scanner is configured. With no clamd configured at all the upload
- * proceeds with a warning so the live flow is not taken down by missing
- * infrastructure; once clamd is provisioned, a failed or unavailable scan
- * rejects the upload (fail closed, like the facilities pipeline).
+ * Fail closed, exactly like the facilities pipeline: a missing, misconfigured,
+ * flagged, or unreachable scanner rejects the upload. Unscanned documents must
+ * never reach the admin download route.
  */
 async function scanLegacyUpload(bytes: Buffer, verified: VerifiedLegacyUpload, scanner: FacilitiesFileScanner) {
   if (scanner instanceof UnavailableFacilitiesFileScanner) {
-    logger.warn("legacy_upload_unscanned", { reason: "SCANNER_NOT_CONFIGURED", fileType: verified.fileType, size: bytes.byteLength });
-    return;
+    logger.error("legacy_upload_scanner_not_configured", undefined, { fileType: verified.fileType, size: bytes.byteLength });
+    throw new Error(UPLOAD_SCAN_UNAVAILABLE_MESSAGE);
   }
 
   const result = await scanner.scan({

@@ -1,6 +1,8 @@
+import { randomBytes } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { deflateRawSync } from "node:zlib";
 import * as XLSX from "xlsx";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -46,19 +48,21 @@ function compound(kind: "doc" | "xls"): Buffer {
   return value;
 }
 
-function zip(entries: Array<{ name: string; contents?: Buffer; declaredUncompressedSize?: number }>): Buffer {
+function zip(entries: Array<{ name: string; contents?: Buffer; declaredUncompressedSize?: number; deflate?: boolean }>): Buffer {
   const locals: Buffer[] = [];
   const centrals: Buffer[] = [];
   let localOffset = 0;
   for (const entry of entries) {
     const name = Buffer.from(entry.name);
-    const contents = entry.contents ?? Buffer.alloc(0);
-    const uncompressedSize = entry.declaredUncompressedSize ?? contents.byteLength;
+    const original = entry.contents ?? Buffer.alloc(0);
+    const contents = entry.deflate ? deflateRawSync(original) : original;
+    const method = entry.deflate ? 8 : 0;
+    const uncompressedSize = entry.declaredUncompressedSize ?? original.byteLength;
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0);
     local.writeUInt16LE(20, 4);
     local.writeUInt16LE(0, 6);
-    local.writeUInt16LE(0, 8);
+    local.writeUInt16LE(method, 8);
     local.writeUInt32LE(contents.byteLength, 18);
     local.writeUInt32LE(uncompressedSize, 22);
     local.writeUInt16LE(name.byteLength, 26);
@@ -69,7 +73,7 @@ function zip(entries: Array<{ name: string; contents?: Buffer; declaredUncompres
     central.writeUInt16LE(20, 4);
     central.writeUInt16LE(20, 6);
     central.writeUInt16LE(0, 8);
-    central.writeUInt16LE(0, 10);
+    central.writeUInt16LE(method, 10);
     central.writeUInt32LE(contents.byteLength, 20);
     central.writeUInt32LE(uncompressedSize, 24);
     central.writeUInt16LE(name.byteLength, 28);
@@ -86,6 +90,8 @@ function zip(entries: Array<{ name: string; contents?: Buffer; declaredUncompres
   end.writeUInt32LE(localOffset, 16);
   return Buffer.concat([...locals, central, end]);
 }
+
+const pdfHead = () => Buffer.from("%PDF-1.7\n%\u00e2\u00e3\u00cf\u00d3\n1 0 obj\n<< /Type /Catalog >>\nendobj\n", "latin1");
 
 function jpeg(): Buffer {
   return Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]), Buffer.from("JFIF\0"), Buffer.alloc(8), Buffer.from([0xff, 0xd9])]);
@@ -127,8 +133,8 @@ describe("facilities content verification", () => {
   it("allows only documents and scans inside applicant ZIPs", () => {
     const accepted = zip([
       { name: "docs/", contents: Buffer.alloc(0) },
-      { name: "docs/licence.pdf", contents: Buffer.from("x") },
-      { name: "docs/card-front.JPG", contents: Buffer.from("x") },
+      { name: "docs/licence.pdf", contents: pdfHead() },
+      { name: "docs/card-front.JPG", contents: jpeg() },
       { name: "__MACOSX/._licence.pdf", contents: Buffer.from("x") },
       { name: ".DS_Store", contents: Buffer.from("x") },
       { name: "docs/Thumbs.db", contents: Buffer.from("x") },
@@ -136,8 +142,39 @@ describe("facilities content verification", () => {
     expect(verifyFacilitiesUpload({ fileName: "package.zip", bytes: accepted }).fileType).toBe("ZIP");
 
     for (const member of ["inner.zip", "run.exe", "setup.msi", "script.js", "README", "notes.txt"]) {
-      expect(() => verifyFacilitiesUpload({ fileName: "package.zip", bytes: zip([{ name: "a.pdf", contents: Buffer.from("x") }, { name: member, contents: Buffer.from("x") }]) })).toThrow("ZIP_UNSAFE");
+      expect(() => verifyFacilitiesUpload({ fileName: "package.zip", bytes: zip([{ name: "a.pdf", contents: pdfHead() }, { name: member, contents: Buffer.from("x") }]) })).toThrow("ZIP_UNSAFE");
     }
+  });
+
+  it("verifies ZIP member content, not just the member name", () => {
+    const verify = (entries: Parameters<typeof zip>[0]) => verifyFacilitiesUpload({ fileName: "package.zip", bytes: zip(entries) });
+    const nestedArchive = zip([{ name: "payload.exe", contents: Buffer.from("MZ\u0090\u0000", "latin1") }]);
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([["safe"]]), "Sheet1");
+    const xlsx = XLSX.write(book, { type: "buffer", bookType: "xlsx" }) as Buffer;
+
+    // An archive or executable hiding behind a document name.
+    expect(() => verify([{ name: "scan.pdf", contents: nestedArchive }])).toThrow("ZIP_UNSAFE");
+    expect(() => verify([{ name: "scan.pdf", contents: Buffer.from("MZ\u0090\u0000\u0003", "latin1") }])).toThrow("ZIP_UNSAFE");
+    expect(() => verify([{ name: "photo.jpg", contents: pdfHead() }])).toThrow("ZIP_UNSAFE");
+    expect(() => verify([{ name: "list.csv", contents: Buffer.from("a,b\u0000c") }])).toThrow("ZIP_UNSAFE");
+    // A plain ZIP renamed to an Office extension is not an Office document.
+    expect(() => verify([{ name: "report.docx", contents: nestedArchive }])).toThrow("ZIP_UNSAFE");
+
+    // Genuine members pass, including a real workbook, text, and an empty placeholder.
+    expect(verify([
+      { name: "list.xlsx", contents: xlsx },
+      { name: "photo.jpg", contents: jpeg() },
+      { name: "scan.png", contents: png() },
+      { name: "notes.csv", contents: Buffer.from("نام,تعداد\n") },
+      { name: "empty.pdf", contents: Buffer.alloc(0) },
+    ]).fileType).toBe("ZIP");
+
+    // Deflated members are checked from a truncated inflate of their head only.
+    const bigPdf = Buffer.concat([pdfHead(), randomBytes(256 * 1024)]);
+    expect(verify([{ name: "scan.pdf", contents: bigPdf, deflate: true }]).fileType).toBe("ZIP");
+    expect(() => verify([{ name: "scan.pdf", contents: Buffer.concat([Buffer.from("MZ"), randomBytes(64 * 1024)]), deflate: true }])).toThrow("ZIP_UNSAFE");
+    expect(verify([{ name: "empty.pdf", contents: Buffer.alloc(0), deflate: true }]).fileType).toBe("ZIP");
   });
 
   it("uses a structural Compound File parser for legacy Office files", () => {
@@ -158,7 +195,7 @@ describe("facilities content verification", () => {
     XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([["safe"]]), "Sheet1");
     const xlsx = XLSX.write(book, { type: "buffer", bookType: "xlsx" });
     expect(verifyFacilitiesUpload({ fileName: "list.xlsx", bytes: xlsx }).fileType).toBe("XLSX");
-    expect(verifyFacilitiesUpload({ fileName: "evidence.zip", bytes: zip([{ name: "evidence.pdf", contents: Buffer.from("x") }]) }).fileType).toBe("ZIP");
+    expect(verifyFacilitiesUpload({ fileName: "evidence.zip", bytes: zip([{ name: "evidence.pdf", contents: pdfHead() }]) }).fileType).toBe("ZIP");
     expect(() => verifyFacilitiesUpload({ fileName: "unsafe.zip", bytes: zip([{ name: "../secret", contents: Buffer.from("x") }]) })).toThrow("ZIP_UNSAFE");
     expect(() => verifyFacilitiesUpload({ fileName: "bomb.zip", bytes: zip([{ name: "large", contents: Buffer.from("x"), declaredUncompressedSize: 151 * 1024 * 1024 }]) })).toThrow("ZIP_UNSAFE");
     const corrupt = Buffer.from(fakeDocx);

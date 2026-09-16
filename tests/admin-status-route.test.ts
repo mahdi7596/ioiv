@@ -2,11 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   changeSubmissionStatus: vi.fn(),
+  requireActiveAdmin: vi.fn(),
   loggerError: vi.fn(),
 }));
 
 vi.mock("@/lib/actions/admin", () => ({
   changeSubmissionStatus: mocks.changeSubmissionStatus,
+}));
+
+vi.mock("@/lib/admin/require-admin", () => ({
+  requireActiveAdmin: mocks.requireActiveAdmin,
 }));
 
 vi.mock("@/lib/actions/auth", () => ({
@@ -27,6 +32,20 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 describe("admin status API route", () => {
+  it("authenticates before reading the body and never reaches the action when denied", async () => {
+    const { ActionError } = await import("@/lib/actions/auth");
+    const { POST } = await import("@/app/api/admin/submissions/status/route");
+    mocks.requireActiveAdmin.mockRejectedValueOnce(new ActionError("دسترسی مدیریت فعال نیست", 403));
+    const formData = new FormData();
+    formData.set("applicationId", "app_1");
+
+    const response = await POST(new Request("https://sana.ioiv.ir/api/admin/submissions/status", { method: "POST", body: formData }));
+
+    expect(response.status).toBe(403);
+    expect(mocks.requireActiveAdmin).toHaveBeenCalledWith("changeSubmissionStatus");
+    expect(mocks.changeSubmissionStatus).not.toHaveBeenCalled();
+  });
+
   it("accepts normal form data without requiring a Next server action payload", async () => {
     const { POST } = await import("@/app/api/admin/submissions/status/route");
     const formData = new FormData();

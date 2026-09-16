@@ -7,14 +7,22 @@ import { createAdminQuestionnaireTemplateBinding, scheduleUnpublishedTemplateDel
 import { FilesystemFacilitiesPrivateStorage } from "@/lib/facilities-files/storage";
 import { createFacilitiesScannerFromEnv } from "@/lib/facilities-files/scanner";
 import { logger } from "@/lib/logger";
+import { MAX_FACILITIES_FILE_BYTES } from "@/lib/facilities-files/verification";
+import { admitUpload, rejectOversizedUploadRequest } from "@/lib/uploads/request-guards";
 
 export async function POST(request: Request) {
+  let release: (() => void) | undefined;
   try {
+    const oversized = rejectOversizedUploadRequest(request, MAX_FACILITIES_FILE_BYTES);
+    if (oversized) return oversized;
     const admin = await requireFacilitiesSuperAdmin();
+    const gate = admitUpload(request, `admin:${admin.id}`);
+    if (!gate.ok) return gate.response;
+    release = gate.release;
     const form = await request.formData();
     const supplierId = form.get("supplierId"), versionLabel = templateLabelSchema.safeParse(form.get("versionLabel")), idempotencyKey = form.get("idempotencyKey"), file = form.get("file");
     if (typeof supplierId !== "string" || !versionLabel.success || typeof idempotencyKey !== "string" || !(file instanceof File)) return Response.json({ error: "اطلاعات نسخه پرسشنامه معتبر نیست" }, { status: 400 });
-    if (file.size === 0 || file.size > 25 * 1024 * 1024) return Response.json({ error: "حجم فایل معتبر نیست" }, { status: 400 });
+    if (file.size === 0 || file.size > MAX_FACILITIES_FILE_BYTES) return Response.json({ error: "حجم فایل معتبر نیست" }, { status: 400 });
     const supplier = await db.facilitySupplier.findUnique({ where: { id: supplierId } });
     if (!supplier) return Response.json({ error: "تأمین‌کننده معتبر نیست" }, { status: 404 });
     if (await db.questionnaireTemplateVersion.findUnique({ where: { supplierId_versionLabel: { supplierId, versionLabel: versionLabel.data } } })) return Response.json({ error: "این نسخه قبلاً ثبت شده است" }, { status: 409 });
@@ -38,5 +46,7 @@ export async function POST(request: Request) {
     if (error instanceof ActionError) return Response.json({ error: error.message }, { status: error.status });
     logger.error("questionnaire_template_publish_failed", error);
     return Response.json({ error: "ثبت پرسشنامه ناموفق بود" }, { status: 400 });
+  } finally {
+    release?.();
   }
 }

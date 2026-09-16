@@ -226,6 +226,53 @@ describe("zarinpal payment adapter", () => {
     ).rejects.not.toThrow(merchantId);
   });
 
+  it("classifies an explicit gateway rejection with its code", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], errors: { code: -51, message: "Session is not valid" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
+    const { ZarinpalRejectedError, isZarinpalRejection } = await import("@/lib/payments/zarinpal-errors");
+
+    const error = await verifyZarinpalPayment({ amountToman: 3000000, authority: "authority_1" }).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ZarinpalRejectedError);
+    expect(isZarinpalRejection(error)).toBe(true);
+    expect((error as InstanceType<typeof ZarinpalRejectedError>).code).toBe(-51);
+  });
+
+  it("never reports a 5xx, malformed, or field-less answer as a rejection", async () => {
+    const { ZarinpalUnavailableError, isZarinpalRejection } = await import("@/lib/payments/zarinpal-errors");
+    const answers = [
+      { ok: false, status: 502, json: async () => ({ errors: { code: -1, message: "Bad gateway" } }) },
+      { ok: false, status: 503, json: async () => { throw new SyntaxError("Unexpected token <"); } },
+      { ok: true, status: 200, json: async () => "not-an-object" },
+      { ok: true, status: 200, json: async () => ({ data: {}, errors: [] }) },
+      { ok: false, status: 404, json: async () => ({ message: "not found" }) },
+    ];
+
+    const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
+    for (const answer of answers) {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(answer));
+      const error = await verifyZarinpalPayment({ amountToman: 3000000, authority: "authority_1" }).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ZarinpalUnavailableError);
+      expect(isZarinpalRejection(error)).toBe(false);
+    }
+  });
+
+  it("accepts an already-verified answer (code 101) as a confirmed capture", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: { code: 101, message: "Verified", ref_id: 987654 }, errors: [] }),
+    }));
+    const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
+
+    await expect(verifyZarinpalPayment({ amountToman: 3000000, authority: "authority_1" })).resolves.toEqual({ referenceId: "987654" });
+  });
+
   it("treats successful HTTP responses with an errors object as provider failures", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

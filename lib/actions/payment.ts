@@ -5,14 +5,11 @@ import { db } from "@/lib/db";
 import { requireAppUrl } from "@/lib/app-url";
 import { requireSession } from "@/lib/auth/session";
 import { logger } from "@/lib/logger";
-import { sendSms } from "@/lib/sms";
-import {
-  createAdminSubmissionSmsMessage,
-  createSubmissionReceivedSmsMessage,
-} from "@/lib/sms/messages";
+import { notifyAdminOfSubmission, notifyUserOfSubmission } from "@/lib/payments/legacy-notifications";
 import { applicationDraftSchema, finalSubmissionSchema } from "@/lib/validations/application";
 import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
 import { requestZarinpalPayment } from "@/lib/payments/zarinpal";
+import { settleLegacyPayment } from "@/lib/payments/legacy-settlement";
 
 type PaymentStartResult =
   | { ok: true; redirectTo: string }
@@ -20,6 +17,7 @@ type PaymentStartResult =
 
 const PAYMENT_START_FAILED_MESSAGE = "شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید.";
 const PAYMENT_VALIDATION_FAILED_MESSAGE = "مدارک الزامی پیش از پرداخت کامل نیست";
+const PAYMENT_PENDING_MESSAGE = "وضعیت پرداخت قبلی شما هنوز از درگاه دریافت نشده است. اگر مبلغ کسر شده باشد، پرداخت به‌صورت خودکار ثبت می‌شود؛ چند دقیقه بعد دوباره تلاش کنید.";
 
 export async function startPayment(input: unknown): Promise<PaymentStartResult> {
   const session = await requireSession("user");
@@ -90,6 +88,56 @@ export async function startPayment(input: unknown): Promise<PaymentStartResult> 
 
   if (hasVerifiedPayment) {
     return { ok: false, message: "پرداخت قبلاً ثبت شده است" };
+  }
+
+  // An attempt that already reached the gateway may have been paid without the
+  // callback ever landing (closed tab, network loss, or a persist failure after
+  // verification). Ask Zarinpal before charging again: a confirmed capture
+  // completes the submission with no new fee, an explicit rejection is closed,
+  // and an unreachable gateway leaves the attempt open rather than duplicating it.
+  const openPayment = application.payments.find(
+    (payment) => payment.status === PaymentStatus.INITIATED && payment.authority,
+  );
+
+  if (openPayment?.authority) {
+    const outcome = await settleLegacyPayment(
+      {
+        id: openPayment.id,
+        applicationId: application.id,
+        amountToman: openPayment.amountToman,
+        authority: openPayment.authority,
+        status: openPayment.status,
+        application: { status: application.status, payments: application.payments },
+      },
+      openPayment.authority,
+    );
+
+    if (outcome === "already-settled" || outcome === "duplicate") {
+      return { ok: false, message: "پرداخت قبلاً ثبت شده است" };
+    }
+
+    if (outcome === "verified") {
+      logger.info("payment_retry_recovered_verified_attempt", {
+        applicationId: application.id,
+        paymentId: openPayment.id,
+      });
+      try {
+        await Promise.all([
+          notifyAdminOfSubmission(application.id),
+          notifyUserOfSubmission(application.mobile, application.id),
+        ]);
+      } catch (error) {
+        logger.error("payment_notification_failed", error, {
+          applicationId: application.id,
+          paymentId: openPayment.id,
+        });
+      }
+      return { ok: true, redirectTo: `/payment/return?status=success&paymentId=${openPayment.id}` };
+    }
+
+    if (outcome !== "rejected") {
+      return { ok: false, message: PAYMENT_PENDING_MESSAGE };
+    }
   }
 
   if (application.status === ApplicationStatus.PENDING_PAYMENT) {
@@ -172,28 +220,4 @@ export async function startPayment(input: unknown): Promise<PaymentStartResult> 
   });
 
   return { ok: true, redirectTo: zarinpal.paymentUrl };
-}
-
-export async function notifyAdminOfSubmission(applicationId: string) {
-  const adminMobile = process.env.ADMIN_ALERT_MOBILE;
-
-  if (!adminMobile) {
-    logger.warn("admin_submission_notification_skipped", {
-      applicationId,
-      reason: "missing_admin_alert_mobile",
-    });
-    return;
-  }
-
-  await sendSms(createAdminSubmissionSmsMessage(adminMobile, applicationId));
-  logger.info("admin_submission_notification_sent", {
-    applicationId,
-  });
-}
-
-export async function notifyUserOfSubmission(mobile: string, applicationId: string) {
-  await sendSms(createSubmissionReceivedSmsMessage(mobile));
-  logger.info("user_submission_notification_sent", {
-    applicationId,
-  });
 }

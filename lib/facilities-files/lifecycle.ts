@@ -1,6 +1,6 @@
 import type { FacilitiesFileScanner, FacilitiesScanResult } from "@/lib/facilities-files/scanner";
 import type { FacilitiesPrivateStorage, FacilitiesStorageKey } from "@/lib/facilities-files/storage";
-import { verifyFacilitiesUpload, type VerifiedFacilitiesFile } from "@/lib/facilities-files/verification";
+import { asBuffer, verifyFacilitiesUpload, type VerifiedFacilitiesFile } from "@/lib/facilities-files/verification";
 
 export type FacilitiesStagedFile = VerifiedFacilitiesFile & {
   storageKey: FacilitiesStorageKey;
@@ -20,7 +20,7 @@ export async function stageVerifyScanPromoteFacilitiesFile(input: {
   storage: FacilitiesPrivateStorage;
   scanner: FacilitiesFileScanner;
 }): Promise<FacilitiesStagedFile> {
-  const bytes = Buffer.from(input.bytes);
+  const bytes = asBuffer(input.bytes);
   const verified = verifyFacilitiesUpload({ fileName: input.fileName, bytes });
   const stagingKey = input.storage.createStagingKey();
   await input.storage.writeStaging(stagingKey, bytes);

@@ -1,14 +1,11 @@
-import { ApplicationStatus, PaymentStatus, Prisma } from "@prisma/client";
+import { PaymentStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { verifyZarinpalPayment } from "@/lib/payments/zarinpal";
-import { PAYMENT_AMOUNT_TOMAN } from "@/lib/validations/shared";
-import { notifyAdminOfSubmission, notifyUserOfSubmission } from "@/lib/actions/payment";
+import { notifyAdminOfSubmission, notifyUserOfSubmission } from "@/lib/payments/legacy-notifications";
+import { markLegacyPaymentFailed, settleLegacyPayment } from "@/lib/payments/legacy-settlement";
 import { logger } from "@/lib/logger";
 
-type PaymentWithApplication = Prisma.PaymentGetPayload<{
-  include: { application: { include: { payments: true } } };
-}>;
+type ReturnState = "success" | "failed" | "pending";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -52,63 +49,37 @@ export async function GET(request: Request) {
       status,
       reason: "callback_not_ok",
     });
-    await markActivePaymentFailed(payment, {
+    await markLegacyPaymentFailed(payment, {
       status,
       reason: "callback_not_ok",
     });
     redirect(createReturnUrl("failed", payment.id));
   }
 
-  try {
-    logger.info("payment_verification_started", {
-      paymentId: payment.id,
-      applicationId: payment.applicationId,
-    });
+  const outcome = await settleLegacyPayment(payment, authority);
 
-    const verified = await verifyZarinpalPayment({
-      amountToman: PAYMENT_AMOUNT_TOMAN,
-      authority,
-    });
-
-    await db.$transaction([
-      db.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.VERIFIED,
-          referenceId: verified.referenceId,
-          rawData: verified,
-        },
-      }),
-      db.application.update({
-        where: { id: payment.applicationId },
-        data: {
-          status: ApplicationStatus.SUBMITTED,
-          submittedAt: new Date(),
-        },
-      }),
-      db.statusHistory.create({
-        data: {
-          applicationId: payment.applicationId,
-          previousStatus: payment.application.status,
-          newStatus: ApplicationStatus.SUBMITTED,
-          note: "پرداخت موفق بود و پرونده در صف بررسی قرار گرفت",
-        },
-      }),
-    ]);
-    logger.info("payment_verification_succeeded", {
-      paymentId: payment.id,
-      applicationId: payment.applicationId,
-      referenceId: verified.referenceId,
-    });
-  } catch (error) {
-    logger.error("payment_verification_failed", error, {
-      paymentId: payment.id,
-      applicationId: payment.applicationId,
-    });
-    await markActivePaymentFailed(payment, {
-      error: error instanceof Error ? error.message : "verify failed",
-    });
+  if (outcome === "rejected") {
     redirect(createReturnUrl("failed", payment.id));
+  }
+
+  if (outcome === "duplicate") {
+    // The application is already paid through another row; this capture was
+    // left unverified for the gateway to reverse. Show the paid state.
+    const verifiedPayment = payment.application.payments.find((candidate) => candidate.status === PaymentStatus.VERIFIED);
+    redirect(createReturnUrl("success", verifiedPayment?.id ?? payment.id));
+  }
+
+  if (outcome === "already-settled") {
+    // A concurrent delivery already wrote history and sent the notifications.
+    redirect(createReturnUrl("success", payment.id));
+  }
+
+  // "unknown": the gateway could not be trusted; "persist-failed": Zarinpal
+  // confirmed the capture but the database write failed. In both cases the row
+  // keeps its authority and is re-verified on the next retry or re-delivery, so
+  // the applicant must never be told to pay again here.
+  if (outcome !== "verified") {
+    redirect(createReturnUrl("pending", payment.id));
   }
 
   try {
@@ -126,7 +97,7 @@ export async function GET(request: Request) {
   redirect(createReturnUrl("success", payment.id));
 }
 
-function createReturnUrl(status: "success" | "failed", paymentId: string | null) {
+function createReturnUrl(status: ReturnState, paymentId: string | null) {
   const params = new URLSearchParams({ status });
 
   if (paymentId) {
@@ -134,51 +105,4 @@ function createReturnUrl(status: "success" | "failed", paymentId: string | null)
   }
 
   return `/payment/return?${params.toString()}`;
-}
-
-async function markActivePaymentFailed(
-  payment: PaymentWithApplication,
-  rawData: Prisma.InputJsonObject,
-) {
-  if (payment.status !== PaymentStatus.INITIATED) {
-    return;
-  }
-
-  const operations: Prisma.PrismaPromise<unknown>[] = [
-    db.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData,
-      },
-    }),
-  ];
-
-  if (isActivePendingPayment(payment)) {
-    operations.push(
-      db.application.update({
-        where: { id: payment.applicationId },
-        data: { status: ApplicationStatus.DRAFT },
-      }),
-    );
-  }
-
-  await db.$transaction(operations);
-}
-
-function isActivePendingPayment(payment: PaymentWithApplication) {
-  if (payment.application.status !== ApplicationStatus.PENDING_PAYMENT) {
-    return false;
-  }
-
-  const relatedPayments = payment.application.payments || [];
-  const hasVerifiedPayment = relatedPayments.some(
-    (candidate) => candidate.status === PaymentStatus.VERIFIED,
-  );
-  const hasNewerInitiatedPayment = relatedPayments.some(
-    (candidate) =>
-      candidate.id !== payment.id && candidate.status === PaymentStatus.INITIATED,
-  );
-
-  return !hasVerifiedPayment && !hasNewerInitiatedPayment;
 }

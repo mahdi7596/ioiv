@@ -188,7 +188,7 @@ Each phase is independently deployable and should be reviewed and tested on its 
 npx tsc --noEmit -p tsconfig.json
 npx eslint .
 npx vitest run --exclude '.claude/**'
-git grep -nE '<merchant-id-prefix>' -- . ':!*.example'
+git grep -nE '<merchant-id-prefix>' -- . ':!*.example'   # prefix redacted on 2026-09-16
 git log --all --diff-filter=A --name-only --pretty=format: | grep -E '^\.env'
 grep -rn 'process\.env' lib app scripts | wc -l
 grep -rn 'FacilitiesConfigurationForm\b' app components   # no importers: dead code

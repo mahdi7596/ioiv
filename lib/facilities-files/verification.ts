@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { inflateRawSync } from "node:zlib";
+import { constants as zlibConstants, inflateRawSync } from "node:zlib";
 import * as XLSX from "xlsx";
 
 import { FacilitiesFileError } from "@/lib/facilities-files/errors";
@@ -85,9 +85,18 @@ export function assertFacilitiesApplicationAggregateLimit(existingBytes: number,
   }
 }
 
+/**
+ * View the caller's bytes as a Buffer without copying. `Buffer.from(buffer)`
+ * duplicates memory; with a 25 MiB limit and several pipeline stages that adds
+ * up to more than the container can hold under a burst of uploads.
+ */
+export function asBuffer(bytes: Buffer | Uint8Array): Buffer {
+  return Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+}
+
 export function verifyFacilitiesUpload(input: { fileName: string; bytes: Buffer | Uint8Array }): VerifiedFacilitiesFile {
   const originalName = safeFacilitiesOriginalName(input.fileName);
-  const bytes = Buffer.from(input.bytes);
+  const bytes = asBuffer(input.bytes);
 
   if (bytes.byteLength === 0) throw new FacilitiesFileError("FILE_EMPTY");
   if (bytes.byteLength > MAX_FACILITIES_FILE_BYTES) throw new FacilitiesFileError("FILE_TOO_LARGE");
@@ -128,14 +137,16 @@ function detectFacilitiesContentType(bytes: Buffer): FacilitiesStoredFileType | 
     if (zip.names.has("[content_types].xml") && zip.names.has("xl/workbook.xml")) {
       if (!isOfficeXml(zip, "xl/workbook.xml", /<workbook\b/)) throw new FacilitiesFileError("CONTENT_CORRUPT");
       try {
-        const workbook = XLSX.read(bytes, { type: "buffer", WTF: true });
+        // bookSheets reads only the workbook part for sheet names; cell data is
+        // never parsed here, which bounds parser time and memory on untrusted input.
+        const workbook = XLSX.read(bytes, { type: "buffer", bookSheets: true, WTF: true });
         if (!workbook.SheetNames.length) throw new Error("empty workbook");
       } catch {
         throw new FacilitiesFileError("CONTENT_CORRUPT");
       }
       return "XLSX";
     }
-    assertZipMemberPolicy(zip.names);
+    assertZipMemberPolicy(zip);
     return "ZIP";
   }
 
@@ -208,9 +219,11 @@ function isHeic(bytes: Buffer): boolean {
   return false;
 }
 
+const CFB_SIGNATURE = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+
 function detectCompoundDocumentType(bytes: Buffer): "DOC" | "XLS" | null {
   if (bytes.byteLength < 512) return null;
-  if (!bytes.subarray(0, 8).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]))) return null;
+  if (!bytes.subarray(0, 8).equals(CFB_SIGNATURE)) return null;
   if (bytes.readUInt16LE(28) !== 0xfffe) throw new FacilitiesFileError("CONTENT_CORRUPT");
   const majorVersion = bytes.readUInt16LE(26);
   const sectorShift = bytes.readUInt16LE(30);
@@ -237,17 +250,80 @@ function detectCompoundDocumentType(bytes: Buffer): "DOC" | "XLS" | null {
  * VAT declarations): documents and scans only. Nested archives, executables,
  * scripts, and extension-less blobs are rejected as ZIP_UNSAFE. Directory entries
  * and the metadata files every desktop ZIP tool adds are ignored.
+ *
+ * The member's name is not trusted on its own: the head of every member is read
+ * (a bounded, truncated inflate for deflated members) and must carry the magic
+ * bytes its extension implies, so an archive or executable renamed to `scan.pdf`
+ * is rejected. OOXML members must open with a known Office part; a plain ZIP
+ * renamed to `.docx` is rejected. Members are never fully extracted here.
  */
-export const ZIP_MEMBER_ALLOWED_EXTENSIONS = new Set([".pdf", ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".doc", ".docx", ".xls", ".xlsx", ".csv"]);
+const zipMemberExpectedHead: Record<string, ZipMemberHeadType> = {
+  ".pdf": "PDF",
+  ".jpg": "JPG",
+  ".jpeg": "JPG",
+  ".png": "PNG",
+  ".webp": "WEBP",
+  ".heic": "HEIC",
+  ".heif": "HEIC",
+  ".doc": "CFB",
+  ".xls": "CFB",
+  ".docx": "OOXML",
+  ".xlsx": "OOXML",
+  ".csv": "TEXT",
+};
+export const ZIP_MEMBER_ALLOWED_EXTENSIONS = new Set(Object.keys(zipMemberExpectedHead));
 const ZIP_MEMBER_IGNORED_BASENAMES = new Set([".ds_store", "thumbs.db", "desktop.ini"]);
 
-function assertZipMemberPolicy(names: Set<string>): void {
-  for (const name of names) {
+type ZipMemberHeadType = "PDF" | "JPG" | "PNG" | "WEBP" | "HEIC" | "CFB" | "OOXML" | "ARCHIVE" | "TEXT" | "UNKNOWN";
+
+// Enough compressed input to always yield the leading bytes, small enough that
+// the worst-case deflate expansion (about 1032:1) stays under the output cap.
+const ZIP_MEMBER_HEAD_COMPRESSED_BYTES = 1024;
+const ZIP_MEMBER_HEAD_MAX_BYTES = 2 * 1024 * 1024;
+const ZIP_MEMBER_HEAD_STORED_BYTES = 4096;
+const OOXML_FIRST_PARTS = ["[content_types].xml", "_rels/", "docprops/", "word/", "xl/", "customxml/"];
+
+function assertZipMemberPolicy(zip: ZipInspection): void {
+  for (const [name, entry] of zip.entries) {
     if (name.endsWith("/") || name.startsWith("__macosx/")) continue;
     const baseName = name.split("/").at(-1) ?? "";
     if (ZIP_MEMBER_IGNORED_BASENAMES.has(baseName)) continue;
-    if (!ZIP_MEMBER_ALLOWED_EXTENSIONS.has(path.extname(baseName))) throw new FacilitiesFileError("ZIP_UNSAFE");
+    const expected = zipMemberExpectedHead[path.extname(baseName)];
+    if (!expected) throw new FacilitiesFileError("ZIP_UNSAFE");
+    const head = zipMemberHead(entry);
+    // An empty placeholder carries nothing to misclassify.
+    if (head.byteLength === 0) continue;
+    if (detectZipMemberHeadType(head) !== expected) throw new FacilitiesFileError("ZIP_UNSAFE");
   }
+}
+
+function zipMemberHead(entry: { compressionMethod: number; data: Buffer }): Buffer {
+  if (entry.compressionMethod === 0) return entry.data.subarray(0, ZIP_MEMBER_HEAD_STORED_BYTES);
+  try {
+    // Z_SYNC_FLUSH returns whatever the truncated input decodes to instead of
+    // failing on the missing stream end; the output cap bounds a hostile ratio.
+    return inflateRawSync(entry.data.subarray(0, ZIP_MEMBER_HEAD_COMPRESSED_BYTES), {
+      finishFlush: zlibConstants.Z_SYNC_FLUSH,
+      maxOutputLength: ZIP_MEMBER_HEAD_MAX_BYTES,
+    });
+  } catch {
+    throw new FacilitiesFileError("CONTENT_CORRUPT");
+  }
+}
+
+function detectZipMemberHeadType(head: Buffer): ZipMemberHeadType {
+  if (head.byteLength >= 5 && head.subarray(0, 5).equals(Buffer.from("%PDF-"))) return "PDF";
+  if (head.byteLength >= 4 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff && head[3] >= 0xc0) return "JPG";
+  if (isPng(head)) return "PNG";
+  if (isWebp(head)) return "WEBP";
+  if (isHeic(head)) return "HEIC";
+  if (head.byteLength >= 8 && head.subarray(0, 8).equals(CFB_SIGNATURE)) return "CFB";
+  if (head.byteLength >= 30 && head.readUInt32LE(0) === 0x04034b50) {
+    const nameLength = head.readUInt16LE(26);
+    const firstEntry = head.subarray(30, 30 + nameLength).toString("utf8").toLocaleLowerCase("en-US");
+    return OOXML_FIRST_PARTS.some((part) => firstEntry.startsWith(part)) ? "OOXML" : "ARCHIVE";
+  }
+  return head.includes(0) ? "UNKNOWN" : "TEXT";
 }
 
 type ZipInspection = { names: Set<string>; entries: Map<string, { compressionMethod: number; data: Buffer }> };

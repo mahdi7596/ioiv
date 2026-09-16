@@ -42,6 +42,18 @@ describe("legacy upload route", () => {
     mocks.unlink.mockResolvedValue(undefined);
   });
 
+  it("rejects an oversized declared body before parsing or touching the database", async () => {
+    const form = new FormData();
+    form.set("applicationId", "app-1");
+    form.set("fieldKey", "creditReports.ceo");
+    form.set("file", new File(["%PDF-"], "doc.pdf"));
+    const response = await POST(new Request("http://test.local/api/uploads", { method: "POST", body: form, headers: { "content-length": String(30 * 1024 * 1024) } }));
+
+    expect(response.status).toBe(413);
+    expect(mocks.applicationFindUnique).not.toHaveBeenCalled();
+    expect(mocks.storeUploadFile).not.toHaveBeenCalled();
+  });
+
   it("rejects a traversal field key before touching the database", async () => {
     const response = await POST(request({ applicationId: "app-1", fieldKey: "../../../app/public" }));
 

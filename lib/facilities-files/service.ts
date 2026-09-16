@@ -15,7 +15,7 @@ import { FacilitiesFileError } from "@/lib/facilities-files/errors";
 import { stageVerifyScanPromoteFacilitiesFile } from "@/lib/facilities-files/lifecycle";
 import type { FacilitiesFileScanner } from "@/lib/facilities-files/scanner";
 import type { FacilitiesPrivateStorage, FacilitiesStorageKey } from "@/lib/facilities-files/storage";
-import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
+import { asBuffer, verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
 import { assertFacilitiesProfileDocumentEditable } from "@/lib/facilities/profile-lock";
 import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
 
@@ -133,7 +133,7 @@ export async function storeOwnedFacilitiesFile(input: {
   scanner: FacilitiesFileScanner;
 }): Promise<FacilitiesFileCommitResult> {
   ensureIdempotencyKey(input.idempotencyKey);
-  const bytes = Buffer.from(input.bytes);
+  const bytes = asBuffer(input.bytes);
   const binding = await requireOwnedBinding({ userId: input.userId, adminId: input.adminId }, input.bindingId);
   const existing = await db.facilitiesFileUploadAttempt.findUnique({
     where: { bindingId_idempotencyKey: { bindingId: binding.id, idempotencyKey: input.idempotencyKey } },

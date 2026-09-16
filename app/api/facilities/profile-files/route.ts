@@ -6,18 +6,26 @@ import { db } from "@/lib/db";
 import { assertFacilitiesProfileDocumentEditable } from "@/lib/facilities/profile-lock";
 import { ActionError } from "@/lib/actions/auth";
 import { facilitiesUploadRecoveryMessage, facilitiesUploadRecoveryState } from "@/lib/facilities-files/retention";
-import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
+import { MAX_FACILITIES_FILE_BYTES, verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
+import { admitUpload, rejectOversizedUploadRequest } from "@/lib/uploads/request-guards";
 import { FacilitiesFileError, describeFacilitiesFileError } from "@/lib/facilities-files/errors";
 
 export async function POST(request: Request) {
+  let release: (() => void) | undefined;
   try {
     const session = await requireSession("user");
+    // Declared-length and admission gates run before the body is buffered.
+    const oversized = rejectOversizedUploadRequest(request, MAX_FACILITIES_FILE_BYTES);
+    if (oversized) return oversized;
+    const gate = admitUpload(request, session.subjectId);
+    if (!gate.ok) return gate.response;
+    release = gate.release;
     const form = await request.formData();
     const bindingId = form.get("bindingId");
     const idempotencyKey = form.get("idempotencyKey");
     const file = form.get("file");
     if (typeof bindingId !== "string" || typeof idempotencyKey !== "string" || !(file instanceof File)) return Response.json({ error: "درخواست بارگذاری معتبر نیست" }, { status: 400 });
-    if (file.size > 25 * 1024 * 1024) return Response.json({ error: "حجم فایل بیش از حد مجاز است" }, { status: 400 });
+    if (file.size > MAX_FACILITIES_FILE_BYTES) return Response.json({ error: "حجم فایل بیش از حد مجاز است" }, { status: 400 });
     const binding = await db.facilitiesFileBinding.findFirst({ where: { id: bindingId, userId: session.subjectId, scope: "COMPANY_PROFILE" } });
     if (!binding) return Response.json({ error: "دسترسی یا نوع فایل معتبر نیست" }, { status: 400 });
     if (!binding.companyId) return Response.json({ error: "دسترسی امکان‌پذیر نیست" }, { status: 403 });
@@ -38,5 +46,7 @@ export async function POST(request: Request) {
     if (error instanceof FacilitiesFileError) return Response.json({ error: describeFacilitiesFileError(error.code), code: error.code }, { status: 422 });
     const message = error instanceof Error && (error.message === "FACILITIES_FILE_FORBIDDEN" || error.message.includes("پروفایل شرکت")) ? error.message === "FACILITIES_FILE_FORBIDDEN" ? "دسترسی امکان‌پذیر نیست" : error.message : "بارگذاری فایل ناموفق بود";
     return Response.json({ error: message }, { status: error instanceof ActionError ? error.status : 400 });
+  } finally {
+    release?.();
   }
 }

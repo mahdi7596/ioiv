@@ -134,11 +134,80 @@ describe("facilities payment and submission actions", () => {
     expect(mocks.db.facilitiesAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "APPLICATION_SUBMITTED", outcome: "FAILED", metadata: expect.objectContaining({ reasonCode: "POST_VERIFY_SUBMISSION_FAILED" }) }) }));
   });
 
-  it("logs and rejects a callback for an attempt that is already closed", async () => {
-    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ id: "pay_1", applicationId: "app_1", amountToman: 3000000, authority: "auth_1", status: FacilitiesPaymentStatus.FAILED });
+  it("keeps the attempt open when the gateway answers a verify with 5xx, but closes it on an explicit rejection", async () => {
+    const { ZarinpalRejectedError, ZarinpalUnavailableError } = await import("@/lib/payments/zarinpal-errors");
+    const open = { id: "pay_1", applicationId: "app_1", amountToman: 3000000, authority: "auth_1", status: FacilitiesPaymentStatus.REDIRECT_READY, application: application({ status: "PENDING_PAYMENT" }) };
     const { verifyFacilitiesPaymentCallback } = await import("@/lib/actions/facilities-payment");
+
+    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue(open);
+    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalUnavailableError("HTTP_5XX", 502));
+    await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "OK" })).resolves.toEqual({ state: "pending" });
+    expect(mocks.db.facilitiesPaymentAttempt.update).not.toHaveBeenCalled();
+    expect(mocks.db.facilitiesApplication.update.mock.calls.some((call) => call[0]?.data?.status === "DRAFT")).toBe(false);
+
+    vi.clearAllMocks();
+    mocks.db.$transaction.mockImplementation(async (work: unknown) => typeof work === "function" ? (work as (tx: typeof mocks.db) => unknown)(mocks.db) : Promise.all(work as Promise<unknown>[]));
+    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue(open);
+    mocks.db.facilitiesPaymentAttempt.update.mockResolvedValue({ id: "pay_1" });
+    mocks.db.facilitiesApplication.findUnique.mockResolvedValue({ status: "PENDING_PAYMENT" });
+    mocks.db.facilitiesApplication.update.mockResolvedValue({ id: "app_1" });
+    mocks.db.facilitiesStatusHistory.create.mockResolvedValue({ id: "history" });
+    mocks.db.facilitiesAuditLog.create.mockResolvedValue({ id: "audit" });
+    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalRejectedError(-51, { code: -51 }));
     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "OK" })).resolves.toEqual({ state: "failed" });
+    expect(mocks.db.facilitiesPaymentAttempt.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "pay_1" }, data: expect.objectContaining({ status: FacilitiesPaymentStatus.FAILED }) }));
+  });
+
+  it("does not ask the gateway about a closed attempt when the callback itself is not OK", async () => {
+    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ id: "pay_1", applicationId: "app_1", amountToman: 3000000, authority: "auth_1", status: FacilitiesPaymentStatus.FAILED, application: application({ status: "DRAFT" }) });
+    const { verifyFacilitiesPaymentCallback } = await import("@/lib/actions/facilities-payment");
+    await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "NOK" })).resolves.toEqual({ state: "failed" });
     expect(mocks.verifyZarinpalPayment).not.toHaveBeenCalled();
+    expect(mocks.db.facilitiesPaymentAttempt.update).not.toHaveBeenCalled();
+  });
+
+  it("records a late capture when the gateway confirms an attempt that was already closed, and submits", async () => {
+    const closed = { id: "pay_1", applicationId: "app_1", amountToman: 3000000, authority: "auth_1", status: FacilitiesPaymentStatus.FAILED, application: application({ status: "DRAFT" }) };
+    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue(closed);
+    mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "DRAFT" }));
+    mocks.verifyZarinpalPayment.mockResolvedValue({ referenceId: "ref_late" });
+    const { verifyFacilitiesPaymentCallback } = await import("@/lib/actions/facilities-payment");
+
+    await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "OK" })).resolves.toEqual({ state: "success" });
+
+    expect(mocks.verifyZarinpalPayment).toHaveBeenCalledWith({ amountToman: 3000000, authority: "auth_1" });
+    expect(mocks.db.facilitiesPaymentAttempt.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "pay_1" }, data: expect.objectContaining({ status: FacilitiesPaymentStatus.VERIFIED, referenceId: "ref_late", safeMetadata: expect.objectContaining({ reasonCode: "LATE_CAPTURE" }) }) }));
+    expect(mocks.db.facilitiesAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "PAYMENT_VERIFIED", metadata: expect.objectContaining({ reasonCode: "LATE_CAPTURE" }) }) }));
+    expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "SUBMITTED" }) }));
+  });
+
+  it("leaves a closed attempt closed when the gateway rejects it, and flags it when the gateway is unreachable", async () => {
+    const { ZarinpalRejectedError, ZarinpalUnavailableError } = await import("@/lib/payments/zarinpal-errors");
+    const closed = { id: "pay_1", applicationId: "app_1", amountToman: 3000000, authority: "auth_1", status: FacilitiesPaymentStatus.CANCELLED, application: application({ status: "DRAFT" }) };
+    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue(closed);
+    const { verifyFacilitiesPaymentCallback } = await import("@/lib/actions/facilities-payment");
+
+    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalRejectedError(-51, { code: -51 }));
+    await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "OK" })).resolves.toEqual({ state: "failed" });
+    expect(mocks.db.facilitiesPaymentAttempt.update).not.toHaveBeenCalled();
+
+    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalUnavailableError("HTTP_5XX", 503));
+    await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1", authority: "auth_1", gatewayStatus: "OK" })).resolves.toEqual({ state: "pending" });
+    expect(mocks.db.facilitiesPaymentAttempt.update).not.toHaveBeenCalled();
+  });
+
+  it("never verifies a second capture when the application already holds a verified payment", async () => {
+    const verifiedFirst = { id: "pay_a", amountToman: 3000000, status: FacilitiesPaymentStatus.VERIFIED, authority: "auth_a", referenceId: "ref_a", createdAt: new Date(), updatedAt: new Date() };
+    const second = { id: "pay_b", applicationId: "app_1", amountToman: 3000000, authority: "auth_b", status: FacilitiesPaymentStatus.REDIRECT_READY, application: application({ status: "SUBMITTED", payments: [verifiedFirst] }) };
+    mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue(second);
+    const { verifyFacilitiesPaymentCallback } = await import("@/lib/actions/facilities-payment");
+
+    await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_b", authority: "auth_b", gatewayStatus: "OK" })).resolves.toEqual({ state: "success" });
+
+    expect(mocks.verifyZarinpalPayment).not.toHaveBeenCalled();
+    expect(mocks.db.facilitiesPaymentAttempt.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "pay_b" }, data: expect.objectContaining({ status: FacilitiesPaymentStatus.CANCELLED, safeMetadata: expect.objectContaining({ reasonCode: "DUPLICATE_NOT_VERIFIED" }) }) }));
+    expect(mocks.db.facilitiesAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: "PAYMENT_CANCELLED", outcome: "REJECTED", metadata: expect.objectContaining({ reasonCode: "DUPLICATE_NOT_VERIFIED" }) }) }));
+    expect(mocks.db.facilitiesApplication.update).not.toHaveBeenCalled();
   });
 
   it("fails a stale attempt that never reached the gateway and returns the application to draft", async () => {

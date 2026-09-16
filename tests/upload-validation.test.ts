@@ -134,12 +134,13 @@ describe("legacy upload scanning", () => {
     await expect(readdir(root)).resolves.toEqual([]);
   });
 
-  it("stores the file with a warning when no scanner is configured at all", async () => {
-    await tempRoot();
+  it("fails closed when no scanner is configured at all, and scans when one is", async () => {
+    const root = await tempRoot();
     const scanned = vi.fn();
     const passthrough: FacilitiesFileScanner = { scan: async (request) => { scanned(request.fileType); return { status: "PASSED" }; } };
 
-    await expect(storeUploadFile({ applicationId: "app-1", fieldKey: "creditReports.ceo", file: file(), scanner: new UnavailableFacilitiesFileScanner() })).resolves.toMatchObject({ mimeType: "application/pdf" });
+    await expect(storeUploadFile({ applicationId: "app-1", fieldKey: "creditReports.ceo", file: file(), scanner: new UnavailableFacilitiesFileScanner() })).rejects.toThrow(UPLOAD_SCAN_UNAVAILABLE_MESSAGE);
+    await expect(readdir(root)).resolves.toEqual([]);
     await expect(storeUploadFile({ applicationId: "app-1", fieldKey: "creditReports.ceo", file: file(), scanner: passthrough })).resolves.toMatchObject({ mimeType: "application/pdf" });
     expect(scanned).toHaveBeenCalledWith("PDF");
   });

@@ -1,3 +1,5 @@
+import { ZarinpalRejectedError, ZarinpalUnavailableError } from "@/lib/payments/zarinpal-errors";
+
 const ZARINPAL_PRODUCTION_URL = "https://payment.zarinpal.com";
 const ZARINPAL_SANDBOX_URL = "https://sandbox.zarinpal.com";
 const ZARINPAL_MERCHANT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,19 +30,47 @@ function getMerchantId() {
   return merchantId;
 }
 
-async function postZarinpal<T>(path: string, body: Record<string, unknown>) {
+/**
+ * Distinguishes an explicit gateway rejection (safe to act on) from an answer
+ * that cannot be trusted (5xx, non-JSON body, non-2xx without a gateway error
+ * payload). See `zarinpal-errors.ts` for why the two must never be conflated.
+ */
+async function postZarinpal(path: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const response = await fetchWithNetworkRetry(`${getBaseUrl()}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const payload = await response.json();
-
-  if (!response.ok || hasZarinpalErrors(payload.errors)) {
-    throw new Error(`Zarinpal request failed: ${JSON.stringify(sanitizeZarinpalError(payload.errors || payload))}`);
+  const status = typeof response.status === "number" ? response.status : undefined;
+  if (status !== undefined && status >= 500) {
+    throw new ZarinpalUnavailableError("HTTP_5XX", status);
   }
 
-  return payload.data as T;
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
+  }
+  if (!payload || typeof payload !== "object") {
+    throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
+  }
+
+  const { data, errors } = payload as { data?: unknown; errors?: unknown };
+  if (hasZarinpalErrors(errors)) {
+    const code = errors && typeof errors === "object" && !Array.isArray(errors) && typeof (errors as { code?: unknown }).code === "number"
+      ? (errors as { code: number }).code
+      : undefined;
+    throw new ZarinpalRejectedError(code, sanitizeZarinpalError(errors));
+  }
+  if (!response.ok) {
+    throw new ZarinpalUnavailableError("HTTP_ERROR", status);
+  }
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
+  }
+
+  return data as Record<string, unknown>;
 }
 
 async function fetchWithNetworkRetry(input: string, init: RequestInit) {
@@ -123,7 +153,7 @@ export async function requestZarinpalPayment(input: {
   callbackUrl: string;
   mobile: string;
 }): Promise<{ authority: string; paymentUrl: string }> {
-  const data = await postZarinpal<{ authority: string }>("/pg/v4/payment/request.json", {
+  const data = await postZarinpal("/pg/v4/payment/request.json", {
     merchant_id: getMerchantId(),
     amount: input.amountToman,
     currency: "IRT",
@@ -133,10 +163,14 @@ export async function requestZarinpalPayment(input: {
       mobile: input.mobile,
     },
   });
+  const authority = data.authority;
+  if (typeof authority !== "string" || !authority) {
+    throw new ZarinpalUnavailableError("MALFORMED_RESPONSE");
+  }
 
   return {
-    authority: data.authority,
-    paymentUrl: `${getBaseUrl()}/pg/StartPay/${data.authority}`,
+    authority,
+    paymentUrl: `${getBaseUrl()}/pg/StartPay/${authority}`,
   };
 }
 
@@ -144,12 +178,17 @@ export async function verifyZarinpalPayment(input: {
   amountToman: number;
   authority: string;
 }): Promise<{ referenceId: string }> {
-  const data = await postZarinpal<{ ref_id: number | string }>("/pg/v4/payment/verify.json", {
+  const data = await postZarinpal("/pg/v4/payment/verify.json", {
     merchant_id: getMerchantId(),
     amount: input.amountToman,
     currency: "IRT",
     authority: input.authority,
   });
+  // code 100 = verified now, 101 = already verified earlier; both confirm capture.
+  const referenceId = data.ref_id;
+  if ((typeof referenceId !== "string" && typeof referenceId !== "number") || referenceId === "") {
+    throw new ZarinpalUnavailableError("MALFORMED_RESPONSE");
+  }
 
-  return { referenceId: String(data.ref_id) };
+  return { referenceId: String(referenceId) };
 }

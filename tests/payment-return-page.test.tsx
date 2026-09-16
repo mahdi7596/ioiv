@@ -39,13 +39,22 @@ describe("payment return page", () => {
     expect(markup).not.toContain("PAYMENT_RETURNED");
   });
 
-  it("does not trust a success status in the URL when the payment is not verified", async () => {
+  it("does not trust a success status in the URL when the payment is still open", async () => {
     mocks.paymentFindUnique.mockResolvedValue({ status: "INITIATED", application: { userId: "user-1" } });
 
     const markup = await render({ status: "success", paymentId: "pay_1" });
 
-    expect(markup).toContain("پرداخت ناموفق بود");
+    expect(markup).toContain("وضعیت پرداخت هنوز مشخص نیست");
     expect(markup).not.toContain("پرداخت با موفقیت ثبت شد");
+    expect(markup).not.toContain("می‌توانید دوباره پرداخت را انجام دهید");
+  });
+
+  it("shows the failure message from the row, not the URL, for a failed payment", async () => {
+    mocks.paymentFindUnique.mockResolvedValue({ status: "FAILED", application: { userId: "user-1" } });
+
+    const markup = await render({ status: "pending", paymentId: "pay_1" });
+
+    expect(markup).toContain("پرداخت ناموفق بود");
   });
 
   it("shows a neutral state for another user's payment or when signed out", async () => {
