@@ -1602,6 +1602,14 @@ What changed:
   copies.
 - The legacy submission SMS helpers live in `lib/payments/legacy-notifications.ts`, a
   plain module, so they are no longer registered as callable server actions.
+- 2026-09-16: git history was rewritten with `git filter-repo --replace-text` to remove the
+  production Zarinpal merchant ID that earlier commits (2026-05-07 to 2026-09-15) carried in
+  `DEPLOYMENT.md` and `openspec/.../design.md`; every branch on `origin` was force-pushed.
+  Clones made before that date must be re-cloned, not pulled. The pre-rewrite repository
+  is kept as a bare mirror outside the tree (`ioiv-pre-rewrite-2026-09-16.git`) and must be
+  deleted once GitHub support has purged cached views. The merchant ID itself belongs only
+  in `.env.runtime`; `tests/no-committed-gateway-credentials.test.ts` fails the build if a
+  real one is ever tracked again.
 - Gateway answers are classified in `lib/payments/zarinpal-errors.ts`: only an explicit
   Zarinpal rejection (`errors.code`, for example -51/-53/-54) closes a payment attempt.
   HTTP 5xx, non-JSON bodies, missing fields, timeouts and network errors are "unknown"
