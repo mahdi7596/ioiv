@@ -11,7 +11,7 @@ import { facilitiesUploadRecoveryMessage, facilitiesUploadRecoveryState } from "
 function allowed(slot: string, type: string) {
   if (["questionnaire"].includes(slot)) return type === "DOC" || type === "DOCX";
   if (["licences", "active-contracts"].includes(slot) || slot.startsWith("vat-")) return type === "ZIP";
-  return ["PDF", "DOC", "DOCX", "XLS", "XLSX", "CSV", "ZIP"].includes(type);
+  return ["PDF", "DOC", "DOCX", "XLS", "XLSX", "CSV", "ZIP", "JPG", "PNG", "WEBP", "HEIC"].includes(type);
 }
 export async function POST(request: Request) {
   try {

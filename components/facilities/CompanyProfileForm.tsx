@@ -1,14 +1,14 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, FileText, Loader2, Plus, Save, Trash2, UploadCloud, UserCog, Users, Check, AlertCircle } from "lucide-react";
+import { Building2, FileText, Loader2, Plus, Trash2, UploadCloud, UserCog, Users, Check, AlertCircle } from "lucide-react";
 import { completeFacilitiesCompanyProfile, ensureFacilitiesProfileDocumentSlot, saveFacilitiesCompanyDraft } from "@/lib/actions/facilities-company";
 import { showToast } from "@/components/ui/toast";
 import { JalaliDatePicker } from "@/components/ui/JalaliDatePicker";
 import { IRAN_PROVINCES } from "@/lib/data/iran-cities";
-import { normalizeDigits, normalizedText, CEO_POSITION } from "@/lib/validations/facilities-company";
+import { normalizeDigits, normalizedText, CEO_POSITION, isCeoRole } from "@/lib/validations/facilities-company";
 
-type Person = { id?: string; fullName: string; ownershipPercentage?: string; position?: string };
+type Person = { id?: string; fullName: string; nationalId?: string; ownershipPercentage?: string; position?: string };
 type Draft = {
   version: number;
   name: string;
@@ -18,7 +18,7 @@ type Draft = {
   registrationDate: string;
   registeredCapitalRial: string;
   contactFullName: string;
-  contactNationalCode: string;
+  contactMobile: string;
   shareholders: Person[];
   officers: Person[];
 };
@@ -35,7 +35,7 @@ const emptyDraft: Draft = {
   registrationDate: "",
   registeredCapitalRial: "",
   contactFullName: "",
-  contactNationalCode: "",
+  contactMobile: "",
   shareholders: [],
   officers: [],
 };
@@ -53,10 +53,10 @@ const fields: FieldSpec[] = [
   { type: "date", label: "تاریخ ثبت" },
   { type: "text", key: "registeredCapitalRial", label: "سرمایه ثبت‌شده (ریال)", placeholder: "مثلاً: ۱۰۰۰۰۰۰۰۰۰" },
   { type: "text", key: "contactFullName", label: "نام و نام خانوادگی رابط", placeholder: "مثلاً: علی رضایی" },
-  { type: "text", key: "contactNationalCode", label: "کد ملی رابط", placeholder: "۱۲۳۴۵۶۷۸۹۰" },
+  { type: "text", key: "contactMobile", label: "شماره همراه رابط", placeholder: "۰۹۱۲۳۴۵۶۷۸۹" },
 ];
 
-const OFFICER_ROLES = ["مدیرعامل", "رئیس هیئت‌مدیره", "نایب رئیس هیئت‌مدیره", "عضو هیئت‌مدیره", "عضو علی‌البدل هیئت‌مدیره"];
+const OFFICER_ROLES = ["مدیرعامل", "رئیس هیئت‌مدیره", "مدیرعامل و رئیس هیئت‌مدیره", "عضو هیئت‌مدیره", "عضو علی‌البدل هیئت‌مدیره"];
 const BOARD_MEMBER_POSITION = "عضو هیئت‌مدیره";
 
 const documentFields: Array<[string, string]> = [
@@ -70,12 +70,12 @@ const documentFields: Array<[string, string]> = [
 // becomes CEO; extra CEO rows are demoted so the "exactly one" invariant holds.
 function withCeoDefault(officers: Person[]): Person[] {
   if (!officers.length) return officers;
-  if (!officers.some((officer) => normalizedText(officer.position ?? "") === CEO_POSITION)) {
+  if (!officers.some((officer) => isCeoRole(officer.position))) {
     return officers.map((officer, index) => (index === 0 ? { ...officer, position: CEO_POSITION } : officer));
   }
   let seen = false;
   return officers.map((officer) => {
-    if (normalizedText(officer.position ?? "") !== CEO_POSITION) return officer;
+    if (!isCeoRole(officer.position)) return officer;
     if (seen) return { ...officer, position: "" };
     seen = true;
     return officer;
@@ -114,12 +114,15 @@ function validateDraft(draft: Draft): FieldErrors {
 
   requireText("contactFullName", "نام و نام خانوادگی رابط");
 
-  const contactCode = normalizeDigits(String(draft.contactNationalCode ?? "")).trim();
-  if (!contactCode) errors.contactNationalCode = "کد ملی رابط الزامی است";
-  else if (!/^\d{10}$/.test(contactCode)) errors.contactNationalCode = "کد ملی رابط باید ۱۰ رقم باشد";
+  const contactMobile = normalizeDigits(String(draft.contactMobile ?? "")).trim();
+  if (!contactMobile) errors.contactMobile = "شماره همراه رابط الزامی است";
+  else if (!/^09\d{9}$/.test(contactMobile)) errors.contactMobile = "شماره همراه باید با ۰۹ شروع شود و ۱۱ رقم باشد";
 
   draft.shareholders.forEach((person, index) => {
-    if (!person.fullName?.trim()) errors[`shareholders.${index}.fullName`] = "نام سهام‌دار الزامی است";
+    if (!person.fullName?.trim()) errors[`shareholders.${index}.fullName`] = "مشخصات شخص حقیقی یا حقوقی الزامی است";
+    const nationalId = normalizeDigits(String(person.nationalId ?? "")).trim();
+    if (!nationalId) errors[`shareholders.${index}.nationalId`] = "کد ملی یا شناسه ملی الزامی است";
+    else if (!/^\d{10}$|^\d{11}$/.test(nationalId)) errors[`shareholders.${index}.nationalId`] = "کد ملی (۱۰ رقم) یا شناسه ملی (۱۱ رقم) وارد کنید";
     const pct = normalizeDigits(String(person.ownershipPercentage ?? "")).trim();
     if (!pct) errors[`shareholders.${index}.second`] = "درصد مالکیت الزامی است";
     else if (!(Number(pct) > 0 && Number(pct) <= 100)) errors[`shareholders.${index}.second`] = "درصد باید بین ۰ تا ۱۰۰ باشد";
@@ -130,10 +133,10 @@ function validateDraft(draft: Draft): FieldErrors {
     if (!person.position?.trim()) errors[`officers.${index}.second`] = "سمت الزامی است";
   });
 
-  const ceoCount = draft.officers.filter((person) => normalizedText(person.position ?? "") === CEO_POSITION).length;
+  const ceoCount = draft.officers.filter((person) => isCeoRole(person.position)).length;
   const boardMemberCount = draft.officers.filter((person) => {
     const role = normalizedText(person.position ?? "");
-    return role !== "" && role !== CEO_POSITION;
+    return role !== "" && !isCeoRole(person.position);
   }).length;
   if (!draft.officers.length) errors["officers.section"] = "افزودن مدیرعامل و حداقل یک عضو هیئت‌مدیره الزامی است";
   else if (ceoCount === 0) errors["officers.section"] = "یک نفر را به‌عنوان مدیرعامل انتخاب کنید";
@@ -250,13 +253,34 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
     }
   }
 
+  // A member's identity ZIP is stored against that member's saved record, so a
+  // brand-new row must be persisted (to mint its id) before its slot exists.
+  // Do that transparently: save the draft, then open the picker for the new id —
+  // no separate "activate upload" button. Validation errors surface as usual.
+  function saveThenUploadOfficer(index: number) {
+    if (!runValidation()) return;
+    start(async () => {
+      try {
+        const company = await saveFacilitiesCompanyDraft(draft);
+        const merged = mergeSaved(draft, company);
+        setDraft(merged);
+        const officerId = merged.officers[index]?.id;
+        if (!officerId) throw new Error("ذخیره ناموفق بود؛ دوباره تلاش کنید");
+        setFormError(null);
+        await upload("officer", officerId);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "ذخیره ناموفق بود";
+        setFormError(message);
+        showToast({ type: "error", message });
+      }
+    });
+  }
+
   function personList(kind: "shareholders" | "officers") {
     const isOfficers = kind === "officers";
     const title = isOfficers ? "مدیرعامل و اعضای هیئت‌مدیره" : "سهام‌داران";
     const Icon = isOfficers ? UserCog : Users;
     const addLabel = isOfficers ? "افزودن عضو" : "افزودن سهام‌دار";
-    const secondFieldLabel = isOfficers ? "سمت" : "درصد مالکیت";
-    const secondFieldPlaceholder = isOfficers ? "مثلاً: نایب رئیس هیئت‌مدیره" : "مثلاً: ۲۵";
 
     const headingId = `${kind}-heading`;
     const sectionError = isOfficers ? fieldErrors["officers.section"] : undefined;
@@ -281,6 +305,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
         <div className="person-list">
           {draft[kind].map((item, index) => {
             const nameError = fieldErrors[`${kind}.${index}.fullName`];
+            const nationalIdError = fieldErrors[`${kind}.${index}.nationalId`];
             const secondError = fieldErrors[`${kind}.${index}.second`];
             const officerUpload = isOfficers && item.id ? uploads[`officer-${item.id}`] : undefined;
             const currentRole = normalizedText(item.position ?? "");
@@ -288,10 +313,10 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
             const nameField = (
               <label className="person-row__field" key="name">
                 <span>
-                  نام و نام خانوادگی<span className="field-required" aria-hidden="true">*</span>
+                  {isOfficers ? "نام و نام خانوادگی" : "مشخصات شخص حقیقی یا حقوقی"}<span className="field-required" aria-hidden="true">*</span>
                 </span>
                 <input
-                  placeholder="مثلاً: علی رضایی"
+                  placeholder={isOfficers ? "مثلاً: علی رضایی" : "مثلاً: علی رضایی یا شرکت نمونه"}
                   value={item.fullName}
                   aria-invalid={nameError ? true : undefined}
                   onChange={(e) => {
@@ -300,6 +325,25 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                   }}
                 />
                 <FieldError message={nameError} />
+              </label>
+            );
+            const shareholderIdField = (
+              <label className="person-row__field" key="nid">
+                <span>
+                  کد ملی یا شناسه ملی<span className="field-required" aria-hidden="true">*</span>
+                </span>
+                <input
+                  placeholder="۱۲۳۴۵۶۷۸۹۰"
+                  dir="ltr"
+                  inputMode="numeric"
+                  value={item.nationalId ?? ""}
+                  aria-invalid={nationalIdError ? true : undefined}
+                  onChange={(e) => {
+                    setDraft((d) => ({ ...d, shareholders: d.shareholders.map((x, i) => (i === index ? { ...x, nationalId: e.target.value } : x)) }));
+                    clearError(`shareholders.${index}.nationalId`);
+                  }}
+                />
+                <FieldError message={nationalIdError} />
               </label>
             );
             const roleField = (
@@ -317,7 +361,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                       ...d,
                       officers: d.officers.map((x, i) => {
                         if (i === index) return { ...x, position: role };
-                        if (role === CEO_POSITION && normalizedText(x.position ?? "") === CEO_POSITION) return { ...x, position: "" };
+                        if (isCeoRole(role) && isCeoRole(x.position)) return { ...x, position: "" };
                         return x;
                       }),
                     }));
@@ -338,10 +382,10 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
             const percentField = (
               <label className="person-row__field" key="pct">
                 <span>
-                  {secondFieldLabel}<span className="field-required" aria-hidden="true">*</span>
+                  درصد مالکیت<span className="field-required" aria-hidden="true">*</span>
                 </span>
                 <input
-                  placeholder={secondFieldPlaceholder}
+                  placeholder="مثلاً: ۲۵"
                   inputMode="decimal"
                   value={item.ownershipPercentage}
                   aria-invalid={secondError ? true : undefined}
@@ -354,9 +398,10 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
               </label>
             );
             return (
-              <div className="person-row" key={item.id ?? index}>
+              <div className={`person-row${isOfficers ? "" : " person-row--shareholder"}`} key={item.id ?? index}>
                 {isOfficers ? roleField : nameField}
-                {isOfficers ? nameField : percentField}
+                {isOfficers ? nameField : shareholderIdField}
+                {isOfficers ? null : percentField}
                 <div className="person-row__actions">
                   <button
                     type="button"
@@ -424,12 +469,12 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                         </button>
                       </div>
                     ) : (
-                      <div className="member-doc__control member-doc__control--pending">
+                      <div className="member-doc__control">
                         <button
                           type="button"
                           className="button button--ghost button--sm"
                           disabled={pending}
-                          onClick={() => save()}
+                          onClick={() => saveThenUploadOfficer(index)}
                         >
                           {pending ? (
                             <>
@@ -438,12 +483,11 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                             </>
                           ) : (
                             <>
-                              <Save aria-hidden="true" size={15} strokeWidth={2} />
-                              ذخیره و فعال‌سازی بارگذاری
+                              <UploadCloud aria-hidden="true" size={15} strokeWidth={2} />
+                              بارگذاری ZIP
                             </>
                           )}
                         </button>
-                        <span className="member-doc__hint">برای بارگذاری مدرک این عضو، ابتدا اطلاعات را ذخیره کنید.</span>
                       </div>
                     )}
                   </div>
@@ -493,6 +537,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
       ["محل ثبت", draft.registrationPlace],
       ["سرمایه ثبت‌شده (ریال)", draft.registeredCapitalRial],
       ["نام رابط", draft.contactFullName],
+      ["شماره همراه رابط", draft.contactMobile],
     ];
     const documentControl = (slot: string, kind: string, officerId?: string) => {
       const state = uploads[slot];
@@ -565,7 +610,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                 <li className="document-list__item" key={kind} data-status={uploads[kind]?.status}>
                   <span className="document-list__label">
                     <FileText aria-hidden="true" size={17} strokeWidth={2} />
-                    {label}
+                    {label}<span className="field-required" aria-hidden="true">*</span>
                   </span>
                   {documentControl(kind, kind)}
                 </li>
@@ -648,8 +693,8 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                   <input
                     value={draft[key] as string}
                     placeholder={placeholder}
-                    dir={key.includes("Id") || key.includes("Capital") ? "ltr" : undefined}
-                    inputMode={key.includes("Id") || key.includes("Capital") ? "numeric" : undefined}
+                    dir={key.includes("Id") || key.includes("Capital") || key.includes("Mobile") ? "ltr" : undefined}
+                    inputMode={key.includes("Id") || key.includes("Capital") || key.includes("Mobile") ? "numeric" : undefined}
                     aria-invalid={error ? true : undefined}
                     onChange={(e) => update(key, e.target.value)}
                   />
@@ -674,7 +719,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                 <li className="document-list__item" key={kind} data-status={state?.status}>
                   <span className="document-list__label">
                     <FileText aria-hidden="true" size={17} strokeWidth={2} />
-                    {label}
+                    {label}<span className="field-required" aria-hidden="true">*</span>
                   </span>
                   {state && !uploading ? (
                     <span className={`document-list__status document-list__status--${state.status}`}>

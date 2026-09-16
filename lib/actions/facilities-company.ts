@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { ActionError } from "@/lib/actions/auth";
-import { companyDraftSchema, CEO_POSITION, normalizedText } from "@/lib/validations/facilities-company";
+import { companyDraftSchema, isCeoRole } from "@/lib/validations/facilities-company";
 import { assertFacilitiesProfileDocumentEditable, assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
 
 const DOCUMENT_SLOTS = ["incorporation-notice", "articles-of-association", "board-changes-gazette", "capital-increase-gazette"] as const;
@@ -49,7 +49,7 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
   const parsed = companyDraftSchema.safeParse(input);
   if (!parsed.success) throw new ActionError(parsed.error.issues[0]?.message || "اطلاعات پروفایل معتبر نیست");
   const value = parsed.data;
-  const ceos = value.officers.filter((officer) => normalizedText(officer.position) === CEO_POSITION);
+  const ceos = value.officers.filter((officer) => isCeoRole(officer.position));
   if (ceos.length > 1) throw new ActionError("فقط یک مدیرعامل می‌تواند ثبت شود");
   try {
     return await db.$transaction(async (tx) => {
@@ -59,7 +59,7 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
         await assertFacilitiesProfileEditable(tx, current.id);
       }
       if (current && value.version !== undefined && current.profileVersion !== value.version) throw new ActionError("پروفایل در جای دیگری تغییر کرده است؛ صفحه را تازه‌سازی کنید", 409);
-      const fields = { name: value.name, nationalId: value.nationalId, registrationNumber: value.registrationNumber, registrationPlace: value.registrationPlace, registrationDate: dateOnly(value.registrationDate), registeredCapitalRial: new Prisma.Decimal(value.registeredCapitalRial), contactFullName: value.contactFullName, contactNationalCode: value.contactNationalCode, profileCompletedAt: null };
+      const fields = { name: value.name, nationalId: value.nationalId, registrationNumber: value.registrationNumber, registrationPlace: value.registrationPlace, registrationDate: dateOnly(value.registrationDate), registeredCapitalRial: new Prisma.Decimal(value.registeredCapitalRial), contactFullName: value.contactFullName, contactMobile: value.contactMobile, profileCompletedAt: null };
       const company = current ? await tx.company.update({ where: { id: current.id }, data: { ...fields, profileVersion: { increment: 1 } } }) : await tx.company.create({ data: { userId: session.subjectId, ...fields, profileVersion: 1 } });
       // Existing officer ids are deliberately retained so their identity slots cannot be reassigned.
       const retained = value.officers.filter((item) => item.id).map((item) => item.id!);
@@ -72,7 +72,7 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
       const officerBindings = await tx.facilitiesFileBinding.findMany({ where: { companyId: company.id, slotKey: { startsWith: "officer-" } }, select: { slotKey: true, currentUploadId: true } });
       if (removable.some((officer) => officerBindings.some((binding) => binding.slotKey === `officer-${officer.id}-identity-package` && binding.currentUploadId))) throw new ActionError("برای حذف عضو، ابتدا بسته هویتی او را جایگزین یا با پشتیبانی پیگیری کنید");
       await tx.companyShareholder.deleteMany({ where: { companyId: company.id } });
-      await tx.companyShareholder.createMany({ data: value.shareholders.map((s) => ({ companyId: company.id, fullName: s.fullName, ownershipPercentage: new Prisma.Decimal(s.ownershipPercentage) })) });
+      await tx.companyShareholder.createMany({ data: value.shareholders.map((s) => ({ companyId: company.id, fullName: s.fullName, nationalId: s.nationalId, ownershipPercentage: new Prisma.Decimal(s.ownershipPercentage) })) });
       await tx.companyOfficer.deleteMany({ where: { companyId: company.id, id: { notIn: retained } } });
       // Upsert officers in submitted order and echo their ids back, so a freshly
       // added member's identity-package upload can activate immediately after
@@ -81,8 +81,8 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
       for (const officer of value.officers) {
         const saved = await tx.companyOfficer.upsert({
           where: { id: officer.id ?? "__new__" },
-          create: { companyId: company.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: normalizedText(officer.position) === CEO_POSITION },
-          update: { fullName: officer.fullName, position: officer.position, isChiefExecutive: normalizedText(officer.position) === CEO_POSITION },
+          create: { companyId: company.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: isCeoRole(officer.position) },
+          update: { fullName: officer.fullName, position: officer.position, isChiefExecutive: isCeoRole(officer.position) },
         });
         savedOfficers.push({ id: saved.id, fullName: saved.fullName, position: saved.position });
       }
@@ -115,12 +115,12 @@ export async function completeFacilitiesCompanyProfile(input: { version: number 
   const company = await db.company.findUnique({ where: { userId: session.subjectId }, include: { shareholders: true, officers: true, facilitiesFileBindings: { include: { currentUpload: { include: { storedFile: true } } } } } });
   if (!company || company.profileVersion !== input.version) throw new ActionError("پروفایل تغییر کرده است؛ صفحه را تازه‌سازی کنید", 409);
   await assertFacilitiesProfileEditable(db, company.id);
-  const fields = [company.name, company.nationalId, company.registrationNumber, company.registrationPlace, company.registrationDate, company.registeredCapitalRial, company.contactFullName, company.contactNationalCode];
+  const fields = [company.name, company.nationalId, company.registrationNumber, company.registrationPlace, company.registrationDate, company.registeredCapitalRial, company.contactFullName, company.contactMobile];
   if (fields.some((field) => field === null || field === undefined) || !company.shareholders.length || !company.officers.length) throw new ActionError("همه اطلاعات و فهرست‌ها را تکمیل کنید");
   const total = company.shareholders.reduce((sum, item) => sum.plus(item.ownershipPercentage), new Prisma.Decimal(0));
   if (!total.equals(100)) throw new ActionError("مجموع درصد سهام باید دقیقاً ۱۰۰ باشد");
-  const ceos = company.officers.filter((officer) => officer.isChiefExecutive && normalizedText(officer.position) === CEO_POSITION);
-  if (ceos.length !== 1 || company.officers.some((officer) => (normalizedText(officer.position) === CEO_POSITION) !== officer.isChiefExecutive)) throw new ActionError("دقیقاً یک مدیرعامل با سمت «مدیرعامل» لازم است");
+  const ceos = company.officers.filter((officer) => officer.isChiefExecutive && isCeoRole(officer.position));
+  if (ceos.length !== 1 || company.officers.some((officer) => isCeoRole(officer.position) !== officer.isChiefExecutive)) throw new ActionError("دقیقاً یک مدیرعامل (یا «مدیرعامل و رئیس هیئت‌مدیره») لازم است");
   // A credit report requires at least one board member besides the CEO.
   if (!company.officers.some((officer) => !officer.isChiefExecutive)) throw new ActionError("حداقل یک عضو هیئت‌مدیره (غیر از مدیرعامل) برای گزارش اعتباری لازم است");
   const ready = new Set(company.facilitiesFileBindings.filter((binding) => binding.currentUpload?.lifecycleStatus === "PASSED" && binding.currentUpload.storedFile?.scanStatus === "PASSED").map((binding) => binding.slotKey));

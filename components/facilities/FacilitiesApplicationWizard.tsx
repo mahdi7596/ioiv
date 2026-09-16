@@ -2,18 +2,29 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState, useTransition } from "react";
-import { AlertCircle, Building2, CalendarRange, CheckCircle2, Clock, Download, History, Loader2, MessageSquareWarning, Search, Upload, Wallet, type LucideIcon } from "lucide-react";
+import { AlertCircle, CalendarRange, CheckCircle2, Clock, Download, History, Loader2, MessageSquareWarning, Search, Upload, Wallet, type LucideIcon } from "lucide-react";
 
 import { StepIndicator } from "@/components/application/StepIndicator";
 import { showToast } from "@/components/ui/toast";
-import { createFacilitiesDraft, ensureFacilitiesApplicationSlot, saveFacilitiesDraftDetails, updateFacilitiesApplicationDetails } from "@/lib/actions/facilities-application";
+import { createFacilitiesDraft, ensureFacilitiesApplicationSlot, updateFacilitiesApplicationDetails } from "@/lib/actions/facilities-application";
 import { startFacilitiesPayment, submitFacilitiesApplication } from "@/lib/actions/facilities-payment";
+import { normalizeDigits } from "@/lib/validations/facilities-company";
+
+function groupDigits(value: string) {
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
 function formatRial(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "—";
   const [integerPart, ...rest] = String(value).split(".");
-  const grouped = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const grouped = groupDigits(integerPart);
   return rest.length ? `${grouped}.${rest.join(".")}` : grouped;
+}
+
+// Keep only ASCII digits so the value the server receives is a clean integer for
+// Prisma.Decimal, while the input can display grouped digits (۳۰۰٬۰۰۰٬۰۰۰).
+function amountDigits(value: string | number | null | undefined) {
+  return normalizeDigits(String(value ?? "")).replace(/\D/g, "");
 }
 
 type DocItem = readonly [key: string, label: string, required: boolean];
@@ -23,7 +34,11 @@ const documentGroups: { title: string; items: DocItem[] }[] = [
     title: "اسناد مالی و مالیاتی",
     items: [
       ["tax-1404", "اظهارنامه مالیاتی ۱۴۰۴", true],
+      ["tax-1403", "اظهارنامه مالیاتی ۱۴۰۳ (اختیاری)", false],
+      ["tax-1402", "اظهارنامه مالیاتی ۱۴۰۲ (اختیاری)", false],
       ["financial-1404", "صورت مالی حسابرسی‌شده ۱۴۰۴", true],
+      ["financial-1403", "صورت مالی حسابرسی‌شده ۱۴۰۳", true],
+      ["financial-1402", "صورت مالی حسابرسی‌شده ۱۴۰۲ (اختیاری)", false],
       ["insurance", "لیست بیمه", true],
       ["trial-general", "تراز کل ۱۴۰۵", true],
       ["trial-subsidiary", "تراز معین ۱۴۰۵", true],
@@ -61,7 +76,7 @@ function acceptFor(key: string) {
   return ".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.jpg,.jpeg,.png,.webp,.heic,.heif";
 }
 
-const editSteps = ["مشخصات درخواست", "مدارک درخواست", "اطلاعات تکمیلی", "تأیید و ارسال"];
+const editSteps = ["مشخصات درخواست", "مدارک درخواست", "تأیید و ارسال"];
 
 // Required document slots for step 2 — mirrors the server-side requirement so
 // the user cannot advance before every starred document is uploaded.
@@ -196,12 +211,8 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   const intake = useMemo(() => data.intakes.find((item: any) => item.id === intakeId), [data.intakes, intakeId]);
   const [supplierId, setSupplierId] = useState(intake?.supplierConfigurations[0]?.id || "");
   const [app, setApp] = useState(data.applications[0] || null);
-  const [amount, setAmount] = useState(data.applications[0]?.requestedAmountRial || "");
+  const [amount, setAmount] = useState(amountDigits(data.applications[0]?.requestedAmountRial));
   const [type, setType] = useState(data.applications[0]?.facilityType || "FIXED_CAPITAL");
-  const insuranceEvidence = data.applications[0]?.evidence?.find((item: any) => item.kind === "insurance");
-  const boardEvidence = data.applications[0]?.evidence?.find((item: any) => item.kind === "credit-board");
-  const [employeeCount, setEmployeeCount] = useState(String(insuranceEvidence?.employeeCount ?? 0));
-  const [boardOfficerId, setBoardOfficerId] = useState(boardEvidence?.officerId || "");
   const [confirmed, setConfirmed] = useState(false);
   const [step, setStep] = useState(Math.min(Math.max(1, initialStep), editSteps.length));
   const [busy, setBusy] = useState(false);
@@ -261,60 +272,84 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   if (!app) {
     if (!data.intakes.length) return <div className="panel" role="status">در حال حاضر دوره یا تأمین‌کننده واجد شرایطی برای درخواست وجود ندارد.</div>;
     const selectedSupplier = intake.supplierConfigurations.find((item: any) => item.id === supplierId);
+    // The first step of the wizard is choosing the intake/supplier and amount; it
+    // lives inside the same wizard chrome (not a separate screen) and, on success,
+    // advances straight to step 2 so the type/amount are never asked twice.
+    const createDraft = () => {
+      startTransition(async () => {
+        try {
+          const result = await createFacilitiesDraft({ intakeId, intakeSupplierId: supplierId, facilityType: type as any, requestedAmountRial: amountDigits(amount) });
+          if (result?.id) { setApp(result); setStep(2); }
+          showToast({ type: "success", message: "پیش‌نویس درخواست ساخته شد" });
+        } catch (error) {
+          showToast({ type: "error", message: error instanceof Error ? error.message : "ایجاد پیش‌نویس ناموفق بود" });
+        }
+      });
+    };
     return (
-      <form className="panel profile-form" onSubmit={(event) => { event.preventDefault(); run(() => createFacilitiesDraft({ intakeId, intakeSupplierId: supplierId, facilityType: type as any, requestedAmountRial: amount })); }}>
-        <div>
-          <h2>شروع درخواست</h2>
-          <p className="panel-intro">دوره فراخوان، تأمین‌کننده و مبلغ مورد نیاز خود را مشخص کنید تا پیش‌نویس درخواست ساخته شود.</p>
+      <div className="profile-form" style={{ paddingBlockEnd: 84 }}>
+        <div className="panel wizard">
+          <div className="wizard__progress">
+            <StepIndicator currentStep={1} totalSteps={editSteps.length} title={editSteps[0]} />
+          </div>
+          <section className="wizard__body">
+            <form className="wizard__step" onSubmit={(event) => { event.preventDefault(); createDraft(); }}>
+              <h2>{editSteps[0]}</h2>
+              <div className="stack">
+                <section className="profile-list" aria-labelledby="facilities-intake-heading">
+                  <h3 className="section-legend" id="facilities-intake-heading">
+                    <CalendarRange aria-hidden="true" size={18} strokeWidth={2} />
+                    دوره فراخوان و تأمین‌کننده
+                  </h3>
+                  <div className="profile-grid">
+                    <label>
+                      <span className="field-label">دوره فراخوان<span className="field-required" aria-hidden="true">*</span></span>
+                      <select value={intakeId} onChange={(event) => { setIntakeId(event.target.value); setSupplierId(data.intakes.find((item: any) => item.id === event.target.value)?.supplierConfigurations[0]?.id || ""); }}>
+                        {data.intakes.map((item: any) => <option value={item.id} key={item.id}>{item.name}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span className="field-label">تأمین‌کننده<span className="field-required" aria-hidden="true">*</span></span>
+                      <select value={supplierId} onChange={(event) => setSupplierId(event.target.value)}>
+                        {intake.supplierConfigurations.map((item: any) => <option value={item.id} key={item.id}>{item.supplier.name}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  {selectedSupplier ? (
+                    <a className="button button--ghost button--sm facilities-prospectus-link" href={`/api/facilities/questionnaires/${selectedSupplier.questionnaireTemplateVersion.id}?intakeSupplierId=${selectedSupplier.id}`}>
+                      <Download aria-hidden="true" size={16} strokeWidth={2} />
+                      دانلود پرسشنامه این تأمین‌کننده (نسخه {selectedSupplier.questionnaireTemplateVersion.versionLabel})
+                    </a>
+                  ) : null}
+                </section>
+                <section className="profile-list" aria-labelledby="facilities-amount-heading">
+                  <h3 className="section-legend" id="facilities-amount-heading">
+                    <Wallet aria-hidden="true" size={18} strokeWidth={2} />
+                    مشخصات تسهیلات درخواستی
+                  </h3>
+                  <div className="profile-grid">
+                    <label>
+                      <span className="field-label">نوع تسهیلات<span className="field-required" aria-hidden="true">*</span></span>
+                      <select value={type} onChange={(event) => setType(event.target.value)}>
+                        <option value="FIXED_CAPITAL">سرمایه ثابت</option>
+                        <option value="WORKING_CAPITAL">سرمایه در گردش</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span className="field-label">مبلغ درخواستی (ریال)<span className="field-required" aria-hidden="true">*</span></span>
+                      <input dir="ltr" required inputMode="numeric" value={groupDigits(amount)} onChange={(event) => setAmount(amountDigits(event.target.value))} />
+                      <small>سقف قابل درخواست در این دوره: {formatRial(intake.maximumAmountRial)} ریال</small>
+                    </label>
+                  </div>
+                </section>
+              </div>
+              <div className="sticky-actions">
+                <button className="button button--primary" disabled={pending || !supplierId}>ایجاد پیش‌نویس</button>
+              </div>
+            </form>
+          </section>
         </div>
-        <section className="profile-list" aria-labelledby="facilities-intake-heading">
-          <h3 className="section-legend" id="facilities-intake-heading">
-            <CalendarRange aria-hidden="true" size={18} strokeWidth={2} />
-            دوره فراخوان و تأمین‌کننده
-          </h3>
-          <div className="profile-grid">
-            <label>
-              <span className="field-label">دوره فراخوان<span className="field-required" aria-hidden="true">*</span></span>
-              <select value={intakeId} onChange={(event) => { setIntakeId(event.target.value); setSupplierId(data.intakes.find((item: any) => item.id === event.target.value)?.supplierConfigurations[0]?.id || ""); }}>
-                {data.intakes.map((item: any) => <option value={item.id} key={item.id}>{item.name}</option>)}
-              </select>
-            </label>
-            <label>
-              <span className="field-label">تأمین‌کننده<span className="field-required" aria-hidden="true">*</span></span>
-              <select value={supplierId} onChange={(event) => setSupplierId(event.target.value)}>
-                {intake.supplierConfigurations.map((item: any) => <option value={item.id} key={item.id}>{item.supplier.name}</option>)}
-              </select>
-            </label>
-          </div>
-          {selectedSupplier ? (
-            <a className="button button--ghost button--sm facilities-prospectus-link" href={`/api/facilities/questionnaires/${selectedSupplier.questionnaireTemplateVersion.id}?intakeSupplierId=${selectedSupplier.id}`}>
-              <Download aria-hidden="true" size={16} strokeWidth={2} />
-              دانلود پرسشنامه این تأمین‌کننده (نسخه {selectedSupplier.questionnaireTemplateVersion.versionLabel})
-            </a>
-          ) : null}
-        </section>
-        <section className="profile-list" aria-labelledby="facilities-amount-heading">
-          <h3 className="section-legend" id="facilities-amount-heading">
-            <Wallet aria-hidden="true" size={18} strokeWidth={2} />
-            مشخصات تسهیلات درخواستی
-          </h3>
-          <div className="profile-grid">
-            <label>
-              <span className="field-label">نوع تسهیلات<span className="field-required" aria-hidden="true">*</span></span>
-              <select value={type} onChange={(event) => setType(event.target.value)}>
-                <option value="FIXED_CAPITAL">سرمایه ثابت</option>
-                <option value="WORKING_CAPITAL">سرمایه در گردش</option>
-              </select>
-            </label>
-            <label>
-              <span className="field-label">مبلغ درخواستی (ریال)<span className="field-required" aria-hidden="true">*</span></span>
-              <input dir="ltr" required inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} />
-              <small>سقف قابل درخواست در این دوره: {formatRial(intake.maximumAmountRial)} ریال</small>
-            </label>
-          </div>
-        </section>
-        <button className="button button--primary" disabled={pending || !supplierId}>ایجاد پیش‌نویس</button>
-      </form>
+      </div>
     );
   }
 
@@ -383,8 +418,11 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   }
   if (app.status === "PENDING_PAYMENT") return <div className="profile-form"><StatusNotice tone="pending" title="در انتظار نتیجه پرداخت" description={activePayment?.status === "TIMED_OUT" ? "نتیجه پرداخت هنوز از درگاه دریافت نشده است." : "پس از مشخص شدن نتیجه پرداخت، این صفحه را دوباره بررسی کنید."} />{timeline}</div>;
 
-  const officers = app.officers?.filter((officer: any) => !officer.isChiefExecutive) || [];
   const showPaymentConfirm = paymentEnabled && app.status !== "NEEDS_EDIT";
+  // The intake/supplier are fixed once the draft exists; look up their names for
+  // the read-only summary in step 1 (they may be absent if the intake was retired).
+  const appIntake = data.intakes.find((item: any) => item.id === app.intakeId);
+  const appSupplier = appIntake?.supplierConfigurations.find((item: any) => item.id === app.intakeSupplierId);
 
   function scrollToTop() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -392,18 +430,11 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
 
   // Auto-save the current step's data. Returns false if the server rejected it
   // (e.g. validation) so navigation can stay put. Uploads on step 2 already
-  // persist on their own, so only steps 1 and 3 carry field data.
+  // persist on their own, so only step 1 carries field data (type/amount).
   async function persistStep(target: number): Promise<boolean> {
     try {
-      let result: any = null;
-      if (target === 1) result = await updateFacilitiesApplicationDetails({ applicationId: app.id, facilityType: type as any, requestedAmountRial: amount });
-      else if (target === 3) {
-        // The server requires a valid non-CEO board member, so only auto-save
-        // once one is selected. Otherwise let the user move on without a
-        // confusing validation error — the final submit still enforces it.
-        if (!boardOfficerId) return true;
-        result = await saveFacilitiesDraftDetails({ applicationId: app.id, employeeCount: Number(employeeCount), boardOfficerId });
-      } else return true;
+      if (target !== 1) return true;
+      const result: any = await updateFacilitiesApplicationDetails({ applicationId: app.id, facilityType: type as any, requestedAmountRial: amount });
       if (result?.id) setApp(result);
       if (result?.state === "pending") {
         showToast({ type: "error", message: result.message });
@@ -429,7 +460,7 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
     try {
       const saved = await persistStep(step);
       if (!saved) return;
-      if (step === 1 || (step === 3 && boardOfficerId)) showToast({ type: "success", message: "اطلاعات به‌صورت خودکار ذخیره شد" });
+      if (step === 1) showToast({ type: "success", message: "اطلاعات به‌صورت خودکار ذخیره شد" });
       setStep((current) => Math.min(editSteps.length, current + 1));
       scrollToTop();
     } finally {
@@ -461,20 +492,48 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
 
             {step === 1 ? (
               <div className="stack">
-                <div className="profile-grid">
-                  <label>
-                    <span className="field-label">نوع تسهیلات<span className="field-required" aria-hidden="true">*</span></span>
-                    <select value={type} onChange={(event) => setType(event.target.value)}>
-                      <option value="FIXED_CAPITAL">سرمایه ثابت</option>
-                      <option value="WORKING_CAPITAL">سرمایه در گردش</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span className="field-label">مبلغ درخواستی (ریال)<span className="field-required" aria-hidden="true">*</span></span>
-                    <input dir="ltr" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} />
-                    <small>سقف ثبت‌شده: {formatRial(app.maximumAmountRialSnapshot)} ریال</small>
-                  </label>
-                </div>
+                <section className="profile-list" aria-labelledby="facilities-intake-ro">
+                  <h3 className="section-legend" id="facilities-intake-ro">
+                    <CalendarRange aria-hidden="true" size={18} strokeWidth={2} />
+                    دوره فراخوان و تأمین‌کننده
+                  </h3>
+                  <div className="profile-grid">
+                    <label>
+                      <span className="field-label">دوره فراخوان</span>
+                      <input value={appIntake?.name ?? "—"} readOnly aria-readonly="true" />
+                    </label>
+                    <label>
+                      <span className="field-label">تأمین‌کننده</span>
+                      <input value={appSupplier?.supplier?.name ?? "—"} readOnly aria-readonly="true" />
+                    </label>
+                  </div>
+                  {appSupplier ? (
+                    <a className="button button--ghost button--sm facilities-prospectus-link" href={`/api/facilities/questionnaires/${appSupplier.questionnaireTemplateVersion.id}?intakeSupplierId=${appSupplier.id}`}>
+                      <Download aria-hidden="true" size={16} strokeWidth={2} />
+                      دانلود پرسشنامه این تأمین‌کننده (نسخه {appSupplier.questionnaireTemplateVersion.versionLabel})
+                    </a>
+                  ) : null}
+                </section>
+                <section className="profile-list" aria-labelledby="facilities-amount-ro">
+                  <h3 className="section-legend" id="facilities-amount-ro">
+                    <Wallet aria-hidden="true" size={18} strokeWidth={2} />
+                    مشخصات تسهیلات درخواستی
+                  </h3>
+                  <div className="profile-grid">
+                    <label>
+                      <span className="field-label">نوع تسهیلات<span className="field-required" aria-hidden="true">*</span></span>
+                      <select value={type} onChange={(event) => setType(event.target.value)}>
+                        <option value="FIXED_CAPITAL">سرمایه ثابت</option>
+                        <option value="WORKING_CAPITAL">سرمایه در گردش</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span className="field-label">مبلغ درخواستی (ریال)<span className="field-required" aria-hidden="true">*</span></span>
+                      <input dir="ltr" inputMode="numeric" value={groupDigits(amount)} onChange={(event) => setAmount(amountDigits(event.target.value))} />
+                      <small>سقف ثبت‌شده: {formatRial(app.maximumAmountRialSnapshot)} ریال</small>
+                    </label>
+                  </div>
+                </section>
                 <p className="section-hint"><CheckCircle2 aria-hidden="true" size={15} />اطلاعات با رفتن به مرحله بعد به‌صورت خودکار ذخیره می‌شود.</p>
               </div>
             ) : null}
@@ -496,73 +555,32 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
                         <DocRow key={item[0]} item={item} status={docStatus[item[0]]} disabled={pending || uploading} onPick={(file) => void upload(item[0], file)} />
                       ))}
                     </div>
+                    {group.title === "پرسشنامه و مجوزها" ? (
+                      <div className="member-doc">
+                        <div className="member-doc__info">
+                          <span className="member-doc__label">پیوست‌های پرسشنامه (اختیاری)</span>
+                          <span className="member-doc__desc">می‌توانید چند فایل انتخاب کنید{attachmentCount ? ` — ${attachmentCount} فایل ثبت شد` : ""}.</span>
+                        </div>
+                        <div className="member-doc__control">
+                          <label className="button button--ghost button--sm">
+                            <Upload aria-hidden="true" size={15} strokeWidth={2} />
+                            انتخاب فایل‌ها
+                            <input type="file" multiple className="sr-only" disabled={pending || uploading} accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.jpg,.jpeg,.png,.webp,.heic,.heif" onChange={(event) => { for (const file of Array.from(event.target.files || [])) void upload("questionnaire-attachment", file, true); event.target.value = ""; }} />
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
                   </section>
                 ))}
-                <section className="profile-list">
-                  <h3 className="section-legend">پیوست‌های پرسشنامه (اختیاری)</h3>
-                  <div className="member-doc">
-                    <div className="member-doc__info">
-                      <span className="member-doc__label">افزودن پیوست</span>
-                      <span className="member-doc__desc">می‌توانید چند فایل انتخاب کنید{attachmentCount ? ` — ${attachmentCount} فایل ثبت شد` : ""}.</span>
-                    </div>
-                    <div className="member-doc__control">
-                      <label className="button button--ghost button--sm">
-                        <Upload aria-hidden="true" size={15} strokeWidth={2} />
-                        انتخاب فایل‌ها
-                        <input type="file" multiple className="sr-only" disabled={pending || uploading} accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.jpg,.jpeg,.png,.webp,.heic,.heif" onChange={(event) => { for (const file of Array.from(event.target.files || [])) void upload("questionnaire-attachment", file, true); event.target.value = ""; }} />
-                      </label>
-                    </div>
-                  </div>
-                </section>
               </div>
             ) : null}
 
             {step === 3 ? (
               <div className="stack">
-                <div className="profile-grid">
-                  <label>
-                    <span className="field-label">تعداد کارکنان</span>
-                    <input inputMode="numeric" value={employeeCount} onChange={(event) => setEmployeeCount(event.target.value)} />
-                  </label>
-                  <label>
-                    <span className="field-label">عضو هیئت‌مدیره برای گزارش اعتباری<span className="field-required" aria-hidden="true">*</span></span>
-                    <select value={boardOfficerId} disabled={!officers.length} onChange={(event) => setBoardOfficerId(event.target.value)}>
-                      <option value="">{officers.length ? "انتخاب کنید" : "عضو هیئت‌مدیره‌ای ثبت نشده است"}</option>
-                      {officers.map((officer: any) => <option key={officer.id} value={officer.id}>{officer.fullName} — {officer.position}</option>)}
-                    </select>
-                  </label>
-                </div>
-                {officers.length ? (
-                  <p className="section-hint"><CheckCircle2 aria-hidden="true" size={15} />اطلاعات با رفتن به مرحله بعد به‌صورت خودکار ذخیره می‌شود.</p>
-                ) : (
-                  <div className="empty-note" role="note">
-                    <span className="empty-note__icon" aria-hidden="true"><AlertCircle size={20} strokeWidth={2} /></span>
-                    <div className="empty-note__body">
-                      <p className="empty-note__title">هنوز عضو هیئت‌مدیره‌ای ثبت نشده است</p>
-                      <p className="empty-note__desc">گزارش اعتباری به یک عضو هیئت‌مدیره (غیر از مدیرعامل) نیاز دارد. ابتدا اعضای هیئت‌مدیره را در پروفایل شرکت تکمیل کنید، سپس به این مرحله بازگردید.</p>
-                      <a className="button button--ghost button--sm" href="/dashboard/facilities-profile">
-                        <Building2 aria-hidden="true" size={15} strokeWidth={2} />
-                        تکمیل پروفایل شرکت
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : null}
-
-            {step === 4 ? (
-              <div className="stack">
                 <div className="detail-grid">
                   <div><span className="stat-label">نوع تسهیلات</span><p className="stat-value">{facilityTypeLabels[type] || type}</p></div>
                   <div><span className="stat-label">مبلغ درخواستی</span><p className="stat-value">{formatRial(amount)} ریال</p></div>
-                  <div><span className="stat-label">تعداد کارکنان</span><p className="stat-value">{employeeCount || "—"}</p></div>
                 </div>
-                {!boardOfficerId ? (
-                  <p className="final-review__notice">
-                    برای ارسال، انتخاب «عضو هیئت‌مدیره برای گزارش اعتباری» در مرحله «اطلاعات تکمیلی» الزامی است.
-                    {officers.length ? "" : " ابتدا اعضای هیئت‌مدیره را در پروفایل شرکت ثبت کنید."}
-                  </p>
-                ) : null}
                 {showPaymentConfirm ? (
                   <label className="payment-acknowledgement">
                     <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
@@ -572,8 +590,8 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
                 <button
                   type="button"
                   className="button button--primary"
-                  disabled={pending || uploading || !boardOfficerId || (showPaymentConfirm && !confirmed)}
-                  onClick={() => run(() => app.status === "NEEDS_EDIT" ? submitFacilitiesApplication({ applicationId: app.id, employeeCount: Number(employeeCount), boardOfficerId }) : paymentEnabled ? startFacilitiesPayment({ applicationId: app.id, confirmed, employeeCount: Number(employeeCount), boardOfficerId }) : submitFacilitiesApplication({ applicationId: app.id, employeeCount: Number(employeeCount), boardOfficerId }))}
+                  disabled={pending || uploading || (showPaymentConfirm && !confirmed)}
+                  onClick={() => run(() => app.status === "NEEDS_EDIT" ? submitFacilitiesApplication({ applicationId: app.id }) : paymentEnabled ? startFacilitiesPayment({ applicationId: app.id, confirmed }) : submitFacilitiesApplication({ applicationId: app.id }))}
                 >
                   {app.status === "NEEDS_EDIT" ? "ارسال اصلاحات" : paymentEnabled ? "تأیید و ورود به پرداخت" : "ارسال نهایی درخواست"}
                 </button>

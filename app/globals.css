@@ -1367,6 +1367,121 @@ textarea:focus-visible {
   z-index: 20;
 }
 
+/* Facilities review — action panel, expert note field, and jump-to-action button */
+.review-panel {
+  border-inline-start: 3px solid var(--color-secondary);
+  scroll-margin-top: 84px;
+}
+
+.review-panel > h2 {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.review-panel > h2 svg {
+  color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+.review-panel__hint {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.review-note {
+  display: grid;
+  gap: 8px;
+}
+
+.review-note > span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.review-note__input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  line-height: 1.75;
+  min-height: 168px;
+  padding: 12px 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+.review-note__input:hover {
+  border-color: var(--color-secondary);
+}
+
+.review-note__input::placeholder {
+  color: var(--color-text-soft);
+}
+
+.review-note__footer {
+  align-items: center;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 6px 14px;
+  justify-content: space-between;
+  margin-block-start: -4px;
+}
+
+.review-note__counter {
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.review-actions__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.review-fab {
+  align-items: center;
+  animation: review-fab-in 200ms ease both;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  bottom: 20px;
+  box-shadow: 0 12px 30px rgb(48 56 73 / 0.28);
+  color: var(--color-on-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 700;
+  gap: 8px;
+  inset-inline-start: 20px;
+  min-height: 46px;
+  padding: 0 18px;
+  position: fixed;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  z-index: 30;
+}
+
+.review-fab:hover {
+  background: #262d3a;
+  box-shadow: 0 16px 34px rgb(48 56 73 / 0.34);
+  transform: translateY(-2px);
+}
+
+@keyframes review-fab-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-fab { animation: none; }
+  .review-fab:hover { transform: none; }
+}
+
 .form-row {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
@@ -1731,6 +1846,11 @@ textarea:focus-visible {
   gap: 10px;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   padding: 12px;
+}
+
+/* Shareholders carry three fields (identity, national/registration id, share %). */
+.person-row--shareholder {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.8fr) auto;
 }
 
 .person-row__field {
@@ -2351,6 +2471,15 @@ textarea:focus-visible {
     flex: 1 1 0;
     min-width: 0;
     padding-inline: 8px;
+  }
+
+  .review-fab {
+    bottom: 16px;
+    inset-inline-start: 16px;
+  }
+
+  .review-actions__row .button {
+    flex: 1 1 auto;
   }
 
   .form-row {

@@ -245,6 +245,7 @@ model Company {
   registeredCapitalRial  Decimal?
   contactFullName        String?
   contactNationalCode    String?
+  contactMobile          String?
   /// Monotonically incremented on every profile mutation. Clients use this to
   /// avoid silently overwriting another tab's draft.
   profileVersion         Int                      @default(0)
@@ -263,6 +264,7 @@ model CompanyShareholder {
   companyId           String
   company             Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
   fullName            String
+  nationalId          String?
   ownershipPercentage Decimal
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -556,6 +558,7 @@ model FacilitiesApplicationCompanySnapshot {
   registeredCapitalRial Decimal?
   contactFullName       String?
   contactNationalCode   String?
+  contactMobile         String?
   createdAt             DateTime              @default(now())
 }
 
@@ -564,6 +567,7 @@ model FacilitiesApplicationShareholder {
   applicationId       String
   application         FacilitiesApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
   fullName            String
+  nationalId          String?
   ownershipPercentage Decimal
   createdAt           DateTime              @default(now())
 

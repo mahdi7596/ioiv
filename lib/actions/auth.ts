@@ -163,11 +163,19 @@ export async function requestOtp(input: unknown, context: OtpRequestContext = {}
     },
   });
 
-  try {
-    await sendSms(createOtpSmsMessage(mobile, code));
-  } catch {
-    throw new ActionError("ارسال پیامک ناموفق بود. کمی بعد دوباره تلاش کنید.", 502);
-  }
+  // Dispatch the SMS in the background instead of awaiting it here. The provider
+  // HTTP call can take several seconds (up to SMS_REQUEST_TIMEOUT_MS) when the
+  // provider is slow; awaiting it would block this response and freeze the
+  // client's submit button ("در حال ارسال...") for the full duration. The code
+  // is already persisted, so we return immediately and let the user resend if
+  // the message never arrives. Failures are logged, never left as an unhandled
+  // rejection.
+  void sendSms(createOtpSmsMessage(mobile, code)).catch((error) => {
+    logger.error("otp_sms_dispatch_failed", error, {
+      mode,
+      mobile: maskMobile(mobile),
+    });
+  });
 
   if (mode === "admin") {
     logger.info("otp_request_completed", {

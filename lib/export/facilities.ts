@@ -215,9 +215,9 @@ export function createFacilitiesWorkbookRows(applications: FacilitiesExportAppli
       "عضو منتخب هیئت‌مدیره": text(selectedBoard ? `${selectedBoard.fullName} — ${selectedBoard.position}` : ""),
       "نام شرکت": text(snapshot?.name), "شناسه ملی شرکت": text(snapshot?.nationalId), "شماره ثبت": text(snapshot?.registrationNumber),
       "محل ثبت": text(snapshot?.registrationPlace), "تاریخ ثبت": snapshot?.registrationDate ?? "", "سرمایه ثبت‌شده (ریال)": snapshot?.registeredCapitalRial ? Number(snapshot.registeredCapitalRial) : "",
-      "نام رابط شرکت": text(snapshot?.contactFullName), "کد ملی رابط شرکت": text(snapshot?.contactNationalCode),
+      "نام رابط شرکت": text(snapshot?.contactFullName), "شماره همراه رابط شرکت": text(snapshot?.contactMobile),
     });
-    for (const item of application.shareholders) sheets["سهامداران"].push({ "شناسه درخواست": application.id, "نام سهامدار": text(item.fullName), "درصد مالکیت": Number(item.ownershipPercentage) });
+    for (const item of application.shareholders) sheets["سهامداران"].push({ "شناسه درخواست": application.id, "مشخصات سهامدار": text(item.fullName), "کد ملی یا شناسه ملی": text(item.nationalId), "درصد مالکیت": Number(item.ownershipPercentage) });
     for (const item of application.officers) sheets["اعضای شرکت"].push({ "شناسه درخواست": application.id, "شناسه عضو": item.id, "نام": text(item.fullName), "سمت": text(item.position), "مدیرعامل": yesNo(item.isChiefExecutive), "منتخب گزارش اعتباری": yesNo(item.id === boardEvidence?.officerId) });
     for (const item of application.evidence.filter((e) => ["tax", "financial", "vat"].includes(e.kind))) sheets["مدارک سالانه"].push({ "شناسه درخواست": application.id, "نوع": item.kind === "tax" ? "اظهارنامه مالیاتی" : item.kind === "financial" ? "صورت مالی حسابرسی‌شده" : "اظهارنامه ارزش افزوده", "سال": item.year ?? "", "شناسه اتصال فایل": item.bindingId });
     sheets["فایل‌ها"].push(...currentFileRows(application, appUrl));

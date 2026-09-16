@@ -43,10 +43,10 @@ function application(overrides: Record<string, unknown> = {}) {
     maximumAmountRialSnapshot: new Prisma.Decimal(500000000000),
     paymentEnabledSnapshot: true,
     paymentAmountTomanSnapshot: 3000000,
-    companySnapshot: { name: "شرکت نمونه", nationalId: "۱۲۳۴۵۶۷۸۹۰۱", registrationNumber: "۱۲۳", registrationPlace: "تهران", registrationDate: new Date(), registeredCapitalRial: new Prisma.Decimal(100), contactFullName: "نماینده", contactNationalCode: "۱۲۳۴۵۶۷۸۹۰" },
-    shareholders: [{ fullName: "سهامدار", ownershipPercentage: new Prisma.Decimal(100) }],
+    companySnapshot: { name: "شرکت نمونه", nationalId: "۱۲۳۴۵۶۷۸۹۰۱", registrationNumber: "۱۲۳", registrationPlace: "تهران", registrationDate: new Date(), registeredCapitalRial: new Prisma.Decimal(100), contactFullName: "نماینده", contactNationalCode: "۱۲۳۴۵۶۷۸۹۰", contactMobile: "۰۹۱۲۳۴۵۶۷۸۹" },
+    shareholders: [{ fullName: "سهامدار", nationalId: "۱۲۳۴۵۶۷۸۹۰", ownershipPercentage: new Prisma.Decimal(100) }],
     officers: [{ id: "ceo_1", fullName: "مدیرعامل", position: "مدیرعامل", isChiefExecutive: true }, { id: "board_1", fullName: "عضو", position: "عضو هیئت‌مدیره", isChiefExecutive: false }],
-    fileBindings: ["questionnaire", "licences", "active-contracts", "insurance", "trial-general", "trial-subsidiary", "credit-company", "credit-ceo", "credit-board", "vat-1404", "tax-1404", "financial-1404"].map((slotKey) => file(slotKey)),
+    fileBindings: ["questionnaire", "licences", "active-contracts", "insurance", "trial-general", "trial-subsidiary", "credit-company", "credit-ceo", "credit-board", "vat-1404", "tax-1404", "financial-1404", "financial-1403"].map((slotKey) => file(slotKey)),
     evidence: [{ kind: "insurance", employeeCount: 10, officerId: null }, { kind: "credit-board", employeeCount: null, officerId: "board_1" }],
     payments: [],
     user: { mobile: "09120000000" },
@@ -79,14 +79,14 @@ describe("facilities payment and submission actions", () => {
 
   it("uses the pinned server amount and creates only one payment handoff", async () => {
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ ok: true, state: "redirect" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true })).resolves.toMatchObject({ ok: true, state: "redirect" });
     expect(mocks.requestZarinpalPayment).toHaveBeenCalledWith(expect.objectContaining({ amountToman: 3000000, mobile: "09120000000" }));
     expect(mocks.db.facilitiesPaymentAttempt.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ amountToman: 3000000, status: FacilitiesPaymentStatus.INITIATED }) }));
   });
 
   it("requires the confirmation checkbox before an enabled payment", async () => {
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: false, employeeCount: 10, boardOfficerId: "board_1" })).rejects.toThrow("برای ادامه");
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: false })).rejects.toThrow("برای ادامه");
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
   });
@@ -94,7 +94,7 @@ describe("facilities payment and submission actions", () => {
   it("submits directly without a checkbox when payment is disabled", async () => {
     mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ paymentEnabledSnapshot: false, paymentAmountTomanSnapshot: null }));
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: false, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ ok: true, state: "submitted" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: false })).resolves.toMatchObject({ ok: true, state: "submitted" });
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
   });
@@ -102,7 +102,7 @@ describe("facilities payment and submission actions", () => {
   it("reuses an existing redirect instead of creating a duplicate payment", async () => {
     mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ payments: [{ id: "pay_existing", applicationId: "app_1", amountToman: 3000000, status: FacilitiesPaymentStatus.REDIRECT_READY, authority: "auth_existing", referenceId: null, createdAt: new Date(), updatedAt: new Date() }] }));
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toEqual({ ok: true, state: "redirect", redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/auth_existing" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true })).resolves.toEqual({ ok: true, state: "redirect", redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/auth_existing" });
     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
   });
@@ -145,7 +145,7 @@ describe("facilities payment and submission actions", () => {
     const stale = new Date(Date.now() - 30 * 60 * 1000);
     mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "PENDING_PAYMENT", payments: [{ id: "pay_stale", applicationId: "app_1", amountToman: 3000000, status: FacilitiesPaymentStatus.TIMED_OUT, authority: null, referenceId: null, createdAt: stale, updatedAt: stale }] }));
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ ok: false, state: "failed" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true })).resolves.toMatchObject({ ok: false, state: "failed" });
     expect(mocks.db.facilitiesPaymentAttempt.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "pay_stale" }, data: expect.objectContaining({ status: FacilitiesPaymentStatus.FAILED }) }));
     expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "DRAFT" }) }));
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ ...staleAttempt, application: application({ status: "PENDING_PAYMENT" }) });
     mocks.verifyZarinpalPayment.mockResolvedValue({ referenceId: "ref_late" });
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ ok: true, state: "submitted" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true })).resolves.toMatchObject({ ok: true, state: "submitted" });
     expect(mocks.verifyZarinpalPayment).toHaveBeenCalledWith({ amountToman: 3000000, authority: "auth_old" });
     expect(mocks.requestZarinpalPayment).not.toHaveBeenCalled();
     expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "SUBMITTED" }) }));
@@ -171,7 +171,7 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ ...staleAttempt, application: application({ status: "PENDING_PAYMENT" }) });
     mocks.verifyZarinpalPayment.mockRejectedValue(new TypeError("fetch failed"));
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ ok: true, state: "pending" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true })).resolves.toMatchObject({ ok: true, state: "pending" });
     expect(mocks.db.facilitiesPaymentAttempt.update.mock.calls.some((call) => call[0]?.data?.status === FacilitiesPaymentStatus.FAILED)).toBe(false);
   });
 
@@ -183,7 +183,7 @@ describe("facilities payment and submission actions", () => {
       .mockResolvedValueOnce(application({ status: "PENDING_PAYMENT", payments: closed }))
       .mockResolvedValue(application({ status: "DRAFT", payments: closed }));
     const { startFacilitiesPayment } = await import("@/lib/actions/facilities-payment");
-    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true, employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ ok: true, state: "redirect" });
+    await expect(startFacilitiesPayment({ applicationId: "app_1", confirmed: true })).resolves.toMatchObject({ ok: true, state: "redirect" });
     expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "DRAFT" }) }));
     expect(mocks.db.facilitiesPaymentAttempt.create).toHaveBeenCalledOnce();
   });
@@ -214,7 +214,7 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "NEEDS_EDIT", submittedAt: originalSubmittedAt, payments: [{ id: "verified", amountToman: 3000000, status: FacilitiesPaymentStatus.VERIFIED }] }));
     mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1", openedAt: new Date("2026-08-01T00:00:00.000Z") });
     const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
-    await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ state: "submitted" });
+    await expect(submitFacilitiesApplication({ applicationId: "app_1" })).resolves.toMatchObject({ state: "submitted" });
     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
     expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith({ where: { id: "correction_1" }, data: { resolvedAt: expect.any(Date) } });
     const statusUpdate = mocks.db.facilitiesApplication.update.mock.calls.find((call) => call[0]?.data?.status === "SUBMITTED")?.[0];
@@ -228,7 +228,7 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1", openedAt: new Date("2026-09-15T00:00:00.000Z") });
     mocks.db.facilitiesFileBinding.findFirst.mockResolvedValue(null);
     const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
-    await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).rejects.toMatchObject({ status: 400 });
+    await expect(submitFacilitiesApplication({ applicationId: "app_1" })).rejects.toMatchObject({ status: 400 });
     expect(mocks.db.facilitiesCorrectionRequest.update).not.toHaveBeenCalled();
     expect(mocks.db.facilitiesApplication.update.mock.calls.some((call) => call[0]?.data?.status === "SUBMITTED")).toBe(false);
   });
@@ -238,7 +238,7 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1", openedAt: new Date("2026-09-15T00:00:00.000Z") });
     mocks.db.facilitiesFileBinding.findFirst.mockResolvedValue({ id: "profile-binding-1" });
     const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
-    await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ state: "submitted" });
+    await expect(submitFacilitiesApplication({ applicationId: "app_1" })).resolves.toMatchObject({ state: "submitted" });
     expect(mocks.db.facilitiesFileBinding.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ companyId: "company_1", scope: "COMPANY_PROFILE" }) }));
     expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith({ where: { id: "correction_1" }, data: { resolvedAt: expect.any(Date) } });
   });

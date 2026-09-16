@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { redirect } from "next/navigation";
 import { ApplicationWizard } from "@/components/application/ApplicationWizard";
+import { DashboardEvaluationNotice } from "@/components/dashboard/DashboardEvaluationNotice";
 import { AppShell } from "@/components/layout/AppShell";
 import type { ApplicationDraft } from "@/components/application/types";
 import { getApplicationAccess } from "@/lib/application/status";
@@ -53,6 +54,7 @@ export default async function ApplicationPage() {
         </Link>
       }
     >
+      <DashboardEvaluationNotice />
       <ApplicationWizard
         applicationId={application.id}
         initialStep={application.currentStep}

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Building2, MessageSquareWarning } from "lucide-react";
 import { redirect } from "next/navigation";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { DashboardEvaluationNotice } from "@/components/dashboard/DashboardEvaluationNotice";
 import { ValidationCertificateDownload } from "@/components/dashboard/ValidationCertificateDownload";
 import { AppShell } from "@/components/layout/AppShell";
 import { canEditApplication } from "@/lib/application/status";
@@ -76,8 +75,6 @@ export default async function DashboardPage() {
       stickyHeader
     >
       <div className="applicant-dashboard">
-        <DashboardEvaluationNotice />
-
         <section className="profile-callout" aria-label="پروفایل شرکت">
           <span className="profile-callout__icon" aria-hidden="true">
             <Building2 size={24} strokeWidth={2} />

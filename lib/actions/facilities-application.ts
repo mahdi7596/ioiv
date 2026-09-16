@@ -113,8 +113,8 @@ export async function createFacilitiesDraft(input: { intakeId: string; intakeSup
           paymentEnabledSnapshot: config.intake.paymentEnabled,
           paymentAmountTomanSnapshot: config.intake.paymentEnabled ? config.intake.paymentAmountToman : null,
           paymentTermsVersionSnapshot: config.intake.paymentTermsVersion,
-          companySnapshot: { create: { name: company.name, nationalId: company.nationalId, registrationNumber: company.registrationNumber, registrationPlace: company.registrationPlace, registrationDate: company.registrationDate, registeredCapitalRial: company.registeredCapitalRial, contactFullName: company.contactFullName, contactNationalCode: company.contactNationalCode } },
-          shareholders: { create: (await tx.companyShareholder.findMany({ where: { companyId: company.id } })).map((shareholder) => ({ fullName: shareholder.fullName, ownershipPercentage: shareholder.ownershipPercentage })) },
+          companySnapshot: { create: { name: company.name, nationalId: company.nationalId, registrationNumber: company.registrationNumber, registrationPlace: company.registrationPlace, registrationDate: company.registrationDate, registeredCapitalRial: company.registeredCapitalRial, contactFullName: company.contactFullName, contactNationalCode: company.contactNationalCode, contactMobile: company.contactMobile } },
+          shareholders: { create: (await tx.companyShareholder.findMany({ where: { companyId: company.id } })).map((shareholder) => ({ fullName: shareholder.fullName, nationalId: shareholder.nationalId, ownershipPercentage: shareholder.ownershipPercentage })) },
           officers: { create: (await tx.companyOfficer.findMany({ where: { companyId: company.id } })).map((officer) => ({ sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive })) },
         },
       });
@@ -165,7 +165,7 @@ export async function saveFacilitiesDraftDetails(input: { applicationId: string;
     if (!application) throw new ActionError("این پرونده در حال حاضر قابل ویرایش نیست", 403);
     if (!Number.isInteger(input.employeeCount) || input.employeeCount < 0 || !application.officers.some((officer) => officer.id === input.boardOfficerId && !officer.isChiefExecutive)) throw new ActionError("اطلاعات منابع انسانی یا عضو هیئت‌مدیره معتبر نیست");
     const ready = application.fileBindings.filter((binding) => binding.currentUpload?.lifecycleStatus === "PASSED");
-    if (requiredFacilitiesSlots.some((key) => !ready.some((binding) => binding.slotKey === key)) || !ready.some((binding) => binding.slotKey.startsWith("tax-")) || !ready.some((binding) => binding.slotKey.startsWith("financial-"))) throw new ActionError("همه مدارک الزامی باید با موفقیت بررسی شده باشند");
+    if (requiredFacilitiesSlots.some((key) => !ready.some((binding) => binding.slotKey === key))) throw new ActionError("همه مدارک الزامی باید با موفقیت بررسی شده باشند");
     await materializeFacilitiesEvidence(tx, application, input);
     await tx.facilitiesAuditLog.create({ data: { applicationId: application.id, actorType: "USER", actorId: session.subjectId, action: "APPLICATION_UPDATED", entityType: "FacilitiesApplication", entityId: application.id, metadata: {} } });
     return true;

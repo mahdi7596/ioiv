@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import type { FacilitiesApplication, FacilitiesApplicationEvidence, FacilitiesFileBinding, FacilitiesFileUpload, StoredFile, User } from "@prisma/client";
 
 import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
+import { isCeoRole } from "@/lib/validations/facilities-company";
 
 export type FacilitiesSubmissionInput = {
   employeeCount: number;
@@ -19,8 +20,9 @@ type SubmissionApplication = FacilitiesApplication & {
     registeredCapitalRial: Prisma.Decimal | null;
     contactFullName: string | null;
     contactNationalCode: string | null;
+    contactMobile: string | null;
   } | null;
-  shareholders: { fullName: string; ownershipPercentage: Prisma.Decimal }[];
+  shareholders: { fullName: string; nationalId: string | null; ownershipPercentage: Prisma.Decimal }[];
   officers: { id: string; fullName: string; position: string; isChiefExecutive: boolean }[];
   fileBindings: (FacilitiesFileBinding & {
     currentUpload: (FacilitiesFileUpload & { storedFile: Pick<StoredFile, "id" | "originalName" | "fileType" | "byteSize" | "scanStatus"> | null }) | null;
@@ -49,6 +51,9 @@ export const requiredFacilitiesSlots = [
   "credit-ceo",
   "credit-board",
   "vat-1404",
+  "tax-1404",
+  "financial-1404",
+  "financial-1403",
 ] as const;
 
 export const facilitiesSubmissionInclude = {
@@ -71,6 +76,10 @@ function isNationalId(value: string | null | undefined, length: number) {
   return Boolean(value && new RegExp(`^[0-9۰-۹]{${length}}$`).test(value));
 }
 
+function isMobile(value: string | null | undefined) {
+  return Boolean(value && /^09[0-9۰-۹]{9}$/.test(value.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))));
+}
+
 function fileIsReady(binding: SubmissionApplication["fileBindings"][number]) {
   return binding.currentUpload?.lifecycleStatus === "PASSED" && binding.currentUpload.storedFile?.scanStatus === "PASSED";
 }
@@ -78,20 +87,13 @@ function fileIsReady(binding: SubmissionApplication["fileBindings"][number]) {
 function expectedType(slotKey: string) {
   if (slotKey === "questionnaire") return ["DOC", "DOCX"];
   if (slotKey === "licences" || slotKey === "active-contracts" || slotKey.startsWith("vat-")) return ["ZIP"];
-  return ["PDF", "DOC", "DOCX", "XLS", "XLSX", "CSV", "ZIP"];
+  return ["PDF", "DOC", "DOCX", "XLS", "XLSX", "CSV", "ZIP", "JPG", "PNG", "WEBP", "HEIC"];
 }
 
 function hasReadySlot(application: SubmissionApplication, slotKey: string) {
   return application.fileBindings.some((binding) => {
     if (binding.slotKey !== slotKey || !fileIsReady(binding)) return false;
     return expectedType(slotKey).includes(binding.currentUpload?.storedFile?.fileType ?? "");
-  });
-}
-
-function hasReadyYearSlot(application: SubmissionApplication, prefix: "tax" | "financial") {
-  return application.fileBindings.some((binding) => {
-    if (!binding.slotKey.startsWith(`${prefix}-`) || !fileIsReady(binding)) return false;
-    return expectedType(binding.slotKey).includes(binding.currentUpload?.storedFile?.fileType ?? "");
   });
 }
 
@@ -149,10 +151,11 @@ export async function refreshFacilitiesEditableSnapshot(tx: Prisma.TransactionCl
       registeredCapitalRial: company.registeredCapitalRial,
       contactFullName: company.contactFullName,
       contactNationalCode: company.contactNationalCode,
+      contactMobile: company.contactMobile,
     },
   });
   await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
-  await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, ownershipPercentage: shareholder.ownershipPercentage })) });
+  await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, nationalId: shareholder.nationalId, ownershipPercentage: shareholder.ownershipPercentage })) });
   await syncFacilitiesOfficerSnapshot(tx, applicationId, company.officers);
 }
 
@@ -190,11 +193,28 @@ export async function refreshFacilitiesProfileSnapshot(tx: Prisma.TransactionCli
       registeredCapitalRial: company.registeredCapitalRial,
       contactFullName: company.contactFullName,
       contactNationalCode: company.contactNationalCode,
+      contactMobile: company.contactMobile,
     },
   });
   await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
-  await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, ownershipPercentage: shareholder.ownershipPercentage })) });
+  await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, nationalId: shareholder.nationalId, ownershipPercentage: shareholder.ownershipPercentage })) });
   await syncFacilitiesOfficerSnapshot(tx, applicationId, company.officers);
+}
+
+// The credit-report board member and employee count are no longer collected from
+// the applicant. Derive them from the application: reuse any evidence already
+// materialized (keeps NEEDS_EDIT/repeat submits consistent), otherwise fall back
+// to the sole/first non-CEO board member and an employee count of zero. The profile
+// guarantees at least one non-CEO board member, so credit-board evidence still links
+// to a real officer for admin review, export, and the credit report.
+export function deriveFacilitiesSubmissionInput(application: SubmissionApplication): FacilitiesSubmissionInput {
+  const firstBoardMember = application.officers.find((officer) => !officer.isChiefExecutive);
+  const boardEvidence = application.evidence.find((item) => item.kind === "credit-board");
+  const insuranceEvidence = application.evidence.find((item) => item.kind === "insurance");
+  return {
+    boardOfficerId: boardEvidence?.officerId ?? firstBoardMember?.id ?? "",
+    employeeCount: insuranceEvidence?.employeeCount ?? 0,
+  };
 }
 
 export function checkFacilitiesSubmissionReadiness(
@@ -204,7 +224,7 @@ export function checkFacilitiesSubmissionReadiness(
   const issues: string[] = [];
   const snapshot = application.companySnapshot;
 
-  if (!snapshot || !nonEmpty(snapshot.name) || !isNationalId(snapshot.nationalId, 11) || !nonEmpty(snapshot.registrationNumber) || !nonEmpty(snapshot.registrationPlace) || !snapshot.registrationDate || !snapshot.registeredCapitalRial || snapshot.registeredCapitalRial.isNegative() || !nonEmpty(snapshot.contactFullName) || !isNationalId(snapshot.contactNationalCode, 10)) {
+  if (!snapshot || !nonEmpty(snapshot.name) || !isNationalId(snapshot.nationalId, 11) || !nonEmpty(snapshot.registrationNumber) || !nonEmpty(snapshot.registrationPlace) || !snapshot.registrationDate || !snapshot.registeredCapitalRial || snapshot.registeredCapitalRial.isNegative() || !nonEmpty(snapshot.contactFullName) || !isMobile(snapshot.contactMobile)) {
     issues.push("اطلاعات پروفایل شرکت کامل نیست");
   }
 
@@ -215,7 +235,7 @@ export function checkFacilitiesSubmissionReadiness(
     if (!total.eq(100)) issues.push("درصد مالکیت سهامداران باید دقیقاً ۱۰۰ درصد باشد");
   }
 
-  const ceos = application.officers.filter((officer) => officer.isChiefExecutive && officer.position === "مدیرعامل");
+  const ceos = application.officers.filter((officer) => officer.isChiefExecutive && isCeoRole(officer.position));
   const boardMembers = application.officers.filter((officer) => !officer.isChiefExecutive);
   if (ceos.length !== 1 || boardMembers.length === 0) issues.push("اطلاعات مدیرعامل و اعضای هیئت‌مدیره کامل نیست");
 
@@ -226,8 +246,6 @@ export function checkFacilitiesSubmissionReadiness(
   for (const slotKey of requiredFacilitiesSlots) {
     if (!hasReadySlot(application, slotKey)) issues.push(`مدرک «${slotKey}» کامل و بررسی‌شده نیست`);
   }
-  if (!hasReadyYearSlot(application, "tax")) issues.push("حداقل یک اظهارنامه مالیاتی کامل لازم است");
-  if (!hasReadyYearSlot(application, "financial")) issues.push("حداقل یک صورت مالی حسابرسی‌شده کامل لازم است");
 
   if (!Number.isInteger(input.employeeCount) || input.employeeCount < 0) issues.push("تعداد کارکنان معتبر نیست");
   if (!boardMembers.some((officer) => officer.id === input.boardOfficerId)) issues.push("عضو هیئت‌مدیره برای گزارش اعتباری معتبر نیست");

@@ -27,7 +27,7 @@ vi.mock("@/lib/facilities/submission", async (importOriginal) => {
 });
 
 function readyApplication(officers: Array<{ id: string; fullName: string; position: string; isChiefExecutive: boolean }>) {
-  const slots = ["questionnaire", "licences", "active-contracts", "insurance", "trial-general", "trial-subsidiary", "credit-company", "credit-ceo", "credit-board", "vat-1404", "tax-1404", "financial-1404"];
+  const slots = ["questionnaire", "licences", "active-contracts", "insurance", "trial-general", "trial-subsidiary", "credit-company", "credit-ceo", "credit-board", "vat-1404", "tax-1404", "financial-1404", "financial-1403"];
   return {
     id: "app_1",
     userId: "user_1",

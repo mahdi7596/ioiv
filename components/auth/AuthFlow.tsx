@@ -31,11 +31,16 @@ export function AuthFlow() {
     setLoading(true);
     setError(undefined);
 
+    // Safety net so the button can never hang indefinitely if the network
+    // stalls; the server responds quickly now that SMS sending is backgrounded.
+    const timeout = AbortSignal.timeout(15000);
+
     try {
       const response = await fetch("/api/auth/request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile, mode: "user" }),
+        signal: timeout,
       });
       const data = await response.json();
 
@@ -47,7 +52,12 @@ export function AuthFlow() {
       setSecondsRemaining(120);
       showToast({ type: "success", message: "کد تایید ارسال شد" });
     } catch (requestError) {
-      const errorMessage = requestError instanceof Error ? requestError.message : "خطای غیرمنتظره رخ داد";
+      const errorMessage =
+        requestError instanceof DOMException && requestError.name === "TimeoutError"
+          ? "ارسال کد تایید طول کشید. لطفاً دوباره تلاش کنید."
+          : requestError instanceof Error
+            ? requestError.message
+            : "خطای غیرمنتظره رخ داد";
       setError(errorMessage);
       showToast({ type: "error", message: errorMessage });
     } finally {

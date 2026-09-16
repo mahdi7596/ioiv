@@ -44,6 +44,6 @@ describe("facilities application payment confirmation UI", () => {
 
   it("clamps an out-of-range initial step into the wizard", () => {
     const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true)} initialStep={99} />);
-    expect(markup).toContain("مرحله 4 از 4");
+    expect(markup).toContain("مرحله 3 از 3");
   });
 });

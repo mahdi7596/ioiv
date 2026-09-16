@@ -10,8 +10,8 @@ function application(overrides: Record<string, unknown> = {}): Parameters<typeof
     paymentEnabledSnapshot: false,
     paymentAmountTomanSnapshot: null,
     facilityType: "FIXED_CAPITAL",
-    companySnapshot: { name: "شرکت", nationalId: "۱۲۳۴۵۶۷۸۹۰۱", registrationNumber: "۱", registrationPlace: "تهران", registrationDate: new Date(), registeredCapitalRial: new Prisma.Decimal(1), contactFullName: "نماینده", contactNationalCode: "۱۲۳۴۵۶۷۸۹۰" },
-    shareholders: [{ fullName: "سهامدار", ownershipPercentage: new Prisma.Decimal(100) }],
+    companySnapshot: { name: "شرکت", nationalId: "۱۲۳۴۵۶۷۸۹۰۱", registrationNumber: "۱", registrationPlace: "تهران", registrationDate: new Date(), registeredCapitalRial: new Prisma.Decimal(1), contactFullName: "نماینده", contactNationalCode: "۱۲۳۴۵۶۷۸۹۰", contactMobile: "۰۹۱۲۳۴۵۶۷۸۹" },
+    shareholders: [{ fullName: "سهامدار", nationalId: "۱۲۳۴۵۶۷۸۹۰", ownershipPercentage: new Prisma.Decimal(100) }],
     officers: [{ id: "ceo", fullName: "مدیرعامل", position: "مدیرعامل", isChiefExecutive: true }, { id: "board", fullName: "عضو", position: "عضو", isChiefExecutive: false }],
     fileBindings: [],
     evidence: [],
@@ -27,11 +27,12 @@ describe("facilities submission validation", () => {
     expect(result.issues).toContain("درصد مالکیت سهامداران باید دقیقاً ۱۰۰ درصد باشد");
   });
 
-  it("requires every scanned application document and at least one tax and financial year", () => {
+  it("requires every scanned application document including the 1404 tax and 1404/1403 financial statements", () => {
     const result = checkFacilitiesSubmissionReadiness(application(), { employeeCount: 0, boardOfficerId: "board" });
     expect(result.ready).toBe(false);
-    expect(result.issues).toContain("حداقل یک اظهارنامه مالیاتی کامل لازم است");
-    expect(result.issues).toContain("حداقل یک صورت مالی حسابرسی‌شده کامل لازم است");
+    expect(result.issues).toContain("مدرک «tax-1404» کامل و بررسی‌شده نیست");
+    expect(result.issues).toContain("مدرک «financial-1404» کامل و بررسی‌شده نیست");
+    expect(result.issues).toContain("مدرک «financial-1403» کامل و بررسی‌شده نیست");
     expect(result.issues.some((issue) => issue.includes("questionnaire"))).toBe(true);
   });
 

@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { requestZarinpalPayment, verifyZarinpalPayment } from "@/lib/payments/zarinpal";
 import { logger } from "@/lib/logger";
 import { requireAppUrl } from "@/lib/app-url";
-import { checkFacilitiesSubmissionReadiness, facilitiesSubmissionInclude, isCorrectionAddressed, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot, type FacilitiesSubmissionInput } from "@/lib/facilities/submission";
+import { checkFacilitiesSubmissionReadiness, deriveFacilitiesSubmissionInput, facilitiesSubmissionInclude, isCorrectionAddressed, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot } from "@/lib/facilities/submission";
 
 const ACTIVE_PAYMENT_STATES: FacilitiesPaymentStatus[] = [
   FacilitiesPaymentStatus.INITIATED,
@@ -30,6 +30,14 @@ const STALE_PAYMENT_ATTEMPT_MS = 20 * 60 * 1000;
 const PAYMENT_PENDING_MESSAGE = "وضعیت پرداخت هنوز مشخص نیست. لطفاً کمی بعد دوباره صفحه را بررسی کنید.";
 const PAYMENT_FAILED_MESSAGE = "پرداخت انجام نشد. می‌توانید دوباره تلاش کنید.";
 const SUBMISSION_VALIDATION_MESSAGE = "همه اطلاعات و مدارک الزامی باید کامل و بررسی‌شده باشند.";
+
+// Surface the specific blocking reasons so a user isn't left guessing which
+// requirement is missing (e.g. a profile completed before «شماره همراه رابط»
+// became required, or a newly-required annual document).
+function submissionValidationError(issues: string[], status?: number) {
+  const detail = issues.length ? ` موارد باقی‌مانده: ${issues.join("؛ ")}` : "";
+  return new ActionError(`${SUBMISSION_VALIDATION_MESSAGE}${detail}`, status);
+}
 const CORRECTION_NOT_ADDRESSED_MESSAGE = "نسبت به زمان درخواست اصلاح، هیچ مدرکی بارگذاری نشده است. لطفاً مدرک خواسته‌شده توسط کارشناس را دوباره بارگذاری کنید.";
 
 async function requireFacilitiesUserSession() {
@@ -107,7 +115,6 @@ async function returnPaymentApplicationToDraft(tx: Prisma.TransactionClient, app
 async function submitLockedFacilitiesApplication(
   tx: Prisma.TransactionClient,
   application: NonNullable<Awaited<ReturnType<typeof loadFacilitiesSubmissionApplication>>>,
-  input: FacilitiesSubmissionInput,
   actorType: AuditActorType,
   actorId: string,
 ): Promise<FacilitiesSubmissionResult> {
@@ -119,8 +126,9 @@ async function submitLockedFacilitiesApplication(
     throw new ActionError("این درخواست در حال حاضر قابل ارسال نیست", 409);
   }
 
+  const input = deriveFacilitiesSubmissionInput(application);
   const readiness = checkFacilitiesSubmissionReadiness(application, input);
-  if (!readiness.ready) throw new ActionError(SUBMISSION_VALIDATION_MESSAGE, 400);
+  if (!readiness.ready) throw submissionValidationError(readiness.issues, 400);
 
   const verifiedPayment = application.payments.find(
     (payment) => payment.status === FacilitiesPaymentStatus.VERIFIED && payment.amountToman === application.paymentAmountTomanSnapshot,
@@ -155,7 +163,7 @@ async function submitLockedFacilitiesApplication(
   return { ok: true, state: "submitted", redirectTo: `/dashboard/facilities-application?submitted=${correction ? "corrected" : "success"}` };
 }
 
-export async function submitFacilitiesApplication(input: FacilitiesSubmissionInput & { applicationId: string }): Promise<FacilitiesSubmissionResult> {
+export async function submitFacilitiesApplication(input: { applicationId: string }): Promise<FacilitiesSubmissionResult> {
   const session = await requireFacilitiesUserSession();
   const result = await db.$transaction(async (tx) => {
     let application = await lockFacilitiesApplication(tx, input.applicationId);
@@ -167,13 +175,13 @@ export async function submitFacilitiesApplication(input: FacilitiesSubmissionInp
       if (!application) throw new ActionError("پرونده پیدا نشد", 404);
     }
     if (application.paymentEnabledSnapshot && application.status !== ApplicationStatus.NEEDS_EDIT) throw new ActionError("ابتدا پرداخت را انجام دهید", 409);
-    return submitLockedFacilitiesApplication(tx, application, input, AuditActorType.USER, session.subjectId);
+    return submitLockedFacilitiesApplication(tx, application, AuditActorType.USER, session.subjectId);
   });
   revalidatePath("/dashboard/facilities-application");
   return result;
 }
 
-export async function startFacilitiesPayment(input: { applicationId: string; confirmed: boolean; employeeCount: number; boardOfficerId: string }): Promise<FacilitiesPaymentStartResult> {
+export async function startFacilitiesPayment(input: { applicationId: string; confirmed: boolean }): Promise<FacilitiesPaymentStartResult> {
   const session = await requireFacilitiesUserSession();
   const reservation = await db.$transaction(async (tx) => {
     let application = await lockFacilitiesApplication(tx, input.applicationId);
@@ -187,19 +195,20 @@ export async function startFacilitiesPayment(input: { applicationId: string; con
     }
 
     if (!application.paymentEnabledSnapshot) {
-      const submitted = await submitLockedFacilitiesApplication(tx, application, input, AuditActorType.USER, session.subjectId);
+      const submitted = await submitLockedFacilitiesApplication(tx, application, AuditActorType.USER, session.subjectId);
       return { kind: "submitted" as const, submitted };
     }
     if (!input.confirmed) throw new ActionError("برای ادامه، تأیید نهایی اطلاعات را انتخاب کنید");
 
-    const readiness = checkFacilitiesSubmissionReadiness(application, input);
-    if (!readiness.ready) throw new ActionError(SUBMISSION_VALIDATION_MESSAGE);
+    const submissionInput = deriveFacilitiesSubmissionInput(application);
+    const readiness = checkFacilitiesSubmissionReadiness(application, submissionInput);
+    if (!readiness.ready) throw submissionValidationError(readiness.issues);
 
-    await materializeFacilitiesEvidence(tx, application, input);
+    await materializeFacilitiesEvidence(tx, application, submissionInput);
 
     const verifiedPayment = application.payments.find((payment) => payment.status === FacilitiesPaymentStatus.VERIFIED);
     if (verifiedPayment) {
-      const submitted = await submitLockedFacilitiesApplication(tx, application, input, AuditActorType.SYSTEM, "system");
+      const submitted = await submitLockedFacilitiesApplication(tx, application, AuditActorType.SYSTEM, "system");
       return { kind: "submitted" as const, submitted };
     }
 
