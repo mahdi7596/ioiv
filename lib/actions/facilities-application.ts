@@ -122,7 +122,11 @@ export async function createFacilitiesDraft(input: { intakeId: string; intakeSup
       return tx.facilitiesApplication.findUniqueOrThrow({ where: { id: app.id }, include: facilitiesSubmissionInclude });
     });
     revalidatePath("/dashboard/facilities-application");
-    return application;
+    // Decimal fields (requestedAmountRial, maximumAmountRialSnapshot, and the
+    // nested companySnapshot/shareholders amounts) are not plain objects and
+    // cannot cross the server action boundary into the client wizard's state
+    // as-is; round-trip through JSON the same way the page loader does.
+    return JSON.parse(JSON.stringify(application)) as typeof application;
   } catch (error) {
     if ((error as { code?: string }).code === "P2002") throw new ActionError("برای این دوره قبلاً یک درخواست ایجاد شده است", 409);
     throw error;
@@ -185,5 +189,7 @@ export async function updateFacilitiesApplicationDetails(input: { applicationId:
     return tx.facilitiesApplication.findUniqueOrThrow({ where: { id: row.id }, include: facilitiesSubmissionInclude });
   });
   revalidatePath("/dashboard/facilities-application");
-  return updated;
+  // Same Decimal round-trip as createFacilitiesDraft above — this action
+  // returns the same facilitiesSubmissionInclude shape to the client wizard.
+  return JSON.parse(JSON.stringify(updated)) as typeof updated;
 }

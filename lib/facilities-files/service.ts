@@ -16,7 +16,7 @@ import { stageVerifyScanPromoteFacilitiesFile } from "@/lib/facilities-files/lif
 import type { FacilitiesFileScanner } from "@/lib/facilities-files/scanner";
 import type { FacilitiesPrivateStorage, FacilitiesStorageKey } from "@/lib/facilities-files/storage";
 import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
-import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
+import { assertFacilitiesProfileDocumentEditable } from "@/lib/facilities/profile-lock";
 import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
 
 export type FacilitiesFileCommitResult = {
@@ -169,7 +169,7 @@ export async function storeOwnedFacilitiesFile(input: {
       const liveBinding = await tx.facilitiesFileBinding.findUniqueOrThrow({ where: { id: binding.id } });
       if (liveBinding.scope === "COMPANY_PROFILE" && liveBinding.companyId) {
         await tx.company.update({ where: { id: liveBinding.companyId }, data: { updatedAt: new Date() } });
-        await assertFacilitiesProfileEditable(tx, liveBinding.companyId);
+        await assertFacilitiesProfileDocumentEditable(tx, liveBinding.companyId);
       }
       if (liveBinding.applicationId) {
         const editable = await tx.facilitiesApplication.count({ where: { id: liveBinding.applicationId, status: { in: FACILITIES_EDITABLE_STATUSES } } });
@@ -281,7 +281,7 @@ export async function storeOwnedFacilitiesFile(input: {
       const current = await tx.facilitiesFileBinding.findUniqueOrThrow({ where: { id: binding.id } });
       if (current.scope === "COMPANY_PROFILE" && current.companyId) {
         await tx.company.update({ where: { id: current.companyId }, data: { updatedAt: new Date() } });
-        await assertFacilitiesProfileEditable(tx, current.companyId);
+        await assertFacilitiesProfileDocumentEditable(tx, current.companyId);
       }
       if (current.applicationId) {
         const editable = await tx.facilitiesApplication.count({ where: { id: current.applicationId, status: { in: FACILITIES_EDITABLE_STATUSES } } });

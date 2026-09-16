@@ -244,6 +244,34 @@ export function checkFacilitiesSubmissionReadiness(
   return { application, issues, ready: issues.length === 0 };
 }
 
+// A correction can target either an application-scoped document (checked via
+// application.fileBindings, already loaded) or a company-profile-scoped one
+// (اساسنامه, آگهی تأسیس, ...), which lives on the company and is fetched
+// separately here. There is no structured link from a correction note to the
+// specific slot it refers to, so this only proves *something* new was
+// uploaded since the correction was opened, not that the flagged item itself
+// was fixed — see docs/2026-09-15-architecture-and-security-audit.md follow-up.
+export async function isCorrectionAddressed(
+  tx: Prisma.TransactionClient,
+  application: Pick<SubmissionApplication, "companyId" | "fileBindings">,
+  correction: { openedAt: Date },
+) {
+  const applicationUploadIsNew = application.fileBindings.some(
+    (binding) => binding.currentUpload?.lifecycleStatus === "PASSED" && binding.currentUpload.createdAt > correction.openedAt,
+  );
+  if (applicationUploadIsNew) return true;
+
+  const profileUpload = await tx.facilitiesFileBinding.findFirst({
+    where: {
+      companyId: application.companyId,
+      scope: "COMPANY_PROFILE",
+      currentUpload: { lifecycleStatus: "PASSED", createdAt: { gt: correction.openedAt } },
+    },
+    select: { id: true },
+  });
+  return Boolean(profileUpload);
+}
+
 function evidenceForBinding(binding: SubmissionApplication["fileBindings"][number], input: FacilitiesSubmissionInput) {
   if (!binding.applicationId) return null;
   const [kind, yearText] = binding.slotKey.split("-");

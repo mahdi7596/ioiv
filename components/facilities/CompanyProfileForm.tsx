@@ -151,7 +151,7 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function CompanyProfileForm({ initial, documents, locked = false }: { initial: Draft | null; documents?: Record<string, { fileName: string }>; locked?: boolean }) {
+export function CompanyProfileForm({ initial, documents, locked = false, correctionMode = false }: { initial: Draft | null; documents?: Record<string, { fileName: string }>; locked?: boolean; correctionMode?: boolean }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft>(() => initialDraft(initial));
   const [pending, start] = useTransition();
@@ -477,6 +477,121 @@ export function CompanyProfileForm({ initial, documents, locked = false }: { ini
           <h2>پروفایل شرکت موقتاً قفل است</h2>
           <p>تا پایان پرداخت یا بررسی پرونده فعال، اطلاعات و مدارک پروفایل قابل تغییر نیست. اصلاحات درخواست تسهیلات را از صفحه همان پرونده انجام دهید.</p>
         </section>
+      </div>
+    );
+  }
+
+  // During a correction (application returned as NEEDS_EDIT) only the profile
+  // documents may be replaced — field data stays frozen because it is already
+  // snapshotted on the application. Reuse the same upload machinery; the final
+  // "ارسال اصلاحات" happens back on the application page.
+  if (correctionMode) {
+    const infoRows: Array<[string, string]> = [
+      ["نام شرکت", draft.name],
+      ["شناسه ملی", draft.nationalId],
+      ["شماره ثبت", draft.registrationNumber],
+      ["محل ثبت", draft.registrationPlace],
+      ["سرمایه ثبت‌شده (ریال)", draft.registeredCapitalRial],
+      ["نام رابط", draft.contactFullName],
+    ];
+    const documentControl = (slot: string, kind: string, officerId?: string) => {
+      const state = uploads[slot];
+      const uploading = state?.status === "uploading";
+      return (
+        <div className="member-doc__control">
+          {state && !uploading ? (
+            <span className={`document-list__status document-list__status--${state.status}`}>
+              {state.status === "done" ? (
+                <>
+                  <Check aria-hidden="true" size={14} strokeWidth={2.6} />
+                  <span className="document-list__filename">{state.fileName}</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle aria-hidden="true" size={14} strokeWidth={2.2} />
+                  {state.message}
+                </>
+              )}
+            </span>
+          ) : null}
+          <button type="button" className="button button--ghost button--sm" disabled={uploading} onClick={() => upload(kind, officerId)}>
+            {uploading ? (
+              <>
+                <Loader2 aria-hidden="true" size={15} strokeWidth={2.2} className="spin" />
+                در حال بارگذاری
+              </>
+            ) : state?.status === "done" ? (
+              "جایگزینی"
+            ) : (
+              <>
+                <UploadCloud aria-hidden="true" size={15} strokeWidth={2} />
+                بارگذاری
+              </>
+            )}
+          </button>
+        </div>
+      );
+    };
+    const officersWithId = draft.officers.filter((officer) => officer.id);
+    return (
+      <div className="space-y-6">
+        <section className="panel review-message" role="status">
+          <p className="eyebrow">اصلاح پرونده</p>
+          <h2>بارگذاری مجدد مدارک پروفایل</h2>
+          <p>پرونده تسهیلات شما نیازمند اصلاح است. در این حالت فقط مدارک پروفایل قابل جایگزینی است؛ مورد خواسته‌شدهٔ کارشناس و دکمهٔ «ارسال اصلاحات» در «صفحهٔ درخواست تسهیلات» است. سایر اطلاعات شرکت تا پایان بررسی قابل تغییر نیست.</p>
+        </section>
+        <div className="panel profile-form">
+          <section className="profile-list" role="group" aria-labelledby="correction-info-heading">
+            <h3 className="section-legend" id="correction-info-heading">
+              <Building2 aria-hidden="true" size={18} strokeWidth={2} />
+              اطلاعات ثبتی شرکت
+            </h3>
+            <div className="profile-grid">
+              {infoRows.map(([label, value]) => (
+                <div className="profile-row" key={label}>
+                  <span className="field-label">{label}</span>
+                  <strong>{value || "—"}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="profile-list" role="group" aria-labelledby="correction-docs-heading">
+            <h3 className="section-legend" id="correction-docs-heading">
+              <FileText aria-hidden="true" size={18} strokeWidth={2} />
+              مدارک شرکت
+            </h3>
+            <ul className="document-list">
+              {documentFields.map(([kind, label]) => (
+                <li className="document-list__item" key={kind} data-status={uploads[kind]?.status}>
+                  <span className="document-list__label">
+                    <FileText aria-hidden="true" size={17} strokeWidth={2} />
+                    {label}
+                  </span>
+                  {documentControl(kind, kind)}
+                </li>
+              ))}
+            </ul>
+          </section>
+          {officersWithId.length ? (
+            <section className="profile-list" role="group" aria-labelledby="correction-officer-docs-heading">
+              <h3 className="section-legend" id="correction-officer-docs-heading">
+                <UserCog aria-hidden="true" size={18} strokeWidth={2} />
+                مدارک هویتی اعضا
+              </h3>
+              <ul className="document-list">
+                {officersWithId.map((officer) => (
+                  <li className="document-list__item" key={officer.id} data-status={uploads[`officer-${officer.id}`]?.status}>
+                    <span className="document-list__label">
+                      <FileText aria-hidden="true" size={17} strokeWidth={2} />
+                      {(officer.fullName?.trim() || "عضو")} — بستهٔ هویتی (ZIP)
+                    </span>
+                    {documentControl(`officer-${officer.id}`, "officer", officer.id)}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
       </div>
     );
   }

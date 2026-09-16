@@ -27,7 +27,12 @@ export default async function FacilitiesProfilePage() {
         </Link>
       }
     >
-      <CompanyProfileForm initial={initial} documents={documents} locked={profile?.profileLocked} />
+      <CompanyProfileForm
+        initial={initial}
+        documents={documents}
+        correctionMode={profile?.activeApplicationStatus === "NEEDS_EDIT"}
+        locked={Boolean(profile?.profileLocked) && profile?.activeApplicationStatus !== "NEEDS_EDIT"}
+      />
     </AppShell>
   );
 }

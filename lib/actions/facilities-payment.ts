@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { requestZarinpalPayment, verifyZarinpalPayment } from "@/lib/payments/zarinpal";
 import { logger } from "@/lib/logger";
 import { requireAppUrl } from "@/lib/app-url";
-import { checkFacilitiesSubmissionReadiness, facilitiesSubmissionInclude, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot, type FacilitiesSubmissionInput } from "@/lib/facilities/submission";
+import { checkFacilitiesSubmissionReadiness, facilitiesSubmissionInclude, isCorrectionAddressed, loadFacilitiesSubmissionApplication, materializeFacilitiesEvidence, refreshFacilitiesProfileSnapshot, type FacilitiesSubmissionInput } from "@/lib/facilities/submission";
 
 const ACTIVE_PAYMENT_STATES: FacilitiesPaymentStatus[] = [
   FacilitiesPaymentStatus.INITIATED,
@@ -30,6 +30,7 @@ const STALE_PAYMENT_ATTEMPT_MS = 20 * 60 * 1000;
 const PAYMENT_PENDING_MESSAGE = "وضعیت پرداخت هنوز مشخص نیست. لطفاً کمی بعد دوباره صفحه را بررسی کنید.";
 const PAYMENT_FAILED_MESSAGE = "پرداخت انجام نشد. می‌توانید دوباره تلاش کنید.";
 const SUBMISSION_VALIDATION_MESSAGE = "همه اطلاعات و مدارک الزامی باید کامل و بررسی‌شده باشند.";
+const CORRECTION_NOT_ADDRESSED_MESSAGE = "نسبت به زمان درخواست اصلاح، هیچ مدرکی بارگذاری نشده است. لطفاً مدرک خواسته‌شده توسط کارشناس را دوباره بارگذاری کنید.";
 
 async function requireFacilitiesUserSession() {
   try {
@@ -133,6 +134,7 @@ async function submitLockedFacilitiesApplication(
     ? await tx.facilitiesCorrectionRequest.findFirst({ where: { applicationId: application.id, resolvedAt: null } })
     : null;
   if (application.status === ApplicationStatus.NEEDS_EDIT && !correction) throw new ActionError("درخواست اصلاح فعال پیدا نشد", 409);
+  if (correction && !(await isCorrectionAddressed(tx, application, correction))) throw new ActionError(CORRECTION_NOT_ADDRESSED_MESSAGE, 400);
   if (correction) await tx.facilitiesCorrectionRequest.update({ where: { id: correction.id }, data: { resolvedAt: new Date() } });
   await recordStatusChange(tx, application.id, application.status, ApplicationStatus.SUBMITTED, actorType, actorId, correction ? "اصلاحات متقاضی ارسال شد" : "درخواست پس از تکمیل بررسی‌های نهایی ارسال شد");
   await tx.facilitiesAuditLog.create({
@@ -147,7 +149,10 @@ async function submitLockedFacilitiesApplication(
       metadata: { ...(correction ? { correctionRequestId: correction.id } : {}), previousStatus: application.status, newStatus: ApplicationStatus.SUBMITTED },
     },
   });
-  return { ok: true, state: "submitted", redirectTo: "/dashboard/facilities-application?submitted=success" };
+  // A correction resubmit charges no new fee, so it gets its own redirect
+  // key rather than "success", which the wizard renders as a payment-confirmed
+  // banner.
+  return { ok: true, state: "submitted", redirectTo: `/dashboard/facilities-application?submitted=${correction ? "corrected" : "success"}` };
 }
 
 export async function submitFacilitiesApplication(input: FacilitiesSubmissionInput & { applicationId: string }): Promise<FacilitiesSubmissionResult> {

@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
     facilitiesStatusHistory: { create: vi.fn() },
     facilitiesAuditLog: { create: vi.fn() },
     facilitiesCorrectionRequest: { findFirst: vi.fn(), update: vi.fn() },
+    facilitiesFileBinding: { findFirst: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -30,7 +31,7 @@ function application(overrides: Record<string, unknown> = {}) {
     id: `binding-${slotKey}`,
     applicationId: "app_1",
     slotKey,
-    currentUpload: { lifecycleStatus: "PASSED", storedFile: { id: `stored-${slotKey}`, fileType, scanStatus: "PASSED" } },
+    currentUpload: { lifecycleStatus: "PASSED", createdAt: new Date("2026-09-01T00:00:00.000Z"), storedFile: { id: `stored-${slotKey}`, fileType, scanStatus: "PASSED" } },
   });
   return {
     id: "app_1",
@@ -67,6 +68,7 @@ describe("facilities payment and submission actions", () => {
     mocks.db.facilitiesAuditLog.create.mockResolvedValue({ id: "audit" });
     mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue(null);
     mocks.db.facilitiesCorrectionRequest.update.mockResolvedValue({ id: "correction_1" });
+    mocks.db.facilitiesFileBinding.findFirst.mockResolvedValue(null);
     mocks.db.facilitiesPaymentAttempt.create.mockResolvedValue({ id: "pay_1", applicationId: "app_1", amountToman: 3000000, status: FacilitiesPaymentStatus.INITIATED });
     mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ id: "pay_1", applicationId: "app_1", amountToman: 3000000, status: FacilitiesPaymentStatus.INITIATED, authority: null });
     mocks.db.facilitiesPaymentAttempt.update.mockResolvedValue({ id: "pay_1" });
@@ -210,12 +212,34 @@ describe("facilities payment and submission actions", () => {
   it("resubmits an open correction with the verified payment and preserves submittedAt", async () => {
     const originalSubmittedAt = new Date("2026-09-10T10:00:00.000Z");
     mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "NEEDS_EDIT", submittedAt: originalSubmittedAt, payments: [{ id: "verified", amountToman: 3000000, status: FacilitiesPaymentStatus.VERIFIED }] }));
-    mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1" });
+    mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1", openedAt: new Date("2026-08-01T00:00:00.000Z") });
     const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
     await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ state: "submitted" });
     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCalled();
     expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith({ where: { id: "correction_1" }, data: { resolvedAt: expect.any(Date) } });
     const statusUpdate = mocks.db.facilitiesApplication.update.mock.calls.find((call) => call[0]?.data?.status === "SUBMITTED")?.[0];
     expect(statusUpdate.data).not.toHaveProperty("submittedAt");
+  });
+
+  it("rejects a correction resubmit when nothing was uploaded since the correction was opened", async () => {
+    mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "NEEDS_EDIT", payments: [{ id: "verified", amountToman: 3000000, status: FacilitiesPaymentStatus.VERIFIED }] }));
+    // Opened after every fixture upload's createdAt (2026-09-01) and with no
+    // newer company-profile document either: nothing has changed since.
+    mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1", openedAt: new Date("2026-09-15T00:00:00.000Z") });
+    mocks.db.facilitiesFileBinding.findFirst.mockResolvedValue(null);
+    const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
+    await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).rejects.toMatchObject({ status: 400 });
+    expect(mocks.db.facilitiesCorrectionRequest.update).not.toHaveBeenCalled();
+    expect(mocks.db.facilitiesApplication.update.mock.calls.some((call) => call[0]?.data?.status === "SUBMITTED")).toBe(false);
+  });
+
+  it("resubmits a correction once a company-profile document was replaced, even with no application-file change", async () => {
+    mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application({ status: "NEEDS_EDIT", payments: [{ id: "verified", amountToman: 3000000, status: FacilitiesPaymentStatus.VERIFIED }] }));
+    mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({ id: "correction_1", openedAt: new Date("2026-09-15T00:00:00.000Z") });
+    mocks.db.facilitiesFileBinding.findFirst.mockResolvedValue({ id: "profile-binding-1" });
+    const { submitFacilitiesApplication } = await import("@/lib/actions/facilities-payment");
+    await expect(submitFacilitiesApplication({ applicationId: "app_1", employeeCount: 10, boardOfficerId: "board_1" })).resolves.toMatchObject({ state: "submitted" });
+    expect(mocks.db.facilitiesFileBinding.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ companyId: "company_1", scope: "COMPANY_PROFILE" }) }));
+    expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith({ where: { id: "correction_1" }, data: { resolvedAt: expect.any(Date) } });
   });
 });

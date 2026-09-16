@@ -103,6 +103,7 @@ const paymentNotices: Record<string, { tone: NoticeTone; title: string; descript
   failed: { tone: "error", title: "پرداخت ناموفق بود", description: "پرداخت انجام نشد؛ پس از بررسی اطلاعات می‌توانید دوباره تلاش کنید." },
   pending: { tone: "pending", title: "در انتظار نتیجه پرداخت", description: "نتیجه پرداخت هنوز مشخص نیست؛ کمی بعد دوباره صفحه را بررسی کنید." },
   "paid-unsubmitted": { tone: "pending", title: "پرداخت ثبت شد؛ ارسال کامل نشد", description: "پرداخت شما تأیید شده است. برای تکمیل، دکمه ارسال را دوباره بزنید؛ هزینه‌ای کسر نمی‌شود." },
+  corrected: { tone: "success", title: "اصلاحات ارسال شد", description: "اصلاحات شما ثبت شد و پرونده به صف بررسی بازگشت؛ هزینه‌ای از شما کسر نشد." },
 };
 
 const statusLabels: Record<string, string> = {
@@ -447,7 +448,7 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   return (
     <div className="profile-form" style={{ paddingBlockEnd: 84 }}>
       {noticePanel}
-      {app.status === "NEEDS_EDIT" && latestCorrection ? <section className="panel review-message" role="alert"><p className="eyebrow">اقدام لازم</p><h2>موارد درخواستی کارشناس</h2><p>{latestCorrection.note}</p></section> : null}
+      {app.status === "NEEDS_EDIT" && latestCorrection ? <section className="panel review-message" role="alert"><p className="eyebrow">اقدام لازم</p><h2>موارد درخواستی کارشناس</h2><p>{latestCorrection.note}</p><p className="review-message__hint">اگر مورد خواسته‌شده مربوط به مدارک پروفایل شرکت است (مانند اساسنامه یا آگهی تأسیس)، آن را از <a href="/dashboard/facilities-profile">صفحهٔ پروفایل شرکت</a> جایگزین کنید، سپس در همین صفحه «ارسال اصلاحات» را بزنید.</p></section> : null}
 
       <div className="panel wizard">
         <div className="wizard__progress">

@@ -3,7 +3,7 @@ import { FilesystemFacilitiesPrivateStorage } from "@/lib/facilities-files/stora
 import { createFacilitiesScannerFromEnv } from "@/lib/facilities-files/scanner";
 import { storeOwnedFacilitiesFile } from "@/lib/facilities-files/service";
 import { db } from "@/lib/db";
-import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
+import { assertFacilitiesProfileDocumentEditable } from "@/lib/facilities/profile-lock";
 import { ActionError } from "@/lib/actions/auth";
 import { facilitiesUploadRecoveryMessage, facilitiesUploadRecoveryState } from "@/lib/facilities-files/retention";
 import { verifyFacilitiesUpload } from "@/lib/facilities-files/verification";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const binding = await db.facilitiesFileBinding.findFirst({ where: { id: bindingId, userId: session.subjectId, scope: "COMPANY_PROFILE" } });
     if (!binding) return Response.json({ error: "دسترسی یا نوع فایل معتبر نیست" }, { status: 400 });
     if (!binding.companyId) return Response.json({ error: "دسترسی امکان‌پذیر نیست" }, { status: 403 });
-    await assertFacilitiesProfileEditable(db, binding.companyId);
+    await assertFacilitiesProfileDocumentEditable(db, binding.companyId);
     const bytes = Buffer.from(await file.arrayBuffer());
     if (binding.slotKey.endsWith("-identity-package")) {
       // Identity packages must be a real ZIP by content, not just by file name.

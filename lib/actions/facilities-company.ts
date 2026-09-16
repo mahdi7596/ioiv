@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { requireSession } from "@/lib/auth/session";
 import { ActionError } from "@/lib/actions/auth";
 import { companyDraftSchema, CEO_POSITION, normalizedText } from "@/lib/validations/facilities-company";
-import { assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
+import { assertFacilitiesProfileDocumentEditable, assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
 
 const DOCUMENT_SLOTS = ["incorporation-notice", "articles-of-association", "board-changes-gazette", "capital-increase-gazette"] as const;
 
@@ -101,7 +101,7 @@ export async function ensureFacilitiesProfileDocumentSlot(kind: string, officerI
     const company = await tx.company.findUnique({ where: { userId: session.subjectId } });
     if (!company) throw new ActionError("ابتدا پیش‌نویس پروفایل را ذخیره کنید");
     await tx.company.update({ where: { id: company.id }, data: { updatedAt: new Date() } });
-    await assertFacilitiesProfileEditable(tx, company.id);
+    await assertFacilitiesProfileDocumentEditable(tx, company.id);
     const slotKey = officerId ? `officer-${officerId}-identity-package` : `profile-${kind}`;
     if (!officerId && !DOCUMENT_SLOTS.includes(kind as typeof DOCUMENT_SLOTS[number])) throw new ActionError("نوع مدرک معتبر نیست");
     if (officerId && !await tx.companyOfficer.findFirst({ where: { id: officerId, companyId: company.id } })) throw new ActionError("دسترسی به این عضو امکان‌پذیر نیست", 404);
