@@ -106,3 +106,44 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
   "FacilitiesFileUpload",
   "FacilitiesFileDeletionTombstone"
 TO :"runtime_role";
+
+-- R2 durable payment coordination. External outcomes remain append-only.
+GRANT SELECT, INSERT, UPDATE ON TABLE "PaymentObligation", "PaymentNotificationIntent" TO :"runtime_role";
+GRANT SELECT, INSERT ON TABLE "PaymentOperationResult" TO :"runtime_role";
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "PaymentOperationResult" FROM :"runtime_role";
+REVOKE DELETE, TRUNCATE ON TABLE "PaymentObligation", "PaymentNotificationIntent" FROM :"runtime_role";
+
+-- R3 verification accounting; cleanup cannot delete live accounting or any OTP.
+GRANT SELECT, INSERT, UPDATE ON TABLE "AuthVerifyBucket" TO :"runtime_role";
+REVOKE DELETE, TRUNCATE ON TABLE "AuthVerifyBucket" FROM :"runtime_role";
+GRANT EXECUTE ON FUNCTION public.prune_auth_verify_buckets() TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION public.lock_active_otp_admin(TEXT) TO :"runtime_role";
+
+REVOKE DELETE, TRUNCATE ON TABLE public."AuthRequestIntent" FROM :"runtime_role";
+GRANT SELECT, INSERT, UPDATE ON TABLE public."AuthRequestIntent" TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION public.prune_auth_request_intents() TO :"runtime_role";
+
+-- R7 historical lineage repair evidence is migration-owned and append-only.
+REVOKE ALL ON TABLE "FacilitiesFileLineageRepair" FROM :"runtime_role";
+GRANT SELECT ON TABLE "FacilitiesFileLineageRepair" TO :"runtime_role";
+
+-- R8: exact legacy current pointers and durable cleanup; no ApplicationFile DELETE.
+GRANT SELECT, INSERT, UPDATE ON TABLE "LegacyFileBinding", "LegacyFileDeletionIntent" TO :"runtime_role";
+GRANT SELECT ON TABLE "LegacyFileBindingRepair" TO :"runtime_role";
+
+GRANT SELECT, INSERT, UPDATE ON TABLE "LegacyUploadCandidate" TO :"runtime_role";
+
+-- R10 historical verification is append-only; existing file identity stays immutable.
+GRANT SELECT, INSERT ON TABLE "LegacyFileVerification" TO :"runtime_role";
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "LegacyFileVerification" FROM :"runtime_role";
+GRANT USAGE, SELECT ON SEQUENCE "LegacyFileVerification_sequence_seq" TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION public.clear_editable_facilities_shareholders(TEXT), public.prune_editable_facilities_officers(TEXT,TEXT[]) TO :"runtime_role";
+
+-- R9: fixed retention, bounded maintenance capability; no arbitrary OTP erasure.
+REVOKE DELETE, TRUNCATE ON TABLE "OtpCode" FROM :"runtime_role";
+GRANT EXECUTE ON FUNCTION public.prune_expired_otp_codes() TO :"runtime_role";
+GRANT SELECT, INSERT, UPDATE ON TABLE "MaintenanceCursor" TO :"runtime_role";
+REVOKE DELETE, TRUNCATE ON TABLE "MaintenanceCursor" FROM :"runtime_role";
+
+-- Phase12: serialize authorization with revocation without granting Admin UPDATE.
+GRANT EXECUTE ON FUNCTION public.lock_review_admin(TEXT) TO :"runtime_role";

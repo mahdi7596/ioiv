@@ -5,11 +5,10 @@ import type { StepProps } from "./types";
 
 export function TrialBalanceStep({
   draft,
-  uploadingKey,
+  uploadingKeys,
   uploadProgress,
   uploadErrors,
   readOnly,
-  onDraftChange,
   onUpload,
 }: StepProps) {
   return (
@@ -20,18 +19,10 @@ export function TrialBalanceStep({
         required
         value={draft.trialBalance.generalLedger}
         readOnly={readOnly}
-        uploading={uploadingKey === "trialBalance.generalLedger"}
+        uploading={Boolean(uploadingKeys?.["trialBalance.generalLedger"])}
         progress={uploadProgress["trialBalance.generalLedger"]}
         error={uploadErrors["trialBalance.generalLedger"]}
-        onUpload={async (file) => {
-          const uploaded = await onUpload("trialBalance.generalLedger", file);
-          if (uploaded) {
-            onDraftChange({
-              ...draft,
-              trialBalance: { ...draft.trialBalance, generalLedger: uploaded },
-            });
-          }
-        }}
+        onUpload={async (file) => { await onUpload("trialBalance.generalLedger", file); }}
       />
       <FileUploadControl
         id="trialBalance.subsidiaryLedger"
@@ -39,18 +30,10 @@ export function TrialBalanceStep({
         required
         value={draft.trialBalance.subsidiaryLedger}
         readOnly={readOnly}
-        uploading={uploadingKey === "trialBalance.subsidiaryLedger"}
+        uploading={Boolean(uploadingKeys?.["trialBalance.subsidiaryLedger"])}
         progress={uploadProgress["trialBalance.subsidiaryLedger"]}
         error={uploadErrors["trialBalance.subsidiaryLedger"]}
-        onUpload={async (file) => {
-          const uploaded = await onUpload("trialBalance.subsidiaryLedger", file);
-          if (uploaded) {
-            onDraftChange({
-              ...draft,
-              trialBalance: { ...draft.trialBalance, subsidiaryLedger: uploaded },
-            });
-          }
-        }}
+        onUpload={async (file) => { await onUpload("trialBalance.subsidiaryLedger", file); }}
       />
     </div>
   );

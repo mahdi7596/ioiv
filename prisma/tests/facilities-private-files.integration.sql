@@ -110,7 +110,7 @@ DO $$ BEGIN
 END $$;
 UPDATE "FacilitiesFileUpload" SET "lifecycleStatus" = 'UNAVAILABLE', "failureReason" = 'STORAGE_UNAVAILABLE'
 WHERE "id" LIKE 'm2-file-quota-upload-%';
-UPDATE "FacilitiesFileUpload" SET "lifecycleStatus" = 'PENDING', "failureReason" = NULL WHERE "id" = 'm2-file-quota-upload-1';
+UPDATE "FacilitiesFileUpload" SET "lifecycleStatus" = 'PENDING', "failureReason" = NULL, "retryToken" = 'm2-fixture-exclusive-retry' WHERE "id" = 'm2-file-quota-upload-1';
 UPDATE "FacilitiesFileUpload" SET "lifecycleStatus" = 'UNAVAILABLE', "failureReason" = 'STORAGE_UNAVAILABLE' WHERE "id" = 'm2-file-quota-upload-1';
 DO $$ BEGIN
   BEGIN

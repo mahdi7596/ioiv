@@ -97,7 +97,7 @@ describe("Ghasedak SMS adapter", () => {
         text: "fallback",
         template: "sanastatus",
       }),
-    ).rejects.toThrow("bad template");
+    ).rejects.toThrow("SMS provider rejected request");
   });
 
   it("refuses a plain-http base URL in production unless explicitly overridden", async () => {

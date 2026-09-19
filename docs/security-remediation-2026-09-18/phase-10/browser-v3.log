@@ -1,0 +1,7 @@
+(node:98439) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":98459,"port":60708,"scannerPort":60707}
+PASS 390px paid crash recovery, Persian document error, verified replacement and one submission with one preserved payment
+PASS 1440px paid crash recovery, Persian document error, verified replacement and one submission with one preserved payment
+PASS controlled INSTREAM scanner calls 18; no external requests
+Owned Next/browser/scanner stopped

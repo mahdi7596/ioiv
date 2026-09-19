@@ -1,0 +1,32 @@
+                                                          version                                                           
+----------------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 16.14 (Debian 16.14-1.pgdg13+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+(1 row)
+
+ enabled_facilities 
+--------------------
+                  0
+(1 row)
+
+ migrations 
+------------
+         28
+(1 row)
+
+    rolname     | rolsuper | rolcreatedb | rolcreaterole | rolinherit 
+----------------+----------+-------------+---------------+------------
+ phase1_runtime | f        | f           | f             | f
+(1 row)
+
+ runtime_schema_create | admin_update | bucket_delete 
+-----------------------+--------------+---------------
+ f                     | f            | f
+(1 row)
+
+          proname          | prosecdef |  owner   
+---------------------------+-----------+----------
+ prune_auth_verify_buckets | t         | postgres
+ lock_active_otp_admin     | t         | postgres
+(2 rows)
+
+v26.7.0

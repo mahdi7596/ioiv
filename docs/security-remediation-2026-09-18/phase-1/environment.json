@@ -1,0 +1,7 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb",
+  "container": "sana-remediation-phase1-20260918",
+  "port": "61525",
+  "database": "phase1",
+  "isolation": "loopback fresh container; synthetic credentials; source copy without env; blank external credentials"
+}

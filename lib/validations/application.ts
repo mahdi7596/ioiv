@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const fileRefSchema = z.object({
   fileId: z.string().min(1),
+  generation: z.number().int().positive().optional(),
   name: z.string().min(1),
 });
 
@@ -36,6 +37,7 @@ const humanResourcesFinalSchema = z.object({
 });
 
 export const applicationDraftSchema = z.object({
+  draftVersion: z.number().int().nonnegative().optional(),
   currentStep: z.number().int().min(1).max(6).optional(),
   taxDeclarations: z.array(yearFileRowSchema.partial()).optional(),
   financials: z.array(yearFileRowSchema.partial()).optional(),

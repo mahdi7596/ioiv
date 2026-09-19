@@ -1,0 +1,76 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo/source[39m
+
+(node:47329) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mfive admissions per rolling hour survive SMS failures and cooldown expiry
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mfive admissions per rolling hour survive SMS failures and cooldown expiry
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mfive admissions per rolling hour survive SMS failures and cooldown expiry
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mfive admissions per rolling hour survive SMS failures and cooldown expiry
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mfive admissions per rolling hour survive SMS failures and cooldown expiry
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mhash failure spends admission and blocks immediate retry
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2minvalid configuration fails closed: 
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2minvalid configuration fails closed: 0
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2minvalid configuration fails closed: 3001
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2minvalid configuration fails closed: garbage
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mmissing/mixed secrets fail both request and verification namespaces
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mmissing/mixed secrets fail both request and verification namespaces
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mlost claim commit acknowledgement prevents SMS and retry
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2mrequired cleanup failure denies admission and recovery prunes first
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+ [32m✓[39m tests/otp-request.db.test.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 2209[2mms[22m[39m
+     [33m[2m✓[22m[39m eight simultaneous requests create and dispatch exactly one code [33m 369[2mms[22m[39m
+     [33m[2m✓[22m[39m five admissions per rolling hour survive SMS failures and cooldown expiry [33m 510[2mms[22m[39m
+[90mstdout[2m | tests/sms-index.test.ts[2m > [22m[2msendSms[2m > [22m[2mcan send through the provider outside production when explicitly enabled
+[22m[39m{"level":"info","event":"sms_send_started","to":"091****6789","template":"sanaotp"}
+
+[90mstdout[2m | tests/sms-index.test.ts[2m > [22m[2msendSms[2m > [22m[2mcan send through the provider outside production when explicitly enabled
+[22m[39m{"level":"info","event":"sms_send_succeeded","to":"091****6789","template":"sanaotp"}
+
+ [32m✓[39m tests/sms-index.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mkeeps code entry available on uncertain delivery without retrying SMS
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not dispatch after claim failure
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mfails closed before comparison on database failure
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+ [32m✓[39m tests/auth-actions.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m39 passed[39m[22m[90m (39)[39m
+[2m   Start at [22m 10:19:13
+[2m   Duration [22m 3.35s[2m (transform 102ms, setup 0ms, import 778ms, tests 2.23s, environment 0ms)[22m
+

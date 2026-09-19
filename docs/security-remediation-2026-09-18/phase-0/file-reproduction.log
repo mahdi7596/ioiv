@@ -1,0 +1,35 @@
+BEGIN
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 4
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+DO
+UPDATE 1
+UPDATE 1
+SAVEPOINT
+INSERT 0 1
+UPDATE 1
+psql:phase0-reproduction.sql:92: NOTICE:  REPRODUCED after FAILED: third revision blocked while original passed file remains current: facilities file replacement requires the preceding passed revision
+DO
+ROLLBACK
+SAVEPOINT
+INSERT 0 1
+UPDATE 1
+psql:phase0-reproduction.sql:109: NOTICE:  REPRODUCED after UNAVAILABLE: third revision blocked while original passed file remains current: facilities file replacement requires the preceding passed revision
+DO
+ROLLBACK
+ROLLBACK

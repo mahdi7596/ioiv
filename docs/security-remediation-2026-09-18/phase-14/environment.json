@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase14-kmvozixr",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase14-kmvozixr/source",
+  "container": "sana-phase14-kmvozixr",
+  "containerId": "7d996c3a280c8d38f56dce8977874917f2e729957cbefded1bd0576865f1d7b9",
+  "label": "sana.task=sana-phase14-kmvozixr",
+  "port": "64356",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

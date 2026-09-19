@@ -1,0 +1,3 @@
+PASS populated legacy/facilities backfill: 9 obligations, old payment rows byte-for-byte JSON unchanged
+PASS injected migration failure: transactional DDL/data rollback, safe rerun
+PASS no programme enablement, no payment evidence deletion; rollback retains expanded tables

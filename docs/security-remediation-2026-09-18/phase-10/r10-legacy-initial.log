@@ -1,0 +1,76 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:84893) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source[39m
+
+[90mstdout[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mretains capture after file loss, permits repair, submits once without repayment
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu87vldp00a0sijryubytcye","paymentId":"cmu87vlho00b0sijrfypuorm3","amountToman":3000000}
+
+[90mstdout[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mretains capture after file loss, permits repair, submits once without repayment
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu87vldp00a0sijryubytcye","paymentId":"cmu87vlho00b0sijrfypuorm3"}
+
+[90mstdout[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mretains capture after file loss, permits repair, submits once without repayment
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu87vlho00b0sijrfypuorm3","applicationId":"cmu87vldp00a0sijryubytcye","referenceId":"fixture-reference"}
+
+[90mstderr[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mretains capture after file loss, permits repair, submits once without repayment
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu87vldp00a0sijryubytcye","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mretains capture after file loss, permits repair, submits once without repayment
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu87vldp00a0sijryubytcye"}
+
+[90mstdout[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mrecovers original uncertain payment despite missing documents
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu87vllm00bbsijrr1nubff9","paymentId":"cmu87vlpo00cbsijrnhw9jb9g","amountToman":3000000}
+
+[90mstdout[2m | tests/document-qualification.db.test.ts[2m > [22m[2mR10 required files restricted PostgreSQL and actual bytes[2m > [22m[2mrecovers original uncertain payment despite missing documents
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu87vllm00bbsijrr1nubff9","paymentId":"cmu87vlpo00cbsijrnhw9jb9g"}
+
+ [31m❯[39m tests/document-qualification.db.test.ts [2m([22m[2m15 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 3000[2mms[22m[39m
+     [32m✓[39m qualifies all required actual files while preserving blank row positions[32m 294[2mms[22m[39m
+     [32m✓[39m rejects fabricated references[32m 137[2mms[22m[39m
+     [32m✓[39m rejects foreign references[32m 270[2mms[22m[39m
+     [32m✓[39m rejects wrong-slot references[32m 133[2mms[22m[39m
+     [32m✓[39m rejects stale-generation references[32m 136[2mms[22m[39m
+     [32m✓[39m blocks missing before any gateway request[32m 183[2mms[22m[39m
+     [32m✓[39m blocks changed-hash before any gateway request[32m 151[2mms[22m[39m
+     [32m✓[39m blocks size before any gateway request[32m 145[2mms[22m[39m
+     [32m✓[39m blocks unknown before any gateway request[32m 165[2mms[22m[39m
+     [32m✓[39m retains capture after file loss, permits repair, submits once without repayment[32m 285[2mms[22m[39m
+[31m     [31m×[31m recovers original uncertain payment despite missing documents[39m[32m 198[2mms[22m[39m
+     [33m[2m✓[22m[39m UNKNOWN scan outage stays unqualified; repeatable scan restores eligibility [33m 426[2mms[22m[39m
+     [32m✓[39m replacement during historical scan cannot certify the superseded file[32m 168[2mms[22m[39m
+     [32m✓[39m changed bytes during historical scan cannot acquire PASSED evidence[32m 134[2mms[22m[39m
+     [32m✓[39m runtime cannot mutate evidence or insert incomplete PASSED evidence[32m 152[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/document-qualification.db.test.ts[2m > [22mR10 required files restricted PostgreSQL and actual bytes[2m > [22mrecovers original uncertain payment despite missing documents
+[31m[1mAssertionError[22m: expected { ok: false, …(1) } to match object { ok: true }
+(1 matching property omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "ok": true,[39m
+[31m+   "ok": false,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/document-qualification.db.test.ts:[2m94:54[22m[39m
+    [90m 92|[39m   [34mexpect[39m([35mawait[39m [34msettleLegacyPayment[39m(p[33m,[39mp[33m.[39mauthority[33m![39m))[33m.[39m[34mtoBe[39m([32m"unknown"[39m)[33m;[39m
+    [90m 93|[39m   [35mawait[39m [34munlink[39m(f[33m.[39mfiles[[34m6[39m][33m.[39mstoragePath)[33m;[39m
+    [90m 94|[39m   expect(await startPayment(await current(f.appId))).toMatchObject({ok…
+    [90m   |[39m                                                      [31m^[39m
+    [90m 95|[39m   [34mexpect[39m(requestZarinpalPayment)[33m.[39m[34mtoHaveBeenCalledTimes[39m([34m1[39m)[33m;[39m
+    [90m 96|[39m   expect((await db.payment.findUniqueOrThrow({where:{id:p.id}})).statu…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m14 passed[39m[22m[90m (15)[39m
+[2m   Start at [22m 13:30:38
+[2m   Duration [22m 4.09s[2m (transform 133ms, setup 0ms, import 964ms, tests 3.00s, environment 0ms)[22m
+

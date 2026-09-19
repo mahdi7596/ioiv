@@ -1,0 +1,317 @@
+
+> sana-registration-review-platform@0.1.0 test
+> vitest run
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:1730) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ RUN  v4.1.11 /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source
+
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+ ❯ tests/no-committed-gateway-credentials.test.ts (2 tests | 2 failed) 82ms
+     × finds no real merchant id next to a merchant-id key in any tracked file 43ms
+     × keeps the merchant id key only in example env files and the gateway client 38ms
+ ✓ tests/admin-certificate-route.test.ts (3 tests) 169ms
+ ✓ tests/facilities-draft-details-action.test.ts (2 tests) 261ms
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > records the verified payment even when the submission step fails, and reports success
+{"level":"error","event":"facilities_post_verify_submission_failed","paymentAttemptId":"pay_1","applicationId":"app_1","error":{"name":"Error","message":"همه اطلاعات و مدارک الزامی باید کامل و بررسی‌شده باشند.","stack":"Error: همه اطلاعات و مدارک الزامی باید کامل و بررسی‌شده باشند.\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source/lib/actions/facilities-payment.ts:339:35\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"}}
+
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > does not ask the gateway about a closed attempt when the callback itself is not OK
+{"level":"warn","event":"facilities_callback_for_terminal_attempt","paymentAttemptId":"pay_1","applicationId":"app_1","status":"FAILED","gatewayStatus":"NOK","reasonCode":"GATEWAY_NOT_OK"}
+
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > records a late capture when the gateway confirms an attempt that was already closed, and submits
+{"level":"warn","event":"facilities_payment_late_capture_recorded","paymentAttemptId":"pay_1","applicationId":"app_1","previousStatus":"FAILED"}
+
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > leaves a closed attempt closed when the gateway rejects it, and flags it when the gateway is unreachable
+{"level":"warn","event":"facilities_callback_for_terminal_attempt","paymentAttemptId":"pay_1","applicationId":"app_1","status":"CANCELLED","gatewayStatus":"OK","reasonCode":"VERIFICATION_REJECTED"}
+
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > leaves a closed attempt closed when the gateway rejects it, and flags it when the gateway is unreachable
+{"level":"error","event":"facilities_late_capture_verification_unavailable","paymentAttemptId":"pay_1","applicationId":"app_1","status":"CANCELLED","error":{"name":"ZarinpalUnavailableError","message":"Zarinpal unavailable: HTTP_5XX (HTTP 503)","stack":"ZarinpalUnavailableError: Zarinpal unavailable: HTTP_5XX (HTTP 503)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source/tests/facilities-payment-action.test.ts:194:51\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > never verifies a second capture when the application already holds a verified payment
+{"level":"warn","event":"facilities_duplicate_capture_declined","paymentAttemptId":"pay_b","applicationId":"app_1","verifiedAttemptId":"pay_a","status":"REDIRECT_READY","gatewayStatus":"OK"}
+
+stderr | tests/facilities-payment-action.test.ts > facilities payment and submission actions > fails a stale attempt that never reached the gateway and returns the application to draft
+{"level":"warn","event":"facilities_payment_stale_attempt_failed","applicationId":"app_1","paymentAttemptId":"pay_stale","previousStatus":"TIMED_OUT"}
+
+stdout | tests/facilities-payment-action.test.ts > facilities payment and submission actions > re-verifies a stale attempt that reached the gateway and submits when the gateway confirms it
+{"level":"info","event":"facilities_payment_stale_attempt_reverify","applicationId":"app_1","paymentAttemptId":"pay_stale","previousStatus":"REDIRECT_READY"}
+
+stdout | tests/facilities-payment-action.test.ts > facilities payment and submission actions > keeps a stale attempt pending when the gateway cannot be reached during re-verification
+{"level":"info","event":"facilities_payment_stale_attempt_reverify","applicationId":"app_1","paymentAttemptId":"pay_stale","previousStatus":"REDIRECT_READY"}
+
+ ✓ tests/facilities-payment-action.test.ts (21 tests) 277ms
+ ✓ tests/admin-actions-permissions.test.ts (5 tests) 275ms
+ ✓ tests/facilities-review-actions.test.ts (4 tests) 275ms
+stdout | tests/payment-action.test.ts > payment action > starts payment only after server-side final validation passes
+{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+stdout | tests/payment-action.test.ts > payment action > starts payment only after server-side final validation passes
+{"level":"info","event":"payment_start_succeeded","applicationId":"app_1","paymentId":"pay_1"}
+
+stdout | tests/payment-action.test.ts > payment action > marks the initiated payment failed when Zarinpal request fails without changing application status
+{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+stderr | tests/payment-action.test.ts > payment action > marks the initiated payment failed when Zarinpal request fails without changing application status
+{"level":"error","event":"payment_start_failed","applicationId":"app_1","paymentId":"pay_1","error":{"name":"Error","message":"provider down","stack":"Error: provider down\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source/tests/payment-action.test.ts:141:52\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64"}}
+
+stdout | tests/payment-action.test.ts > payment action > submits corrections without repayment when a needs-edit application already has verified payment
+{"level":"info","event":"application_resubmitted_without_payment","applicationId":"app_1"}
+
+stdout | tests/payment-action.test.ts > payment action > retries a pending payment by failing previous initiated attempts and creating a fresh request
+{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+stdout | tests/payment-action.test.ts > payment action > retries a pending payment by failing previous initiated attempts and creating a fresh request
+{"level":"info","event":"payment_start_succeeded","applicationId":"app_1","paymentId":"pay_1"}
+
+stdout | tests/payment-action.test.ts > payment action > completes the submission without a new charge when the open attempt was already paid at the gateway
+{"level":"info","event":"payment_verification_started","paymentId":"old_pay","applicationId":"app_1"}
+
+stdout | tests/payment-action.test.ts > payment action > completes the submission without a new charge when the open attempt was already paid at the gateway
+{"level":"info","event":"payment_verification_succeeded","paymentId":"old_pay","applicationId":"app_1","referenceId":"ref_old"}
+
+stderr | tests/payment-action.test.ts > payment action > completes the submission without a new charge when the open attempt was already paid at the gateway
+{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"app_1","reason":"missing_admin_alert_mobile"}
+
+stdout | tests/payment-action.test.ts > payment action > completes the submission without a new charge when the open attempt was already paid at the gateway
+{"level":"info","event":"payment_retry_recovered_verified_attempt","applicationId":"app_1","paymentId":"old_pay"}
+
+stdout | tests/payment-action.test.ts > payment action > completes the submission without a new charge when the open attempt was already paid at the gateway
+{"level":"info","event":"user_submission_notification_sent","applicationId":"app_1"}
+
+stdout | tests/payment-action.test.ts > payment action > refuses to start a second charge while the open attempt cannot be verified
+{"level":"info","event":"payment_verification_started","paymentId":"old_pay","applicationId":"app_1"}
+
+stderr | tests/payment-action.test.ts > payment action > refuses to start a second charge while the open attempt cannot be verified
+{"level":"error","event":"payment_verification_unavailable","paymentId":"old_pay","applicationId":"app_1","error":{"name":"ZarinpalUnavailableError","message":"Zarinpal unavailable: HTTP_5XX (HTTP 503)","stack":"ZarinpalUnavailableError: Zarinpal unavailable: HTTP_5XX (HTTP 503)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source/tests/payment-action.test.ts:252:51\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64"}}
+
+stdout | tests/payment-action.test.ts > payment action > closes an open attempt the gateway rejects and then starts a fresh request
+{"level":"info","event":"payment_verification_started","paymentId":"old_pay","applicationId":"app_1"}
+
+stderr | tests/payment-action.test.ts > payment action > closes an open attempt the gateway rejects and then starts a fresh request
+{"level":"warn","event":"payment_verification_rejected","paymentId":"old_pay","applicationId":"app_1","code":-51}
+
+stdout | tests/payment-action.test.ts > payment action > closes an open attempt the gateway rejects and then starts a fresh request
+{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+stdout | tests/payment-action.test.ts > payment action > closes an open attempt the gateway rejects and then starts a fresh request
+{"level":"info","event":"payment_start_succeeded","applicationId":"app_1","paymentId":"pay_1"}
+
+stdout | tests/payment-action.test.ts > payment action > returns a pending-payment retry to draft when the fresh gateway request fails
+{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+stderr | tests/payment-action.test.ts > payment action > returns a pending-payment retry to draft when the fresh gateway request fails
+{"level":"error","event":"payment_start_failed","applicationId":"app_1","paymentId":"pay_1","error":{"name":"Error","message":"provider down","stack":"Error: provider down\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source/tests/payment-action.test.ts:310:52\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///Users/mahdi/Documents/work/ioiv/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64"}}
+
+ ✓ tests/payment-action.test.ts (10 tests) 156ms
+ ✓ tests/facilities-application-files-route.test.ts (7 tests) 53ms
+ ✓ tests/admin-export-route.test.ts (3 tests) 61ms
+ ✓ tests/admin-status-route.test.ts (2 tests) 81ms
+ ✓ tests/facilities-payment-callback-route.test.ts (3 tests) 67ms
+stderr | tests/upload-validation.test.ts > legacy upload scanning > rejects files the configured scanner flags or cannot scan, writing nothing
+{"level":"warn","event":"legacy_upload_scan_rejected","status":"FAILED","reason":"MALWARE_DETECTED","fileType":"PDF","size":60}
+
+stderr | tests/upload-validation.test.ts > legacy upload scanning > rejects files the configured scanner flags or cannot scan, writing nothing
+{"level":"warn","event":"legacy_upload_scan_rejected","status":"UNAVAILABLE","reason":"SCANNER_UNAVAILABLE","fileType":"PDF","size":60}
+
+stderr | tests/upload-validation.test.ts > legacy upload scanning > fails closed when no scanner is configured at all, and scans when one is
+{"level":"error","event":"legacy_upload_scanner_not_configured","fileType":"PDF","size":60,"error":{"message":"undefined"}}
+
+ ✓ tests/zarinpal.test.ts (12 tests) 680ms
+     ✓ retries a transient fetch failure before returning the payment authority  305ms
+     ✓ bounds each gateway call with a timeout and retries a timeout only once  304ms
+ ✓ tests/upload-validation.test.ts (12 tests) 47ms
+ ✓ tests/health-route.test.ts (2 tests) 26ms
+ ✓ tests/payment-callback.test.ts (12 tests) 75ms
+ ✓ tests/facilities-submission-validation.test.ts (3 tests) 10ms
+ ✓ tests/upload-request-guards.test.ts (3 tests) 32ms
+ ✓ tests/facilities-application-wizard.test.tsx (5 tests) 48ms
+ ✓ tests/status-history-timeline.test.tsx (1 test) 68ms
+ ✓ tests/facilities-export.test.ts (4 tests) 105ms
+ ✓ tests/facilities-m9-release.test.ts (10 tests) 32ms
+ ✓ tests/client-ip.test.ts (3 tests) 51ms
+ ✓ tests/dashboard-evaluation-notice.test.tsx (1 test) 11ms
+ ✓ tests/facilities-files.test.ts (15 tests) 108ms
+ ✓ tests/protected-file-route.test.ts (5 tests) 48ms
+ ✓ tests/facilities-review-ui.test.tsx (3 tests) 60ms
+ ✓ tests/upload-route.test.ts (8 tests) 49ms
+ ✓ tests/admin-human-resources.test.ts (4 tests) 24ms
+ ✓ tests/facilities-admin-file-route.test.ts (3 tests) 26ms
+ ✓ tests/facilities-private-file-route.test.ts (8 tests) 113ms
+ ✓ tests/admin-readonly-ui.test.tsx (3 tests) 147ms
+ ✓ tests/sms-messages.test.ts (4 tests) 5ms
+stdout | tests/auth-actions.test.ts > auth actions > invalidates older unused OTPs before creating a replacement
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > invalidates older unused OTPs before creating a replacement
+{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"<redacted>","next":"otp"}
+
+stdout | tests/auth-actions.test.ts > auth actions > rejects OTP requests made too soon for the same mobile and purpose
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > rejects OTP requests after five requests in an hour for the same mobile and purpose
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > rejects admin OTP requests for mobiles outside the active admin list
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stderr | tests/auth-actions.test.ts > auth actions > rejects admin OTP requests for mobiles outside the active admin list
+{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > rejects admin OTP requests for inactive admin mobiles
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stderr | tests/auth-actions.test.ts > auth actions > rejects admin OTP requests for inactive admin mobiles
+{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > allows active entry viewer admins to request an admin OTP
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > allows active entry viewer admins to request an admin OTP
+{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"<redacted>","next":"otp"}
+
+stdout | tests/auth-actions.test.ts > auth actions > does not reveal whether a user mobile is already registered when requesting an OTP
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > does not reveal whether a user mobile is already registered when requesting an OTP
+{"level":"info","event":"otp_request_completed","mode":"user","mobile":"<redacted>","next":"otp"}
+
+stdout | tests/auth-actions.test.ts > auth actions > creates a bare user with just their mobile number on first OTP verification
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > creates a bare user with just their mobile number on first OTP verification
+{"level":"info","event":"otp_verify_completed","mode":"user","mobile":"<redacted>","userId":"user-1","createdUser":true}
+
+stdout | tests/auth-actions.test.ts > auth actions > logs an existing user in without creating a new record
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > logs an existing user in without creating a new record
+{"level":"info","event":"otp_verify_completed","mode":"user","mobile":"<redacted>","userId":"user-1","createdUser":false}
+
+stdout | tests/auth-actions.test.ts > auth actions > records the requesting address and rejects an address over the hourly cap
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > records the requesting address and rejects an address over the hourly cap
+{"level":"info","event":"otp_request_completed","mode":"user","mobile":"<redacted>","next":"otp"}
+
+stdout | tests/auth-actions.test.ts > auth actions > records the requesting address and rejects an address over the hourly cap
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"<redacted>"}
+
+stderr | tests/auth-actions.test.ts > auth actions > records the requesting address and rejects an address over the hourly cap
+{"level":"warn","event":"otp_ip_limit_hit","clientIp":"<redacted>","purpose":"USER_LOGIN","count":30}
+
+stdout | tests/auth-actions.test.ts > auth actions > applies rate limits before revealing whether an admin mobile exists
+{"level":"info","event":"otp_request_started","mode":"admin","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > only selects codes that still have verification attempts left
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"<redacted>"}
+
+stdout | tests/auth-actions.test.ts > auth actions > only selects codes that still have verification attempts left
+{"level":"info","event":"otp_verify_completed","mode":"user","mobile":"<redacted>","userId":"user-1","createdUser":true}
+
+stdout | tests/auth-actions.test.ts > auth actions > counts a wrong code against the OTP and does not create a session
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"<redacted>"}
+
+stderr | tests/auth-actions.test.ts > auth actions > counts a wrong code against the OTP and does not create a session
+{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"<redacted>","reason":"invalid_code","attempt":3}
+
+stdout | tests/auth-actions.test.ts > auth actions > does not mint a session when the code was consumed concurrently
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"<redacted>"}
+
+stderr | tests/auth-actions.test.ts > auth actions > does not mint a session when the code was consumed concurrently
+{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"<redacted>","reason":"already_consumed"}
+
+stdout | tests/auth-actions.test.ts > auth actions > runs a dummy hash comparison when no usable code exists
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"<redacted>"}
+
+stderr | tests/auth-actions.test.ts > auth actions > runs a dummy hash comparison when no usable code exists
+{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"<redacted>","reason":"invalid_or_expired"}
+
+ ✓ tests/auth-actions.test.ts (15 tests) 37ms
+stdout | tests/sms-index.test.ts > sendSms > can send through the provider outside production when explicitly enabled
+{"level":"info","event":"sms_send_started","to":"<redacted>","template":"sanaotp"}
+
+stdout | tests/sms-index.test.ts > sendSms > can send through the provider outside production when explicitly enabled
+{"level":"info","event":"sms_send_succeeded","to":"<redacted>","template":"sanaotp"}
+
+ ✓ tests/sms-index.test.ts (1 test) 60ms
+ ✓ tests/validation-certificate-panel.test.tsx (3 tests) 18ms
+ ✓ tests/facilities-export-route.test.ts (3 tests) 24ms
+ ✓ tests/payment-return-page.test.tsx (6 tests) 77ms
+ ✓ tests/facilities-config-validation.test.ts (3 tests) 7ms
+ ✓ tests/logger.test.ts (3 tests) 12ms
+ ✓ tests/export-submissions-cap.test.ts (2 tests) 12ms
+ ✓ tests/status-history-timeline-item.test.tsx (1 test) 20ms
+ ✓ tests/final-payment-step.test.tsx (3 tests) 13ms
+ ✓ tests/status-history-note.test.tsx (1 test) 9ms
+ ✓ tests/validation-certificate-download.test.tsx (2 tests) 19ms
+ ✓ tests/export-submissions.test.ts (3 tests) 13ms
+stderr | tests/ghasedak.test.ts > Ghasedak SMS adapter > refuses a plain-http base URL in production unless explicitly overridden
+{"level":"warn","event":"sms_insecure_transport","reason":"GHASEDAK_ALLOW_INSECURE_HTTP"}
+
+ ✓ tests/ghasedak.test.ts (5 tests) 6ms
+ ✓ tests/validation/application.test.ts (7 tests) 10ms
+ ✓ tests/facilities-scan-semaphore.test.ts (3 tests) 7ms
+ ✓ tests/facilities-editable-snapshot.test.ts (5 tests) 23ms
+ ✓ tests/facilities-review-status.test.ts (2 tests) 8ms
+ ✓ tests/facilities-payment-notice.test.ts (5 tests) 5ms
+ ✓ tests/security-headers.test.ts (3 tests) 3ms
+ ✓ tests/pagination.test.ts (3 tests) 8ms
+ ✓ tests/facilities-reconciliation.test.ts (6 tests) 12ms
+ ✓ tests/facilities-audit-loader.test.ts (2 tests) 13ms
+ ✓ tests/facilities-profile-lock.test.ts (6 tests) 10ms
+ ✓ tests/upload-rate-limit.test.ts (3 tests) 5ms
+ ✓ tests/facilities-retention.test.ts (2 tests) 7ms
+ ✓ tests/validation/auth.test.ts (5 tests) 4ms
+ ✓ tests/application-access.test.ts (3 tests) 5ms
+ ✓ tests/facilities-export-loading.test.ts (2 tests) 4ms
+ ✓ tests/status-labels.test.ts (2 tests) 4ms
+ ✓ tests/status-transitions.test.ts (4 tests) 4ms
+ ✓ tests/payment-status-relationship.test.ts (2 tests) 7ms
+ ✓ tests/status-history-format.test.ts (2 tests) 3ms
+ ✓ tests/admin-permissions.test.ts (3 tests) 3ms
+ ✓ tests/facilities-audit.test.ts (2 tests) 4ms
+ ✓ tests/facilities-payment-state.test.ts (2 tests) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/no-committed-gateway-credentials.test.ts > gateway credentials are never committed > finds no real merchant id next to a merchant-id key in any tracked file
+Error: Command failed: git ls-files -z
+fatal: not a git repository (or any of the parent directories): .git
+
+ ❯ trackedFiles tests/no-committed-gateway-credentials.test.ts:23:10
+     21|
+     22| function trackedFiles(root: string): string[] {
+     23|   return execFileSync("git", ["ls-files", "-z"], { cwd: root })
+       |          ^
+     24|     .toString("utf8")
+     25|     .split("\0")
+ ❯ tests/no-committed-gateway-credentials.test.ts:35:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/no-committed-gateway-credentials.test.ts > gateway credentials are never committed > keeps the merchant id key only in example env files and the gateway client
+Error: Command failed: git ls-files -z
+fatal: not a git repository (or any of the parent directories): .git
+
+ ❯ trackedFiles tests/no-committed-gateway-credentials.test.ts:23:10
+     21|
+     22| function trackedFiles(root: string): string[] {
+     23|   return execFileSync("git", ["ls-files", "-z"], { cwd: root })
+       |          ^
+     24|     .toString("utf8")
+     25|     .split("\0")
+ ❯ tests/no-committed-gateway-credentials.test.ts:52:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 67 passed (68)
+      Tests  2 failed | 306 passed (308)
+   Start at  19:09:48
+   Duration  4.14s (transform 3.64s, setup 0ms, import 10.63s, tests 4.00s, environment 11ms)
+

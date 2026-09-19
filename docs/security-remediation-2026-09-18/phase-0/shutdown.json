@@ -1,0 +1,11 @@
+{
+  "ownedServerPid": 6210,
+  "serverStopped": true,
+  "ownedContainerId": "f1daa782bf916da62c48351a57d3c4e18da1abeb64201aa19dd07acd1d6387de",
+  "containerRemoved": true,
+  "anonymousFixtureVolumeRemoved": true,
+  "rawServerLogRemoved": true,
+  "unrelatedContainersTouched": false,
+  "preservedAuditHashMatches": true,
+  "remainingScratchRoot": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x"
+}

@@ -1,0 +1,26 @@
+{
+  "observedCommandExitCodes": {
+    "baseline-r12.log": 1,
+    "focused.log": 0,
+    "tests.log": 1,
+    "tests2.log": 1,
+    "final-tests.log": 0,
+    "processes.log": 0,
+    "build.log": 0,
+    "types.log": 0,
+    "lint.log": 0,
+    "browser.log": 0,
+    "browser-final.log": 0,
+    "final-types.log": 0,
+    "final-lint.log": 0
+  },
+  "finalTests": 413,
+  "testFiles": 70,
+  "restrictedDbCases": 39,
+  "processCrashCases": 5,
+  "browserWidths": [
+    390,
+    1440
+  ],
+  "evidenceType": "controlled local providers; not sandbox qualification"
+}

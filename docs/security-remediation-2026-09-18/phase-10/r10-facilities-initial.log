@@ -1,0 +1,78 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:87861) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source[39m
+
+ [31m❯[39m tests/facilities-document-qualification.db.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[33m 5588[2mms[22m[39m
+[31m     [31m×[31m qualifies application and officer/profile evidence, starts valid payment[39m[33m 1009[2mms[22m[39m
+[31m     [31m×[31m blocks missing insurance bytes without new payment[39m[33m 751[2mms[22m[39m
+[31m     [31m×[31m blocks missing profile-articles-of-association bytes without new payment[39m[33m 734[2mms[22m[39m
+[31m     [31m×[31m blocks missing officer bytes without new payment[39m[33m 836[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects changed hash and foreign caller ownership [33m 720[2mms[22m[39m
+[31m     [31m×[31m free submission also checks actual bytes[39m[33m 800[2mms[22m[39m
+[31m     [31m×[31m capture survives missing profile file and repaired paid draft submits without another charge[39m[33m 725[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 6 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mqualifies application and officer/profile evidence, starts valid payment
+[31m[1mError[22m: پروفایل شرکت و مدارک آن باید پیش از پرداخت کامل باشد[39m
+[36m [2m❯[22m lib/actions/facilities-payment.ts:[2m179:89[22m[39m
+    [90m177|[39m
+    [90m178|[39m     [35mif[39m (application[33m.[39mstatus [33m===[39m [33mApplicationStatus[39m[33m.[39m[33mDRAFT[39m) {
+    [90m179|[39m       try { await refreshFacilitiesProfileSnapshot(tx, application.id)…
+    [90m   |[39m                                                                                         [31m^[39m
+    [90m180|[39m       application = await loadFacilitiesSubmissionApplication(tx, appl…
+    [90m181|[39m       [35mif[39m ([33m![39mapplication) [35mthrow[39m [35mnew[39m [33mActionError[39m([32m"پرونده پیدا نشد"[39m[33m,[39m [34m404[39m)[33m;[39m
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m Module.startFacilitiesPayment lib/actions/facilities-payment.ts:[2m166:23[22m[39m
+[90m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m59:175[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mblocks missing insurance bytes without new payment
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mblocks missing profile-articles-of-association bytes without new payment
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mblocks missing officer bytes without new payment
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'مدرک' but got 'پروفایل شرکت و مدارک آن باید پیش از پ…'[39m
+
+Expected: [32m"مدرک"[39m
+Received: [31m"پروفایل شرکت و مدارک آن باید پیش از پرداخت کامل باشد"[39m
+
+[36m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m60:378[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mfree submission also checks actual bytes
+[31m[1mError[22m: پروفایل شرکت و مدارک آن باید پیش از ارسال کامل باشد[39m
+[36m [2m❯[22m lib/actions/facilities-payment.ts:[2m153:89[22m[39m
+
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m Module.submitFacilitiesApplication lib/actions/facilities-payment.ts:[2m148:18[22m[39m
+[90m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m62:94[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mcapture survives missing profile file and repaired paid draft submits without another charge
+[31m[1mError[22m: پروفایل شرکت و مدارک آن باید پیش از پرداخت کامل باشد[39m
+[36m [2m❯[22m lib/actions/facilities-payment.ts:[2m179:89[22m[39m
+    [90m177|[39m
+    [90m178|[39m     [35mif[39m (application[33m.[39mstatus [33m===[39m [33mApplicationStatus[39m[33m.[39m[33mDRAFT[39m) {
+    [90m179|[39m       try { await refreshFacilitiesProfileSnapshot(tx, application.id)…
+    [90m   |[39m                                                                                         [31m^[39m
+    [90m180|[39m       application = await loadFacilitiesSubmissionApplication(tx, appl…
+    [90m181|[39m       [35mif[39m ([33m![39mapplication) [35mthrow[39m [35mnew[39m [33mActionError[39m([32m"پرونده پیدا نشد"[39m[33m,[39m [34m404[39m)[33m;[39m
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m Module.startFacilitiesPayment lib/actions/facilities-payment.ts:[2m166:23[22m[39m
+[90m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m64:27[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 13:33:25
+[2m   Duration [22m 6.05s[2m (transform 159ms, setup 0ms, import 322ms, tests 5.59s, environment 0ms)[22m
+

@@ -1,0 +1,9 @@
+{
+  "priorMigrations": 31,
+  "additiveMigrations": 2,
+  "historicalFileExactRowPreserved": true,
+  "unknownNotPromoted": true,
+  "precommitFailureRollbackVerifiedForBothMigrations": true,
+  "runtimeEvidenceImmutableAndDirectDeleteDenied": true,
+  "productionAccess": false
+}

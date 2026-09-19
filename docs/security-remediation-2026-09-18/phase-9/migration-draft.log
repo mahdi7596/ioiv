@@ -1,0 +1,50 @@
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase1", schema "public" at "127.0.0.1:59165"
+
+31 migrations found in prisma/migrations
+
+Applying migration `20260919150000_legacy_file_bindings`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260919150000_legacy_file_bindings/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+REVOKE
+GRANT
+REVOKE
+REVOKE
+GRANT
+GRANT
+REVOKE
+GRANT
+GRANT
+GRANT
+GRANT
+REVOKE
+REVOKE
+GRANT
+REVOKE
+GRANT
+GRANT
+REVOKE
+GRANT
+GRANT
+REVOKE
+GRANT
+GRANT
+GRANT
+GRANT

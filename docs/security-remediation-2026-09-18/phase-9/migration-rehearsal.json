@@ -1,0 +1,18 @@
+{
+  "database": "phase9_migration",
+  "migrationCount": 31,
+  "historicalFiles": 5,
+  "boundFiles": [
+    "valid"
+  ],
+  "repairRecords": 9,
+  "rollbackVerified": true,
+  "originalRowsPreserved": true,
+  "historicalByteHashes": {
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-m6o2n9yn/migration-bytes/valid.csv": "282f27b985ce59159519df4ba368a255f901d413a2e36533a46442d039a48496",
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-m6o2n9yn/migration-bytes/duplicate.csv": "ee6fefd2282c8c21de87a0f6a93a5a61831bb64a66802b9d8a28ea4614fee4fb",
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-m6o2n9yn/migration-bytes/foreign.csv": "fedd445e213e67184ef7de68d6d1368308a8fa2c997e570fcac9ff74ae5bc15a",
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-m6o2n9yn/migration-bytes/certificate-a.csv": "c570bbe8ad77ad192d5a9412b44d6926b92972ac2efb2b804e853d3143908735",
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-m6o2n9yn/migration-bytes/certificate-b.csv": "74f2839116c0f1cab34688c65fffd8b1efe939196f77964b8b97fff30d4161ea"
+  }
+}

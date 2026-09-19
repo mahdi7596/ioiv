@@ -1,0 +1,23 @@
+(node:55036) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"providerPort":54162}
+{"serverPid":55039,"port":54163,"proxy":false}
+{"serverPid":55041,"port":54164,"proxy":false}
+PASS eight HTTP requests/two production Next processes: one dispatch during slow provider
+PASS failure: uncertain warning, quota retained, no retry
+PASS malformed: uncertain warning, quota retained, no retry
+PASS timeout: uncertain warning, quota retained, no retry
+PASS unqualified/spoofed headers share unknown quota
+{"serverPid":55113,"port":54190,"proxy":true}
+PASS explicitly qualified X-Real-IP quota; XFF ignored (fixture only)
+Owned browser, Next servers and provider stopped
+locator.waitFor: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByRole('alert').filter({ hasText: 'تعداد درخواست‌های کد' }).first() to be visible
+
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo/source/prisma/tests/otp-request/browser.ts:39:299) {
+  log: [
+    "  - waiting for getByRole('alert').filter({ hasText: 'تعداد درخواست‌های کد' }).first() to be visible"
+  ],
+  name: 'TimeoutError'
+}

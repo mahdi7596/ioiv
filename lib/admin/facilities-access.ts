@@ -4,7 +4,9 @@ import { getAdminPermissions, hasAdminPermission, type AdminPermission } from "@
 import { ActionError } from "@/lib/actions/auth";
 
 export async function requireFacilitiesAdmin(permission: AdminPermission = "viewFacilitiesEntries") {
-  const session = await requireSession("admin");
+  let session;
+  try { session = await requireSession("admin"); }
+  catch { throw new ActionError("نشست شما پایان یافته است. دوباره وارد شوید.", 401); }
   const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
   if (!admin?.active) throw new ActionError("دسترسی مدیریت فعال نیست", 403);
   if (!hasAdminPermission(admin.role, permission)) throw new ActionError("برای این عملیات دسترسی لازم را ندارید", 403);

@@ -1,0 +1,42 @@
+(node:76440) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":76460,"port":61873,"hostilePort":61872}
+Owned Next/browser/hostile fixture stopped
+locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('form[action="/api/auth/logout"]').first().locator('button')
+    - locator resolved to <button title="خروج" type="submit" aria-label="خروج">…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is not visible
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is not visible
+    - retrying click action
+      - waiting 100ms
+    58 × waiting for element to be visible, enabled and stable
+       - element is not visible
+     - retrying click action
+       - waiting 500ms
+
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase13-6v11a5ly/source/prisma/tests/session-recovery/browser.ts:33:193) {
+  log: [
+    `  - waiting for locator('form[action="/api/auth/logout"]').first().locator('button')`,
+    '    - locator resolved to <button title="خروج" type="submit" aria-label="خروج">…</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not visible',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not visible',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    58 × waiting for element to be visible, enabled and stable',
+    '       - element is not visible',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}

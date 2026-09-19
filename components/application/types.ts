@@ -1,5 +1,6 @@
 export type FileRef = {
   fileId: string;
+  generation?: number;
   name: string;
 };
 
@@ -25,6 +26,7 @@ export type CreditReportsDraft = {
 };
 
 export type ApplicationDraft = {
+  draftVersion?: number;
   currentStep: number;
   taxDeclarations: YearFileRow[];
   financials: YearFileRow[];
@@ -37,7 +39,7 @@ export type StepProps = {
   applicationId: string;
   draft: ApplicationDraft;
   readOnly?: boolean;
-  uploadingKey?: string;
+  uploadingKeys?: Record<string, boolean>;
   uploadProgress: Record<string, number>;
   uploadErrors: Record<string, string>;
   onDraftChange: (draft: ApplicationDraft) => void;

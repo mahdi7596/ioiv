@@ -1,0 +1,42 @@
+{
+  "changedFromPhase8Checkpoint": [
+    "DEPLOYMENT.md",
+    "app/dashboard/application/page.tsx",
+    "components/application/ApplicationWizard.tsx",
+    "lib/actions/admin.ts",
+    "lib/actions/application.ts",
+    "lib/actions/payment.ts",
+    "prisma/facilities-runtime-role-grants.sql",
+    "prisma/schema.prisma",
+    "tests/admin-actions-permissions.test.ts",
+    "tests/payment-coordination-mock.ts",
+    "tests/payment-coordination.db.test.ts"
+  ],
+  "additionalSourceFilesFingerprinted": [
+    "app/api/files/[id]/route.ts",
+    "app/api/uploads/route.ts",
+    "components/application/CreditReportStep.tsx",
+    "components/application/FileUploadControl.tsx",
+    "components/application/FinancialStatementsStep.tsx",
+    "components/application/HumanResourcesStep.tsx",
+    "components/application/TaxDeclarationStep.tsx",
+    "components/application/TrialBalanceStep.tsx",
+    "components/application/types.ts",
+    "lib/export/submissions.ts",
+    "lib/uploads/candidates.ts",
+    "lib/uploads/coordination.ts",
+    "lib/uploads/replace.ts",
+    "lib/uploads/slots.ts",
+    "lib/uploads/storage.ts",
+    "lib/validations/application.ts",
+    "lib/validations/shared.ts",
+    "prisma/migrations/20260919150000_legacy_file_bindings/migration.sql",
+    "prisma/tests/legacy-replacement/browser.ts",
+    "prisma/tests/legacy-replacement/crash-worker.ts",
+    "tests/legacy-replacement.db.test.ts",
+    "tests/protected-file-route.test.ts",
+    "tests/upload-route.test.ts",
+    "tests/upload-validation.test.ts"
+  ],
+  "note": "Additional includes Phase9 files and supporting previously tracked source not in prior selective manifest."
+}

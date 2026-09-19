@@ -1,0 +1,8 @@
+{
+  "serverVersion": "16.14 (Debian 16.14-1.pgdg13+1)",
+  "migrations": 30,
+  "candidateChecksum": "8ea72e679cfa0820479d79eb25a075690289be2a33f038060a3c476a51d5c6e3",
+  "enabledFacilities": 0,
+  "runtimeRestricted": true,
+  "sourceMigrationChecksum": "8ea72e679cfa0820479d79eb25a075690289be2a33f038060a3c476a51d5c6e3"
+}

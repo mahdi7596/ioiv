@@ -1,3 +1,4 @@
+import { currentLegacyFiles } from "@/lib/uploads/slots";
 import * as XLSX from "xlsx";
 import { ApplicationStatus, type Prisma } from "@prisma/client";
 import { applicationStatusLabels } from "@/components/admin/StatusBadge";
@@ -53,7 +54,8 @@ type SubmissionExportApplication = {
   humanResources: unknown;
   adminNote: string | null;
   payments: Array<{ status: string; referenceId: string | null }>;
-  files: Array<{ fieldKey: string }>;
+  files: Array<{ id?: string; fieldKey: string }>;
+  legacyFileBindings?: Array<{ slotKey: string; currentFileId: string }>;
 };
 
 function toCsvValue(value: unknown) {
@@ -90,6 +92,7 @@ export async function getSubmissionExportRows(filters: ExportFilters) {
     include: {
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
       files: true,
+      legacyFileBindings: { select: { slotKey: true, currentFileId: true } },
     },
   });
 
@@ -97,6 +100,7 @@ export async function getSubmissionExportRows(filters: ExportFilters) {
 }
 
 export function createSubmissionExportRow(application: SubmissionExportApplication) {
+  const files = currentLegacyFiles(application.files, application.legacyFileBindings);
   const latestPayment = application.payments[0];
   const taxCompleteRows = countCompleteYearFileRows(application.taxDeclarations);
   const financialCompleteRows = countCompleteYearFileRows(application.financials);
@@ -117,26 +121,26 @@ export function createSubmissionExportRow(application: SubmissionExportApplicati
     "اظهارنامه مالیاتی تکمیل است": taxCompleteRows >= 1 ? "بله" : "خیر",
     "تعداد صورت مالی حسابرسی شده کامل": financialCompleteRows,
     "صورت مالی حسابرسی شده تکمیل است": financialCompleteRows >= 1 ? "بله" : "خیر",
-    "لیست بیمه بارگذاری شده": application.files.some(
+    "لیست بیمه بارگذاری شده": files.some(
       (file) => file.fieldKey === "humanResources.insuranceList",
     )
       ? "بله"
       : "خیر",
-    "تعداد فایل اظهارنامه مالیاتی": application.files.filter((file) =>
+    "تعداد فایل اظهارنامه مالیاتی": files.filter((file) =>
       file.fieldKey.startsWith("taxDeclarations"),
     ).length,
-    "تعداد فایل صورت مالی حسابرسی شده": application.files.filter((file) =>
+    "تعداد فایل صورت مالی حسابرسی شده": files.filter((file) =>
       file.fieldKey.startsWith("financials"),
     ).length,
-    "تراز کل و معین سال 1404 تکمیل است": application.files.some((file) =>
+    "تراز کل و معین سال 1404 تکمیل است": files.some((file) =>
       file.fieldKey.startsWith("trialBalance.generalLedger"),
-    ) && application.files.some((file) => file.fieldKey.startsWith("trialBalance.subsidiaryLedger"))
+    ) && files.some((file) => file.fieldKey.startsWith("trialBalance.subsidiaryLedger"))
       ? "بله"
       : "خیر",
-    "گزارش‌های اعتبارسنجی تکمیل است": application.files.some((file) =>
+    "گزارش‌های اعتبارسنجی تکمیل است": files.some((file) =>
       file.fieldKey.startsWith("creditReports.company"),
-    ) && application.files.some((file) => file.fieldKey.startsWith("creditReports.ceo")) &&
-    application.files.some((file) => file.fieldKey.startsWith("creditReports.boardMember"))
+    ) && files.some((file) => file.fieldKey.startsWith("creditReports.ceo")) &&
+    files.some((file) => file.fieldKey.startsWith("creditReports.boardMember"))
       ? "بله"
       : "خیر",
     "آخرین یادداشت مدیر": application.adminNote || "",

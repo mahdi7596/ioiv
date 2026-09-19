@@ -1,0 +1,10 @@
+{
+  "container": "sana-remediation-phase0-20260918",
+  "port": "59677",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase0-20260918-qwxrvu6x/source",
+  "database": "phase0",
+  "restoreDatabase": "phase0_restore",
+  "node": "v26.7.0",
+  "postgresImage": "sha256:d394728dee24b7791f1969c683f8b8410fe57450713a1db2aff5a500f0f98ab0",
+  "isolation": "Fresh container, loopback only; copied source excluding all .env files; allow-listed environment; blank gateway/SMS credentials; no scanner passthrough."
+}

@@ -1,0 +1,7 @@
+ M DEPLOYMENT.md
+ M docs/2026-09-16-payment-upload-security-audit.md
+?? docs/2026-09-18-prelaunch-security-review.md
+?? docs/2026-09-18-security-remediation-master-prompt.md
+?? docs/security-remediation-2026-09-18/
+?? docs/security-remediation-progress.md
+?? docs/security-review-2026-09-18/

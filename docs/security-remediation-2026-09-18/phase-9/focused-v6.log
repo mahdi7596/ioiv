@@ -1,0 +1,37 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source[39m
+
+(node:35934) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstderr[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mscan rejection and unavailability preserve the previous current object
+[22m[39m{"level":"warn","event":"legacy_upload_scan_rejected","status":"FAILED","fileType":"CSV","size":9}
+
+[90mstderr[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mscan rejection and unavailability preserve the previous current object
+[22m[39m{"level":"warn","event":"legacy_upload_scan_rejected","status":"UNAVAILABLE","fileType":"CSV","size":9}
+
+[90mstderr[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2munlink failure retains irreversible authorization and retries without touching current bytes
+[22m[39m{"level":"warn","event":"legacy_file_deletion_retry_required","intentId":"legacy-delete:cmu8695540036siq8ppuhibh7"}
+
+[90mstdout[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mtwo certificate action writers cannot overwrite a decision made during staging
+[22m[39m{"level":"info","event":"validation_certificate_replaced","applicationId":"cmu8696iu004xsiq84obz5k6d","adminId":"cmu8696ix004ysiq876q8kwy9","mobile":"2e1****1f70"}
+
+[90mstdout[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mpayment reservation fences uploads while the provider request is in flight
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8696n2005rsiq8yp07h9tt","paymentId":"cmu8696nw005zsiq8oj1810h1","amountToman":3000000}
+
+[90mstdout[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mpayment reservation fences uploads while the provider request is in flight
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8696n2005rsiq8yp07h9tt","paymentId":"cmu8696nw005zsiq8oj1810h1"}
+
+ [32m✓[39m tests/legacy-replacement.db.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 2693[2mms[22m[39m
+     [33m[2m✓[22m[39m real process death at allocation preserves current bytes and permits fenced recovery [33m 608[2mms[22m[39m
+     [33m[2m✓[22m[39m real process death at bytes preserves current bytes and permits fenced recovery [33m 320[2mms[22m[39m
+     [33m[2m✓[22m[39m real process death at commit preserves current bytes and permits fenced recovery [33m 356[2mms[22m[39m
+     [33m[2m✓[22m[39m real process death at authorization preserves current bytes and permits fenced recovery [33m 357[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
+[2m   Start at [22m 12:45:12
+[2m   Duration [22m 3.15s[2m (transform 173ms, setup 0ms, import 329ms, tests 2.69s, environment 0ms)[22m
+

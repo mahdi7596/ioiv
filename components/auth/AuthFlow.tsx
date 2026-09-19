@@ -31,9 +31,8 @@ export function AuthFlow() {
     setLoading(true);
     setError(undefined);
 
-    // Safety net so the button can never hang indefinitely if the network
-    // stalls; the server responds quickly now that SMS sending is backgrounded.
-    const timeout = AbortSignal.timeout(15000);
+    // Allow the bounded provider call and database operations to finish.
+    const timeout = AbortSignal.timeout(45000);
 
     try {
       const response = await fetch("/api/auth/request-otp", {
@@ -49,15 +48,21 @@ export function AuthFlow() {
       }
 
       setStep("otp");
-      setSecondsRemaining(120);
-      showToast({ type: "success", message: "کد تایید ارسال شد" });
+      setSecondsRemaining(90);
+      setError(data.warning);
+      showToast({ type: data.warning ? "error" : "success", message: data.warning || "کد تایید ارسال شد" });
     } catch (requestError) {
+      const uncertain = requestError instanceof SyntaxError || requestError instanceof TypeError || (requestError instanceof DOMException && requestError.name === "TimeoutError");
       const errorMessage =
-        requestError instanceof DOMException && requestError.name === "TimeoutError"
-          ? "ارسال کد تایید طول کشید. لطفاً دوباره تلاش کنید."
+        uncertain
+          ? "نتیجه ارسال مشخص نیست. اگر پیامک رسید کد را وارد کنید؛ برای ارسال مجدد ۹۰ ثانیه صبر کنید."
           : requestError instanceof Error
             ? requestError.message
             : "خطای غیرمنتظره رخ داد";
+      if (uncertain) {
+        setStep("otp");
+        setSecondsRemaining(90);
+      }
       setError(errorMessage);
       showToast({ type: "error", message: errorMessage });
     } finally {
@@ -84,6 +89,9 @@ export function AuthFlow() {
       showToast({ type: "success", message: "ورود با موفقیت انجام شد" });
       window.location.assign(data.redirectTo || "/dashboard");
     } catch (verifyError) {
+      // Start retries empty: editing a complete rejected code must not auto-submit
+      // each intermediate six-digit value and spend the remaining guesses.
+      setCode("");
       const errorMessage = verifyError instanceof Error ? verifyError.message : "خطای غیرمنتظره رخ داد";
       setError(errorMessage);
       showToast({ type: "error", message: errorMessage });

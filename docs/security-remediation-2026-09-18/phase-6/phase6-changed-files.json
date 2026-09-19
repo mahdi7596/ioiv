@@ -1,0 +1,13 @@
+[
+  ".env.runtime.example",
+  "DEPLOYMENT.md",
+  "app/api/auth/request-otp/route.ts",
+  "app/api/auth/verify-otp/route.ts",
+  "lib/auth/request-guard.ts",
+  "prisma/tests/auth-origin/browser.ts",
+  "prisma/tests/otp-request/browser.ts",
+  "prisma/tests/otp-verification/browser.ts",
+  "tests/auth-request-guard.test.ts",
+  "tests/otp-request-route.test.ts",
+  "tests/otp-verification-route.test.ts"
+]

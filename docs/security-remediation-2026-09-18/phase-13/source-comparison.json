@@ -1,0 +1,17 @@
+{
+  "sourceCount": 167,
+  "testedCount": 166,
+  "mismatches": [],
+  "changedFromPhase12": [
+    "DEPLOYMENT.md",
+    "lib/auth/request-guard.ts"
+  ],
+  "newFiles": [
+    "app/api/auth/logout/route.ts",
+    "app/api/auth/session-reset/route.ts",
+    "lib/auth/session.ts",
+    "prisma/tests/session-recovery/browser.ts",
+    "tests/session-recovery.test.ts"
+  ],
+  "envFilesExcluded": true
+}

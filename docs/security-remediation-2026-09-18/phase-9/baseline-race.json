@@ -1,0 +1,12 @@
+{
+  "baseline": "REPRODUCED",
+  "algorithm": "existing select all other paths then delete rows and unlink",
+  "runtimeDeleteAllowed": false,
+  "fixtureAuthority": "isolated SQL owner only; no grant changes",
+  "cleanupASelected": "B",
+  "cleanupBSelected": "A",
+  "remainingRows": 0,
+  "candidateAExists": false,
+  "candidateBExists": false,
+  "scope": "fresh labelled loopback database and synthetic bytes"
+}

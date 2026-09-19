@@ -1,0 +1,43 @@
+import assert from "node:assert/strict";
+import {randomInt,randomUUID} from "node:crypto";
+import {createServer as httpServer} from "node:http";
+import {createServer} from "node:net";
+import {spawn,type ChildProcess} from "node:child_process";
+import {mkdir} from "node:fs/promises";
+import {resolve} from "node:path";
+import {SignJWT} from "jose";
+import {PrismaClient} from "@prisma/client";
+const owner=new PrismaClient({datasources:{db:{url:process.env.PHASE1_OWNER_URL}}});
+const bytes=Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\nstartxref\n0\n%%EOF\n");
+let mode="clean",scans=0,server:ChildProcess|undefined;
+const sockets=new Set<import("node:net").Socket>();
+const scanner=createServer(socket=>{sockets.add(socket);socket.on("close",()=>sockets.delete(socket));let data=Buffer.alloc(0),done=false;socket.on("data",chunk=>{data=Buffer.concat([data,chunk]);if(done||data.length<10)return;let at=10;while(data.length>=at+4){const n=data.readUInt32BE(at);at+=4;if(n===0){done=true;scans++;if(mode==="unavailable")socket.destroy();else setTimeout(()=>socket.end(mode==="failed"?"stream: Synthetic FOUND\0":"stream: OK\0"),mode==="slow"?500:0);return;}if(data.length<at+n)return;at+=n;}});});
+async function listen(s:ReturnType<typeof httpServer>|ReturnType<typeof createServer>){await new Promise<void>(r=>s.listen(0,"127.0.0.1",r));return(s.address() as {port:number}).port;}
+async function token(id:string){return new SignJWT({subjectId:id,kind:"user"}).setProtectedHeader({alg:"HS256"}).setIssuedAt().setExpirationTime("30m").sign(new TextEncoder().encode(process.env.SESSION_SECRET!));}
+async function main(){assert.equal(process.env.PHASE1_ISOLATED_DB,"true");assert.equal(new URL(process.env.DATABASE_URL!).hostname,"127.0.0.1");let closeBrowser:(()=>Promise<void>)|undefined;
+try{
+ const scannerPort=await listen(scanner),probe=httpServer(),port=await listen(probe);await new Promise<void>(r=>probe.close(()=>r()));const base=`http://127.0.0.1:${port}`;
+ server=spawn(process.execPath,["node_modules/next/dist/bin/next","start","-H","127.0.0.1","-p",String(port)],{env:{...process.env,APP_URL:base,FACILITIES_CLAMAV_HOST:"127.0.0.1",FACILITIES_CLAMAV_PORT:String(scannerPort),FACILITIES_CLAMAV_TIMEOUT_MS:"1000",NODE_OPTIONS:`--require=${resolve("prisma/tests/otp-verification/no-external-fetch.cjs")}`},stdio:["ignore","pipe","pipe"]});let output="";server.stdout!.on("data",x=>output+=x);server.stderr!.on("data",x=>output+=x);const deadline=Date.now()+30000;while(!output.includes("Ready in")){assert.ok(Date.now()<deadline&&server.exitCode===null);await new Promise(r=>setTimeout(r,50));}console.log(JSON.stringify({pid:server.pid,port,scannerPort}));
+ const {chromium}=await import(process.env.PHASE1_PLAYWRIGHT!);const browser=await chromium.launch({headless:true,channel:"chrome"});closeBrowser=()=>browser.close();await mkdir(process.env.PHASE1_SCREENSHOTS!,{recursive:true});
+ for(const width of [390,1440]){
+  mode="clean";const id=randomUUID();const user=await owner.user.create({data:{mobile:`096${randomInt(10000000,99999999)}`,companyNationalId:id,companyName:"شرکت آزمایشی"}});
+  const application=await owner.application.create({data:{userId:user.id,mobile:user.mobile,companyNationalId:id,applicationRound:"1403"}});
+  const context=await browser.newContext({viewport:{width,height:900}});await context.addCookies([{name:"sana_session",value:await token(user.id),url:base,httpOnly:true,sameSite:"Lax"}]);await context.route("**/*",(route:{request:()=>{url:()=>string};continue:()=>Promise<void>;abort:()=>Promise<void>})=>new URL(route.request().url()).origin===base?route.continue():route.abort());
+  const seed=await context.request.post(base+"/api/uploads",{multipart:{applicationId:application.id,fieldKey:"taxDeclarations.2.file",generation:"0",file:{name:"previous.pdf",mimeType:"application/pdf",buffer:bytes}}});assert.equal(seed.status(),200);const previous=await seed.json();const oldUrl=base+"/api/files/"+previous.fileId;
+  assert.equal((await fetch(oldUrl)).status,401);const stranger=await owner.user.create({data:{mobile:`096${randomInt(10000000,99999999)}`}});assert.equal((await fetch(oldUrl,{headers:{cookie:`sana_session=${await token(stranger.id)}`}})).status,403);
+  const page=await context.newPage();await page.goto(base+"/dashboard/application");await page.getByText("previous.pdf",{exact:true}).waitFor();assert.equal(await page.locator('input[type="file"]').count(),3);
+  const fileInput=page.locator('[id="taxDeclarations.2.file"]');
+  for(const outcome of ["failed","unavailable"]){mode=outcome;const response=page.waitForResponse((r:{url:()=>string})=>r.url().endsWith("/api/uploads"));await fileInput.setInputFiles({name:`${outcome}.pdf`,mimeType:"application/pdf",buffer:bytes});assert.equal((await response).status(),outcome==="failed"?422:503);await page.getByRole("alert").first().waitFor();await page.getByText("previous.pdf",{exact:true}).waitFor();assert.equal(await fileInput.isEnabled(),true);const download=await context.request.get(oldUrl);assert.deepEqual(await download.body(),bytes);await page.screenshot({path:`${process.env.PHASE1_SCREENSHOTS}/${outcome}-${width}.png`});}
+  mode="slow";const replacement=page.waitForResponse((r:{url:()=>string})=>r.url().endsWith("/api/uploads"));await fileInput.setInputFiles({name:"replacement.pdf",mimeType:"application/pdf",buffer:bytes});await page.locator('[id="taxDeclarations.2.year"]').selectOption("1403");
+  // A second slot waits in the same browser queue; its result cannot erase the year.
+  await page.locator('[id="taxDeclarations.0.file"]').setInputFiles({name:"sibling.pdf",mimeType:"application/pdf",buffer:bytes});assert.equal((await replacement).status(),200);await page.getByText("replacement.pdf",{exact:true}).waitFor();await page.getByText("sibling.pdf",{exact:true}).waitFor();await page.getByRole("button",{name:"ذخیره",exact:true}).waitFor();
+  const deadline=Date.now()+10000;while(true){const app=await owner.application.findUniqueOrThrow({where:{id:application.id}});const rows=app.taxDeclarations as Array<{year?:string;file?:{name:string}}>;if(rows[2]?.year==="1403"&&rows[0]?.file?.name==="sibling.pdf")break;assert.ok(Date.now()<deadline);await new Promise(r=>setTimeout(r,50));}
+  await page.reload();await page.getByText("replacement.pdf",{exact:true}).waitFor();await page.getByText("sibling.pdf",{exact:true}).waitFor();assert.equal(await page.locator('[id="taxDeclarations.2.year"]').inputValue(),"1403");assert.equal((await context.request.get(oldUrl)).status(),404);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`${process.env.PHASE1_SCREENSHOTS}/success-${width}.png`});
+  const current=await owner.legacyFileBinding.findUniqueOrThrow({where:{applicationId_slotKey:{applicationId:application.id,slotKey:"taxDeclarations.2.file"}}});const download=await context.request.get(base+"/api/files/"+current.currentFileId);assert.deepEqual(await download.body(),bytes);
+  // A second tab commits first: stale browser gets 409 and an actionable refresh state.
+  mode="clean";const external=await context.request.post(base+"/api/uploads",{multipart:{applicationId:application.id,fieldKey:"taxDeclarations.2.file",generation:String(current.generation),file:{name:"other-tab.pdf",mimeType:"application/pdf",buffer:bytes}}});assert.equal(external.status(),200);
+  const stale=page.waitForResponse((r:{url:()=>string})=>r.url().endsWith("/api/uploads"));await fileInput.setInputFiles({name:"stale.pdf",mimeType:"application/pdf",buffer:bytes});assert.equal((await stale).status(),409);await page.getByText(/وضعیت ذخیره‌سازی نیاز به بررسی دارد/).waitFor();await page.screenshot({path:`${process.env.PHASE1_SCREENSHOTS}/conflict-${width}.png`});await page.reload();await page.getByText("other-tab.pdf",{exact:true}).waitFor();await context.close();console.log(`PASS ${width}px actual legacy upload: failure/unavailable retry, padded tax rows, queued sibling upload+year edit, refresh, stale-tab conflict and protected surviving bytes`);
+ }
+ console.log(`PASS controlled INSTREAM scanner calls ${scans}; no external requests`);
+}finally{await closeBrowser?.();if(server&&server.exitCode===null){const stopped=new Promise<void>(r=>server!.once("exit",()=>r()));const kill=setTimeout(()=>server!.kill("SIGKILL"),5000);server.kill("SIGTERM");await stopped;clearTimeout(kill);}for(const socket of sockets)socket.destroy();await new Promise<void>(r=>scanner.close(()=>r()));await owner.$disconnect();console.log("Owned Next/browser/scanner stopped");}}
+main().catch(error=>{console.error(error);process.exitCode=1;});

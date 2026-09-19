@@ -1,0 +1,100 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:51877) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source[39m
+
+ [32m✓[39m tests/facilities-reconciliation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [31m❯[39m tests/facilities-replacement.db.test.ts [2m([22m[2m15 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 8116[2mms[22m[39m
+[31m     [31m×[31m orphan purge defers during a held scan and preserves the committed bytes[39m[32m 225[2mms[22m[39m
+[31m     [31m×[31m orphan listing may pause beyond transaction timeout without deleting a recovered current[39m[33m 5418[2mms[22m[39m
+[31m     [31m×[31m orphan purge removes only aged unreferenced objects after upload completion[39m[32m 116[2mms[22m[39m
+     [32m✓[39m new-key retry after FAILED preserves old good bytes and commits successful lineage[32m 272[2mms[22m[39m
+     [32m✓[39m new-key retry after UNAVAILABLE preserves old good bytes and commits successful lineage[32m 148[2mms[22m[39m
+     [32m✓[39m new-key retry after storage preserves old good bytes and commits successful lineage[32m 135[2mms[22m[39m
+     [32m✓[39m same-key replay cannot scan or allocate again, including rejected content[32m 66[2mms[22m[39m
+     [32m✓[39m concurrent successful candidates cannot replace a newer winner[32m 286[2mms[22m[39m
+     [32m✓[39m A→B→C supports delayed deletion and cannot rebind old current[32m 234[2mms[22m[39m
+     [32m✓[39m unavailable recovery has one acknowledged scan owner and one successful successor[32m 180[2mms[22m[39m
+     [32m✓[39m expired unavailable and abandoned pending claims cannot publish or reset retention[32m 292[2mms[22m[39m
+     [32m✓[39m expiry during a retry scan cannot overwrite current or delete it[32m 295[2mms[22m[39m
+     [32m✓[39m stale unavailable retains original quarantine rather than replacing a newer winner[32m 264[2mms[22m[39m
+     [32m✓[39m lost acknowledgement after successful commit preserves current bytes[32m 72[2mms[22m[39m
+     [32m✓[39m deletion outage keeps durable intent and a later retry removes only obsolete bytes[32m 101[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22morphan purge defers during a held scan and preserves the committed bytes
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'void'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m db.$transaction.maxWait lib/facilities-files/orphan-reconciliation.ts:[2m17:5[22m[39m
+    [90m 15|[39m   [35mreturn[39m db[33m.[39m[34m$transaction[39m([35masync[39m tx [33m=>[39m {
+    [90m 16|[39m     [35mawait[39m tx[33m.[39m$executeRaw[32m`SET LOCAL lock_timeout = '2s'`[39m[33m;[39m
+    [90m 17|[39m     [35mawait[39m tx[33m.[39m$queryRaw[32m`SELECT pg_advisory_xact_lock(730180801)`[39m[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 18|[39m     if (await tx.facilitiesFileUpload.count({ where: { lifecycleStatus…
+    [90m 19|[39m       return { purged: 0, candidates: 0, skipped: "ACTIVE_UPLOAD" as c…
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m35:17[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22morphan listing may pause beyond transaction timeout without deleting a recovered current
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'void'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m db.$transaction.maxWait lib/facilities-files/orphan-reconciliation.ts:[2m17:5[22m[39m
+    [90m 15|[39m   [35mreturn[39m db[33m.[39m[34m$transaction[39m([35masync[39m tx [33m=>[39m {
+    [90m 16|[39m     [35mawait[39m tx[33m.[39m$executeRaw[32m`SET LOCAL lock_timeout = '2s'`[39m[33m;[39m
+    [90m 17|[39m     [35mawait[39m tx[33m.[39m$queryRaw[32m`SELECT pg_advisory_xact_lock(730180801)`[39m[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 18|[39m     if (await tx.facilitiesFileUpload.count({ where: { lifecycleStatus…
+    [90m 19|[39m       return { purged: 0, candidates: 0, skipped: "ACTIVE_UPLOAD" as c…
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m49:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22morphan purge removes only aged unreferenced objects after upload completion
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'void'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m db.$transaction.maxWait lib/facilities-files/orphan-reconciliation.ts:[2m17:5[22m[39m
+    [90m 15|[39m   [35mreturn[39m db[33m.[39m[34m$transaction[39m([35masync[39m tx [33m=>[39m {
+    [90m 16|[39m     [35mawait[39m tx[33m.[39m$executeRaw[32m`SET LOCAL lock_timeout = '2s'`[39m[33m;[39m
+    [90m 17|[39m     [35mawait[39m tx[33m.[39m$queryRaw[32m`SELECT pg_advisory_xact_lock(730180801)`[39m[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 18|[39m     if (await tx.facilitiesFileUpload.count({ where: { lifecycleStatus…
+    [90m 19|[39m       return { purged: 0, candidates: 0, skipped: "ACTIVE_UPLOAD" as c…
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m54:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m18 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 11:39:04
+[2m   Duration [22m 9.12s[2m (transform 199ms, setup 0ms, import 647ms, tests 8.12s, environment 0ms)[22m
+

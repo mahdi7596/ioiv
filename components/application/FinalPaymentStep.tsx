@@ -1,5 +1,6 @@
 "use client";
 
+import { PAYMENT_UNCERTAIN_MESSAGE } from "@/lib/payments/messages";
 import { useRef, useState, useTransition } from "react";
 import { startPayment } from "@/lib/actions/payment";
 import type { ApplicationDraft } from "./types";
@@ -13,6 +14,7 @@ type FinalPaymentStepProps = {
   canRetryPayment?: boolean;
   hasVerifiedPayment?: boolean;
   latestPaymentStatus?: string;
+  paymentCoordinationState?: string;
   isSavingDraft?: boolean;
   isUploading?: boolean;
   onAcceptedTermsChange: (accepted: boolean) => void;
@@ -25,6 +27,7 @@ export function FinalPaymentStep({
   canRetryPayment = false,
   hasVerifiedPayment = false,
   latestPaymentStatus,
+  paymentCoordinationState,
   isSavingDraft = false,
   isUploading = false,
   onAcceptedTermsChange,
@@ -34,7 +37,8 @@ export function FinalPaymentStep({
   const [isPaymentLocked, setIsPaymentLocked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const canRetryIncompletePayment =
-    canRetryPayment && latestPaymentStatus === "INITIATED" && !hasVerifiedPayment;
+    canRetryPayment || (Boolean(latestPaymentStatus) && !hasVerifiedPayment);
+  const canResumePayment = canRetryIncompletePayment && paymentCoordinationState === "PAYABLE";
   const allowPaymentAction = !readOnly || canRetryIncompletePayment;
   const requiresPaymentConfirmation = !hasVerifiedPayment && !canRetryIncompletePayment;
   const effectiveAcceptedTerms =
@@ -58,9 +62,7 @@ export function FinalPaymentStep({
   const hasBlockingWork = Boolean(blockingWorkMessage);
   const isPaymentReady = validation.success && !hasChecklistErrors && effectiveAcceptedTerms;
   const canStartPayment =
-    validation.success &&
-    !hasChecklistErrors &&
-    effectiveAcceptedTerms &&
+    (canRetryIncompletePayment || (validation.success && !hasChecklistErrors && effectiveAcceptedTerms)) &&
     !isPending &&
     !isPaymentLocked &&
     !hasBlockingWork &&
@@ -77,14 +79,12 @@ export function FinalPaymentStep({
           </div>
         ) : canRetryIncompletePayment ? (
           <div className="final-review__notice final-review__notice--info" data-variant="info" role="status">
-            پرونده در انتظار نتیجه درگاه است. اگر پرداخت را کامل نکرده‌اید یا از درگاه خارج
-            شده‌اید، می‌توانید دوباره به درگاه پرداخت بروید.
+            {hasVerifiedPayment ? "پرداخت ثبت شده است؛ وضعیت ارسال پرونده را بدون پرداخت دوباره بررسی کنید." : canResumePayment ? "می‌توانید همان پرداخت قبلی را در درگاه ادامه دهید." : PAYMENT_UNCERTAIN_MESSAGE}
           </div>
-        ) : hasVerifiedPayment && !errorItems.length ? (
+        ) : hasVerifiedPayment && !errorItems.length && !message ? (
           <div className="final-review__notice final-review__notice--success" role="status">
             <strong>
-              پس از اعمال تغییرات برای اینکه پرونده دوباره به کارشناس برگردد،بر روی دکمه
-              «ارسال اصلاحات» را کلیک کنید.
+              پس از تکمیل مدارک، دکمه «ارسال پرونده» را انتخاب کنید.
             </strong>{" "}
             پرداخت قبلی با موفقیت ثبت شده و پرداخت مجدد لازم نیست.
           </div>
@@ -102,10 +102,10 @@ export function FinalPaymentStep({
               </ul>
             </section>
           ))
-        ) : (
+        ) : message ? null : (
           <div className="final-review__notice final-review__notice--success" role="status">
             {hasVerifiedPayment
-              ? "همه موارد تکمیل است و پرونده آماده ارسال اصلاحات است."
+              ? "همه موارد تکمیل است و پرونده آماده ارسال است."
               : "همه موارد تکمیل است و پرداخت آماده شروع است."}
           </div>
         )}
@@ -138,7 +138,7 @@ export function FinalPaymentStep({
       ) : (
         <div className="final-review__notice final-review__notice--success" role="status">
           {canRetryIncompletePayment
-            ? "پرداخت آماده تلاش دوباره است."
+            ? (canResumePayment ? "ادامه همان پرداخت؛ درخواست جدیدی ایجاد نمی‌شود." : "فقط وضعیت پرداخت قبلی بررسی می‌شود.")
             : "همه موارد تکمیل است و پرداخت آماده شروع است."}
         </div>
       )}
@@ -147,9 +147,9 @@ export function FinalPaymentStep({
         <button
           type="button"
           onClick={() => {
-            if (!validation.success) {
+            if (!canRetryIncompletePayment && !validation.success) {
               const errorMessage = hasVerifiedPayment
-                ? "برای ارسال اصلاحات، همه مدارک الزامی را تکمیل کنید."
+                ? "برای ارسال پرونده، همه مدارک الزامی را تکمیل کنید."
                 : "برای پرداخت، همه مدارک الزامی و تایید پرداخت را تکمیل کنید.";
               setMessage(errorMessage);
               showToast({ type: "error", message: errorMessage });
@@ -162,13 +162,13 @@ export function FinalPaymentStep({
               try {
                 showToast({
                   type: "info",
-                  message: hasVerifiedPayment ? "در حال ارسال اصلاحات" : "در حال انتقال به پرداخت",
+                  message: hasVerifiedPayment ? "در حال ارسال پرونده" : canRetryIncompletePayment && !canResumePayment ? "در حال بررسی وضعیت پرداخت" : "در حال انتقال به پرداخت",
                 });
                 const result = await startPayment(draft);
                 if (!result.ok) {
                   setIsPaymentLocked(false);
                   setMessage(result.message);
-                  showToast({ type: "error", message: result.message });
+                  showToast({ type: result.message === PAYMENT_UNCERTAIN_MESSAGE ? "info" : "error", message: result.message });
                   return;
                 }
                 window.location.assign(result.redirectTo);
@@ -186,13 +186,13 @@ export function FinalPaymentStep({
           {isPending
             ? "در حال ارسال..."
             : canRetryIncompletePayment
-              ? "تلاش دوباره برای پرداخت"
+              ? (canResumePayment ? "ادامه پرداخت قبلی" : "بررسی وضعیت پرداخت")
               : hasVerifiedPayment
-              ? "ارسال اصلاحات"
+              ? "ارسال پرونده"
               : "پرداخت و ارسال نهایی"}
         </button>
       )}
-      {message ? <p className="final-review__form-error">{message}</p> : null}
+      {message ? <p role="status" aria-live="polite" className="final-review__form-error">{message}</p> : null}
     </div>
   );
 }

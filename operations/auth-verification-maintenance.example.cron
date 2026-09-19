@@ -1,0 +1,5 @@
+# Install only during authorized rollout, with an operator-owned log/alert path.
+# Prunes verification/request buckets and request intents in one transaction.
+# Run hourly even when no one logs in. A nonzero exit must alert the operator.
+# Use the actual deployment directory; do not copy the placeholder unchanged.
+0 * * * * cd /data/apps/sana && docker compose exec -T app npm run auth:prune-verification >> /var/log/sana-auth-verification-maintenance.log 2>&1

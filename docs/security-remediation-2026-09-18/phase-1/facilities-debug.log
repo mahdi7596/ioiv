@@ -1,0 +1,59 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source[39m
+
+(node:2260) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mfacilities concurrent starts/callbacks and old-authority barriers use the same durable coordination
+[22m[39m{"level":"error","event":"facilities_payment_request_persist_or_transport_failed","applicationId":"fbb9ef09947164efdb206290f2800dbdf-application","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `tx.facilitiesAuditLog.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/facilities-payment.ts:250:35\n\n  247 });\n  248 const ready = await finishPaymentRequest(reservation.claim, \"facilities\", reservation.payment.applicationId, reservation.payment.id, gateway.authority, async (tx) => {\n  249   await tx.facilitiesPaymentAttempt.update({ where: { id: reservation.payment.id }, data: { authority: gateway.authority, status: FacilitiesPaymentStatus.REDIRECT_READY, safeMetadata: { status: FacilitiesPaymentStatus.REDIRECT_READY } } });\n→ 250   await tx.facilitiesAuditLog.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"22P02\", message: \"invalid input value for enum \\\"FacilitiesAuditAction\\\": \\\"PAYMENT_REDIRECT_READY\\\"\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `tx.facilitiesAuditLog.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/facilities-payment.ts:250:35\n\n  247 });\n  248 const ready = await finishPaymentRequest(reservation.claim, \"facilities\", reservation.payment.applicationId, reservation.payment.id, gateway.authority, async (tx) => {\n  249   await tx.facilitiesPaymentAttempt.update({ where: { id: reservation.payment.id }, data: { authority: gateway.authority, status: FacilitiesPaymentStatus.REDIRECT_READY, safeMetadata: { status: FacilitiesPaymentStatus.REDIRECT_READY } } });\n→ 250   await tx.facilitiesAuditLog.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"22P02\", message: \"invalid input value for enum \\\"FacilitiesAuditAction\\\": \\\"PAYMENT_REDIRECT_READY\\\"\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/facilities-payment.ts:250:7\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/coordination.ts:85:5\n    at Proxy._transactionWithCallback (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:8120)\n    at Module.startFacilitiesPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/facilities-payment.ts:248:19)"}}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mfacilities concurrent starts/callbacks and old-authority barriers use the same durable coordination
+[22m[39m{"level":"warn","event":"facilities_payment_start_unresolved","applicationId":"fbb9ef09947164efdb206290f2800dbdf-application"}
+
+ [31m❯[39m tests/payment-coordination.db.test.ts [2m([22m[2m13 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m12 skipped[39m[2m)[22m[33m 3067[2mms[22m[39m
+     [2m[90m↓[39m[22m concurrent starts cross a provider barrier only once, and replay the same URL
+     [2m[90m↓[39m[22m serializes duplicate callbacks and creates one settlement/history/notification intent
+     [2m[90m↓[39m[22m old authorities before and after settlement never reach provider and retain separate evidence
+     [2m[90m↓[39m[22m unknown request timeout and expired lease never create another remote call
+     [2m[90m↓[39m[22m verification timeout never retries remotely or creates another authority
+     [2m[90m↓[39m[22m crash after authority evidence replays only local persistence and the original URL
+     [2m[90m↓[39m[22m capture evidence survives failed submission commit and retries without provider
+     [2m[90m↓[39m[22m restricted role rejects cross-application selection, amount mutation and result deletion
+     [2m[90m↓[39m[22m notification failure preserves settlement and consumes one durable intent
+     [2m[90m↓[39m[22m a late original worker may persist capture after expiry without enabling takeover
+     [2m[90m↓[39m[22m completed rejection evidence recovers despite crash and unrelated callback evidence
+     [2m[90m↓[39m[22m provider capture with failed evidence persistence remains blocked after DB recovery
+[31m     [31m×[31m facilities concurrent starts/callbacks and old-authority barriers use the same durable coordination[39m[33m 2831[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mfacilities concurrent starts/callbacks and old-authority barriers use the same durable coordination
+[31m[1mAssertionError[22m: expected { ok: true, state: 'pending', …(1) } to match object { state: 'redirect' }
+(2 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "state": "redirect",[39m
+[31m+   "state": "pending",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m206:38[22m[39m
+    [90m204|[39m     const first = startFacilitiesPayment({ applicationId: id, confirme…
+    [90m205|[39m     expect(await startFacilitiesPayment({ applicationId: id, confirmed…
+    [90m206|[39m     b.release(); expect(await first).toMatchObject({ state: "redirect"…
+    [90m   |[39m                                      [31m^[39m
+    [90m207|[39m     const p = await db.facilitiesPaymentAttempt.findFirstOrThrow({ whe…
+    [90m208|[39m     const old = await db.facilitiesPaymentAttempt.create({ data: { app…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m12 skipped[39m[90m (13)[39m
+[2m   Start at [22m 21:20:58
+[2m   Duration [22m 10.69s[2m (transform 3.81s, setup 0ms, import 5.42s, tests 3.07s, environment 0ms)[22m
+

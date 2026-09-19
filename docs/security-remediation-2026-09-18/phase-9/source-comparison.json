@@ -1,0 +1,8 @@
+{
+  "sourceCount": 119,
+  "copiedCount": 118,
+  "mismatches": [],
+  "staticExcluded": [
+    ".env.runtime.example"
+  ]
+}

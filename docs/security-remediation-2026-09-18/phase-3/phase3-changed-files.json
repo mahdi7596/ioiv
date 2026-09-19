@@ -1,0 +1,11 @@
+[
+  "lib/actions/payment.ts",
+  "lib/payments/zarinpal.ts",
+  "prisma/tests/payment-coordination/phase3-browser.ts",
+  "prisma/tests/payment-coordination/phase3-fetch.cjs",
+  "prisma/tests/payment-coordination/processes.ts",
+  "tests/payment-action.test.ts",
+  "tests/payment-coordination.db.test.ts",
+  "tests/zarinpal-contract.test.ts",
+  "tests/zarinpal.test.ts"
+]

@@ -1,0 +1,56 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source[39m
+
+(node:59660) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [31m❯[39m tests/facilities-replacement.db.test.ts [2m([22m[2m18 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 7242[2mms[22m[39m
+     [32m✓[39m orphan purge defers during a held scan and preserves the committed bytes[32m 169[2mms[22m[39m
+     [33m[2m✓[22m[39m orphan listing may pause beyond transaction timeout without deleting a recovered current [33m 5278[2mms[22m[39m
+[31m     [31m×[31m orphan purge removes only aged unreferenced objects after upload completion[39m[32m 73[2mms[22m[39m
+     [32m✓[39m runtime cannot commit PASSED metadata separately from its current pointer[32m 85[2mms[22m[39m
+     [32m✓[39m runtime cannot authorize deletion of unavailable or actively scanned quarantine[32m 89[2mms[22m[39m
+     [32m✓[39m another user cannot replace or rescan the owner's document[32m 39[2mms[22m[39m
+     [32m✓[39m new-key retry after FAILED preserves old good bytes and commits successful lineage[32m 135[2mms[22m[39m
+     [32m✓[39m new-key retry after UNAVAILABLE preserves old good bytes and commits successful lineage[32m 124[2mms[22m[39m
+     [32m✓[39m new-key retry after storage preserves old good bytes and commits successful lineage[32m 131[2mms[22m[39m
+     [32m✓[39m same-key replay cannot scan or allocate again, including rejected content[32m 68[2mms[22m[39m
+     [32m✓[39m concurrent successful candidates cannot replace a newer winner[32m 171[2mms[22m[39m
+     [32m✓[39m A→B→C supports delayed deletion and cannot rebind old current[32m 153[2mms[22m[39m
+     [32m✓[39m unavailable recovery has one acknowledged scan owner and one successful successor[32m 105[2mms[22m[39m
+     [32m✓[39m expired unavailable and abandoned pending claims cannot publish or reset retention[32m 177[2mms[22m[39m
+     [32m✓[39m expiry during a retry scan cannot overwrite current or delete it[32m 109[2mms[22m[39m
+     [32m✓[39m stale unavailable retains original quarantine rather than replacing a newer winner[32m 111[2mms[22m[39m
+     [32m✓[39m lost acknowledgement after successful commit preserves current bytes[32m 73[2mms[22m[39m
+     [32m✓[39m deletion outage keeps durable intent and a later retry removes only obsolete bytes[32m 101[2mms[22m[39m
+ [32m✓[39m tests/facilities-reconciliation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22morphan purge removes only aged unreferenced objects after upload completion
+[31m[1mAssertionError[22m: expected +0 to be 1 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m54:76[22m[39m
+    [90m 52|[39m  it("orphan purge removes only aged unreferenced objects after upload …
+    [90m 53|[39m   await upload();const orphan=storage.createStagingKey();await storage…
+    [90m 54|[39m   expect((await reconcileFacilitiesOrphans({storage,ttlMs:60000})).pur…
+    [90m   |[39m                                                                            [31m^[39m
+    [90m 55|[39m   expect(await storage.readReady((await current()).currentUpload!.stor…
+    [90m 56|[39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m23 passed[39m[22m[90m (24)[39m
+[2m   Start at [22m 11:45:37
+[2m   Duration [22m 8.01s[2m (transform 137ms, setup 0ms, import 521ms, tests 7.25s, environment 0ms)[22m
+

@@ -1,0 +1,9 @@
+{
+  "branch": "master",
+  "head": "29705da7e148b75a56d3a4aedc3565530c1d6974",
+  "preservedAuditSha256": "2c775286f74363868519d05f7af6886cf38f77454e4c7394d6f90def8716716e",
+  "sourceCount": 145,
+  "testedSourceCount": 144,
+  "productionAccess": false,
+  "commitPushReset": false
+}

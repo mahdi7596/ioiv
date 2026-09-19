@@ -1,0 +1,62 @@
+{
+  "status": "COMPLETE locally; independent code and evidence approved",
+  "fullTests": {
+    "files": 79,
+    "passed": 578,
+    "failed": 0,
+    "restrictedDatabaseCases": 126,
+    "r7Cases": 29,
+    "log": "regression-final2.log"
+  },
+  "realProcessKillBoundaries": [
+    "staging",
+    "promotion",
+    "attachment",
+    "commit",
+    "retry-claim"
+  ],
+  "priorPaymentProcessScenarios": 5,
+  "browser": {
+    "widths": [
+      390,
+      1440
+    ],
+    "productionNext": true,
+    "controlledInstreamCalls": 8,
+    "log": "browser-final.log",
+    "actualAntivirusQualified": false
+  },
+  "migration": {
+    "serverVersion": "16.14 (Debian 16.14-1.pgdg13+1)",
+    "migrations": 30,
+    "candidateChecksum": "8ea72e679cfa0820479d79eb25a075690289be2a33f038060a3c476a51d5c6e3",
+    "enabledFacilities": 0,
+    "runtimeRestricted": true,
+    "sourceMigrationChecksum": "8ea72e679cfa0820479d79eb25a075690289be2a33f038060a3c476a51d5c6e3"
+  },
+  "sql": {
+    "facilities-foundation": "PASS owner fixture suite, deferred constraints forced",
+    "facilities-private-files": "PASS owner fixture suite, deferred constraints forced",
+    "facilities-m6-payment": "PASS owner fixture suite, deferred constraints forced",
+    "facilities-m7-review": "PASS owner fixture suite, deferred constraints forced",
+    "facilities-m8-operations": "PASS owner fixture suite, deferred constraints forced",
+    "restricted-r7-quota": "PASS all lifecycle/quota actions SET LOCAL ROLE phase1_runtime after admin fixture",
+    "restricted-role": "PASS repair readonly, no DDL/trigger bypass, restricted role attributes",
+    "m9": "PASS dry-run, apply twice, exactly four suppliers and no programme/intake/template/user/admin"
+  },
+  "build": {
+    "exit": 0,
+    "log": "build-sealed.log"
+  },
+  "types": {
+    "exit": 0,
+    "log": "types-sealed.log"
+  },
+  "lint": {
+    "exit": 0,
+    "log": "lint-sealed.log",
+    "warnings": "one preexisting public-page no-img-element"
+  },
+  "productionChanges": false,
+  "launch": "NO-GO"
+}

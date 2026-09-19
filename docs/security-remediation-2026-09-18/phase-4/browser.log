@@ -1,0 +1,14 @@
+(node:9012) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"serverPid":9016,"port":64542,"source":"/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source"}
+{"serverPid":9035,"port":64543,"source":"/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source"}
+PASS 390px user: real OTP request, invalid/429 accessible Persian errors, recovery, cookie, refresh and signed-out denial
+Owned browsers and both Next processes stopped
+page.reload: net::ERR_ABORTED; maybe frame was detached?
+Call log:
+  - waiting for navigation until "load"
+
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source/prisma/tests/otp-verification/browser.ts:60:15) {
+  log: [ '  - waiting for navigation until "load"' ],
+  name: 'Error'
+}

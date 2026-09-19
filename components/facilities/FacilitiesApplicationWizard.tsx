@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { PAYMENT_UNCERTAIN_MESSAGE } from "@/lib/payments/messages";
 import { useMemo, useState, useTransition } from "react";
 import { AlertCircle, CalendarRange, CheckCircle2, Clock, Download, History, Loader2, MessageSquareWarning, Search, Upload, Wallet, type LucideIcon } from "lucide-react";
 
@@ -116,8 +117,8 @@ function StatusNotice({ tone, title, description }: { tone: NoticeTone; title: s
 const paymentNotices: Record<string, { tone: NoticeTone; title: string; description: string }> = {
   success: { tone: "success", title: "پرداخت تأیید شد", description: "پرداخت شما با موفقیت انجام و درخواست تسهیلات ارسال شد." },
   failed: { tone: "error", title: "پرداخت ناموفق بود", description: "پرداخت انجام نشد؛ پس از بررسی اطلاعات می‌توانید دوباره تلاش کنید." },
-  pending: { tone: "pending", title: "در انتظار نتیجه پرداخت", description: "نتیجه پرداخت هنوز مشخص نیست؛ کمی بعد دوباره صفحه را بررسی کنید." },
-  "paid-unsubmitted": { tone: "pending", title: "پرداخت ثبت شد؛ ارسال کامل نشد", description: "پرداخت شما تأیید شده است. برای تکمیل، دکمه ارسال را دوباره بزنید؛ هزینه‌ای کسر نمی‌شود." },
+  pending: { tone: "pending", title: "در انتظار نتیجه پرداخت", description: PAYMENT_UNCERTAIN_MESSAGE },
+  "paid-unsubmitted": { tone: "pending", title: "پرداخت ثبت شد؛ ارسال کامل نشد", description: "پرداخت شما تأیید شده است. مدارک را بررسی و در صورت نیاز دوباره بارگذاری کنید، سپس دکمه ارسال را بزنید؛ هزینه‌ای کسر نمی‌شود." },
   corrected: { tone: "success", title: "اصلاحات ارسال شد", description: "اصلاحات شما ثبت شد و پرونده به صف بررسی بازگشت؛ هزینه‌ای از شما کسر نشد." },
 };
 
@@ -140,7 +141,7 @@ function displayStatusNote(note: string) {
   return legacyStatusNotes[note] ?? note;
 }
 
-type DocStatus = { state: "uploading" | "done" | "error"; name?: string; error?: string };
+type DocStatus = { state: "uploading" | "done" | "error"; name?: string; previousName?: string; error?: string };
 
 function DocRow({ item, status, disabled, onPick }: { item: DocItem; status?: DocStatus; disabled: boolean; onPick: (file: File) => void }) {
   const [key, label, required] = item;
@@ -155,7 +156,7 @@ function DocRow({ item, status, disabled, onPick }: { item: DocItem; status?: Do
       <div className="member-doc__control">
         <label className="button button--ghost button--sm">
           <Upload aria-hidden="true" size={15} strokeWidth={2} />
-          {status?.state === "done" ? "تغییر فایل" : "انتخاب فایل"}
+          {status?.state === "done" || status?.previousName ? "تغییر فایل" : "انتخاب فایل"}
           <input
             type="file"
             className="sr-only"
@@ -169,7 +170,7 @@ function DocRow({ item, status, disabled, onPick }: { item: DocItem; status?: Do
           />
         </label>
         {status?.state === "uploading" ? (
-          <span className="document-list__status document-list__status--uploading">
+          <span role="status" className="document-list__status document-list__status--uploading">
             <Loader2 aria-hidden="true" size={15} className="spin" />
             در حال بررسی…
           </span>
@@ -179,9 +180,10 @@ function DocRow({ item, status, disabled, onPick }: { item: DocItem; status?: Do
             <span className="document-list__filename">{status.name || "ثبت شد"}</span>
           </span>
         ) : status?.state === "error" ? (
-          <span className="document-list__status document-list__status--error">
+          <span role="alert" className="document-list__status document-list__status--error">
             <AlertCircle aria-hidden="true" size={15} />
-            {status.error || "خطا"}
+            <span className="document-list__error-text">{status.error || "خطا"}
+            {status.previousName ? <span className="document-list__previous-file">آخرین فایل ثبت‌شده: «<bdi>{status.previousName}</bdi>». برای دیدن وضعیت فعلی، صفحه را بازخوانی کنید.</span> : null}</span>
           </span>
         ) : (
           <span className="member-doc__hint">حداکثر ۲۵ مگابایت</span>
@@ -218,7 +220,6 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   const [busy, setBusy] = useState(false);
 
   const paymentEnabled = Boolean(app?.paymentEnabledSnapshot);
-  const activePayment = app?.payments?.find((payment: any) => ["INITIATED", "REDIRECT_READY", "PENDING", "TIMED_OUT"].includes(payment.status));
   const paymentNotice = notice ? paymentNotices[notice] : undefined;
   const noticePanel = paymentNotice ? <StatusNotice tone={paymentNotice.tone} title={paymentNotice.title} description={paymentNotice.description} /> : null;
 
@@ -245,7 +246,7 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   async function upload(slotKey: string, file: File, attachment = false) {
     if (!app) return;
     setUploading(true);
-    if (!attachment) setDocStatus((current) => ({ ...current, [slotKey]: { state: "uploading" } }));
+    if (!attachment) setDocStatus((current) => ({ ...current, [slotKey]: { state: "uploading", previousName: current[slotKey]?.name || current[slotKey]?.previousName } }));
     try {
       const kind = attachment ? `questionnaire-attachment-${crypto.randomUUID().replaceAll("-", "")}` : slotKey.startsWith("tax-") ? "tax" : slotKey.startsWith("financial-") ? "financial" : slotKey.startsWith("vat-") ? "vat" : slotKey;
       const year = attachment ? undefined : Number(slotKey.split("-")[1]) || undefined;
@@ -262,7 +263,7 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
       showToast({ type: "success", message: "فایل بررسی و ثبت شد" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "بارگذاری فایل ناموفق بود";
-      if (!attachment) setDocStatus((current) => ({ ...current, [slotKey]: { state: "error", error: message } }));
+      if (!attachment) setDocStatus((current) => ({ ...current, [slotKey]: { state: "error", error: message, previousName: current[slotKey]?.previousName } }));
       showToast({ type: "error", message });
     } finally {
       setUploading(false);
@@ -416,7 +417,10 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
     const description = app.status === "SUBMITTED" ? "درخواست در صف بررسی مدیریت قرار دارد." : app.status === "UNDER_REVIEW" ? "کارشناس در حال بررسی اطلاعات و مدارک است." : "فرآیند اعتبارسنجی این درخواست پایان یافته است.";
     return <div className="profile-form">{noticePanel}<StatusNotice tone={tone} title={statusLabels[app.status]} description={description} />{timeline}</div>;
   }
-  if (app.status === "PENDING_PAYMENT") return <div className="profile-form"><StatusNotice tone="pending" title="در انتظار نتیجه پرداخت" description={activePayment?.status === "TIMED_OUT" ? "نتیجه پرداخت هنوز از درگاه دریافت نشده است." : "پس از مشخص شدن نتیجه پرداخت، این صفحه را دوباره بررسی کنید."} />{timeline}</div>;
+  if (app.status === "PENDING_PAYMENT" || (app.paymentObligation && !["READY", "SETTLED"].includes(app.paymentObligation.state))) {
+    const resumable = app.paymentObligation?.state === "PAYABLE";
+    return <div className="profile-form"><StatusNotice tone="pending" title={resumable ? "ادامه پرداخت قبلی" : "در انتظار نتیجه پرداخت"} description={resumable ? "می‌توانید همان پرداخت قبلی را در درگاه ادامه دهید." : PAYMENT_UNCERTAIN_MESSAGE} /><button type="button" className="button button--primary" disabled={pending} onClick={() => run(() => startFacilitiesPayment({ applicationId: app.id, confirmed: true }))}>{pending ? "در حال بررسی..." : resumable ? "ادامه پرداخت قبلی" : "بررسی وضعیت پرداخت"}</button>{timeline}</div>;
+  }
 
   const showPaymentConfirm = paymentEnabled && app.status !== "NEEDS_EDIT";
   // The intake/supplier are fixed once the draft exists; look up their names for
@@ -447,7 +451,7 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
     }
   }
 
-  const missingRequiredDocs = requiredDocKeys.filter((key) => docStatus[key]?.state !== "done");
+  const missingRequiredDocs = requiredDocKeys.filter((key) => docStatus[key]?.state !== "done" && !docStatus[key]?.previousName);
 
   async function goNext() {
     if (busy || step >= editSteps.length) return;

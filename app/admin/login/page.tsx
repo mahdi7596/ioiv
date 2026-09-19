@@ -12,22 +12,31 @@ export default function AdminLoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>();
+  const [requestInfo, setRequestInfo] = useState<string>();
 
   async function requestOtp() {
     setLoading(true);
     setMessage(undefined);
+    setRequestInfo(undefined);
 
     try {
       const response = await fetch("/api/auth/request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile, mode: "admin" }),
+        signal: AbortSignal.timeout(60000),
       });
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "ارسال کد ناموفق بود");
       setOtpSent(true);
+      setRequestInfo(data.warning);
     } catch (error) {
+      if (error instanceof SyntaxError || error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError")) {
+        setOtpSent(true);
+        setRequestInfo("نتیجه ارسال مشخص نیست. اگر پیامک رسید کد را وارد کنید؛ برای ارسال مجدد ۹۰ ثانیه صبر کنید.");
+        return;
+      }
       setMessage(error instanceof Error ? error.message : "خطا رخ داد");
     } finally {
       setLoading(false);
@@ -49,6 +58,7 @@ export default function AdminLoginPage() {
       if (!response.ok) throw new Error(data.error || "ورود ناموفق بود");
       window.location.assign(data.redirectTo || "/admin");
     } catch (error) {
+      setCode("");
       setMessage(error instanceof Error ? error.message : "خطا رخ داد");
     } finally {
       setLoading(false);
@@ -115,6 +125,8 @@ export default function AdminLoginPage() {
             </label>
             <input
               id="admin-mobile"
+              aria-invalid={message && !otpSent ? true : undefined}
+              aria-describedby={message && !otpSent ? "admin-mobile-error" : undefined}
               type="tel"
               dir="ltr"
               inputMode="numeric"
@@ -122,7 +134,7 @@ export default function AdminLoginPage() {
               value={mobile}
               onChange={(event) => setMobile(keepAsciiDigits(event.target.value).slice(0, 11))}
               placeholder="09120000000"
-              disabled={otpSent}
+              disabled={otpSent || loading}
               maxLength={11}
             />
           </div>
@@ -134,6 +146,8 @@ export default function AdminLoginPage() {
               </label>
               <input
                 id="admin-otp"
+                aria-invalid={message ? true : undefined}
+                aria-describedby={message ? "admin-otp-error" : requestInfo ? "admin-request-info" : undefined}
                 type="tel"
                 dir="ltr"
                 inputMode="numeric"
@@ -144,10 +158,11 @@ export default function AdminLoginPage() {
                 maxLength={6}
                 className="text-center text-xl"
               />
-              {message ? <p className="field__hint">{message}</p> : null}
+              {message ? <p id="admin-otp-error" className="field__hint" role="alert">{message}</p> : null}
+              {requestInfo ? <p id="admin-request-info" className="field__hint" role="status">{requestInfo}</p> : null}
             </div>
           ) : message ? (
-            <p className="field__hint text-red-700">{message}</p>
+            <p id="admin-mobile-error" className="field__hint text-red-700" role="alert">{message}</p>
           ) : null}
 
           <button
@@ -161,10 +176,12 @@ export default function AdminLoginPage() {
           {otpSent ? (
             <button
               type="button"
+              disabled={loading}
               onClick={() => {
                 setOtpSent(false);
                 setCode("");
                 setMessage(undefined);
+                setRequestInfo(undefined);
               }}
               className="button button--ghost w-full"
             >

@@ -1,0 +1,17 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source[39m
+
+(node:54770) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m tests/facilities-replacement.db.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 7554[2mms[22m[39m
+     [33m[2m✓[22m[39m orphan listing may pause beyond transaction timeout without deleting a recovered current [33m 5403[2mms[22m[39m
+ [32m✓[39m tests/facilities-reconciliation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m21 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 11:41:27
+[2m   Duration [22m 8.45s[2m (transform 171ms, setup 0ms, import 615ms, tests 7.56s, environment 0ms)[22m
+

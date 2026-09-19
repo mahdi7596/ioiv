@@ -1,0 +1,12 @@
+(node:96230) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":96238,"port":60117,"scannerPort":60116}
+Owned Next/browser/scanner stopped
+page.reload: Protocol error (Page.reload): Not attached to an active page
+Call log:
+  - waiting for navigation until "load"
+
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source/prisma/tests/document-qualification/browser.ts:35:14) {
+  log: [ '  - waiting for navigation until "load"' ],
+  name: 'Error'
+}

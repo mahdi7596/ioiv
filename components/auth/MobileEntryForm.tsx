@@ -39,8 +39,10 @@ export function MobileEntryForm({
           onChange={(event) => onMobileChange(keepAsciiDigits(event.target.value).slice(0, 11))}
           placeholder="09123456789"
           maxLength={11}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "mobile-error" : undefined}
         />
-        {error ? <p className="field__hint">{error}</p> : null}
+        {error ? <p id="mobile-error" className="field__hint" role="alert">{error}</p> : null}
       </div>
 
       <button

@@ -1,0 +1,15 @@
+{
+  "recorded_at": "2026-09-18T18:08:21.273187+00:00",
+  "server_pid": 14405,
+  "server_stopped": true,
+  "container_id": "a98debefb90dae75aa20cedcbaab3cb6d597908f41b860a8c7b7000f6a42825c",
+  "container_label": "remediation-phase1-20260918",
+  "container_removed": true,
+  "pre_shutdown_checks": {
+    "applied_migrations": 27,
+    "enabled_facilities_configurations": 0,
+    "runtime_role": "phase1_runtime",
+    "runtime_superuser_createdb_createrole_inherit": false
+  },
+  "scope": "Only recorded task-owned server and container stopped; browser harness closed its browser; process workers exited. No production access."
+}

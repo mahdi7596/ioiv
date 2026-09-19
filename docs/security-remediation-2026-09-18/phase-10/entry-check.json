@@ -1,0 +1,59 @@
+{
+  "phase9HashesVerified": {
+    "source-hashes.json": 119,
+    "tested-source-hashes.json": 118,
+    "evidence-hashes.json": 88
+  },
+  "phase9ShutdownVerifiedFromRecord": {
+    "containers": [
+      {
+        "id": "372b6c85daa102d24c6f70d6c0b826c4d567a8ed8c83cea166687f801cd12a67",
+        "name": "sana-phase9-3l12r0e_",
+        "label": "sana.task=sana-phase9-3l12r0e_",
+        "image": "sha256:f961d097a9cedd37779baef1aab3fe87ef1c63b3b34d361f90a98ea5c9b77e56",
+        "formerPort": "59165"
+      },
+      {
+        "id": "795aed808e8e0c1f5fc0c95feaca03c967a78d775995939d90101b6652c5cb6f",
+        "name": "sana-phase9-m6o2n9yn",
+        "label": "sana.task=sana-phase9-m6o2n9yn",
+        "image": "sha256:f961d097a9cedd37779baef1aab3fe87ef1c63b3b34d361f90a98ea5c9b77e56",
+        "formerPort": "50848"
+      }
+    ],
+    "recordedPids": {
+      "19793": "absent",
+      "19827": "absent",
+      "19839": "absent",
+      "19858": "absent",
+      "19859": "absent",
+      "31117": "absent",
+      "31131": "absent",
+      "31145": "absent",
+      "31163": "absent",
+      "31205": "absent",
+      "36891": "absent",
+      "42517": "absent",
+      "42578": "absent",
+      "42581": "absent",
+      "42593": "absent",
+      "42605": "absent",
+      "43713": "absent"
+    },
+    "ports": {
+      "49861": "closed",
+      "49864": "closed",
+      "50848": "closed",
+      "51314": "closed",
+      "51315": "closed",
+      "59165": "closed"
+    },
+    "phaseWorkersRemaining": [],
+    "sourceScratchAndSyntheticBytesRetained": [
+      "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_",
+      "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-m6o2n9yn"
+    ],
+    "otherResourcesTouched": false
+  },
+  "D4": "APPROVED_BY_OWNER"
+}

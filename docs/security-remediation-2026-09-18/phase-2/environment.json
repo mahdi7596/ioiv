@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase2-7q3nwb6w",
+  "container": "sana-remediation-phase2-20260919",
+  "containerId": "f89983e70988ff9869fc4464df4c8dd5b2e09c262398eba34550f19400d7bd59",
+  "port": "58227",
+  "database": "phase1",
+  "role": "phase1_runtime",
+  "isolation": "new loopback container; synthetic fixtures; reused phase1 guarded harness names; no env files/external credentials",
+  "serverPid": 43942
+}

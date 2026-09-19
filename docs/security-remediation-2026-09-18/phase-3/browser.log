@@ -1,0 +1,8 @@
+(node:74775) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"serverPid":74790,"appPort":61873,"providerPort":61872,"source":"/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase3-sz6w9iur/source"}
+PASS 390px malformed reference blocks replay: forged browser success, stored amount, original authority, refresh, no overflow, signed-out denial
+PASS 390px rejection then101 recovers once: forged browser success, stored amount, original authority, refresh, no overflow, signed-out denial
+PASS 1440px malformed reference blocks replay: forged browser success, stored amount, original authority, refresh, no overflow, signed-out denial
+PASS 1440px rejection then101 recovers once: forged browser success, stored amount, original authority, refresh, no overflow, signed-out denial
+Owned Next/browser/provider stopped

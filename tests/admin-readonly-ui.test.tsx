@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -44,7 +46,7 @@ describe("read-only admin UI controls", () => {
 
   it("hides validation certificate download and replacement controls for read-only admins", () => {
     const markup = renderToStaticMarkup(
-      <ValidationCertificatePanel
+      <ValidationCertificatePanel draftVersion={0}
         applicationId="app-1"
         currentStatus="VALIDATION_COMPLETED"
         certificate={{

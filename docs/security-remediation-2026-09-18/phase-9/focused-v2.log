@@ -1,0 +1,78 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:18612) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source[39m
+
+[90mstderr[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mscan rejection and unavailability preserve the previous current object
+[22m[39m{"level":"warn","event":"legacy_upload_scan_rejected","status":"FAILED","fileType":"CSV","size":9}
+
+[90mstderr[2m | tests/legacy-replacement.db.test.ts[2m > [22m[2mR8 legacy replacement restricted DB and real bytes[2m > [22m[2mscan rejection and unavailability preserve the previous current object
+[22m[39m{"level":"warn","event":"legacy_upload_scan_rejected","status":"UNAVAILABLE","fileType":"CSV","size":9}
+
+ [31m❯[39m tests/legacy-replacement.db.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 666[2mms[22m[39m
+[31m     [31m×[31m atomically saves current pointer, draft reference, version and exact predecessor[39m[32m 164[2mms[22m[39m
+     [32m✓[39m same-slot competitors leave exactly one committed winner with surviving bytes[32m 46[2mms[22m[39m
+     [32m✓[39m different slots merge against locked current draft without overwriting siblings[32m 50[2mms[22m[39m
+     [32m✓[39m rejects stale full drafts and current-version drafts pointing to a predecessor[32m 44[2mms[22m[39m
+     [32m✓[39m direct runtime writes cannot restore retired JSON or mutate file identity[32m 44[2mms[22m[39m
+     [32m✓[39m rechecks ownership and editability after staging[32m 15[2mms[22m[39m
+     [32m✓[39m rejects leading-zero slot aliases before object allocation[32m 5[2mms[22m[39m
+     [32m✓[39m scan rejection and unavailability preserve the previous current object[32m 27[2mms[22m[39m
+     [32m✓[39m enforces 20 MiB boundary without introducing aggregate quota[32m 139[2mms[22m[39m
+[31m     [31m×[31m staged candidate cannot expire early; abandoned candidates cannot commit[39m[32m 29[2mms[22m[39m
+     [32m✓[39m committed candidate survives reconciliation and lost acknowledgement[32m 27[2mms[22m[39m
+     [32m✓[39m retains unsafe historical paths and rejects path traversal[32m 6[2mms[22m[39m
+     [32m✓[39m certificate binding commits only in completed status and retains unknown history[32m 32[2mms[22m[39m
+     [32m✓[39m preserves original tax-row positions across file persistence[32m 30[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22matomically saves current pointer, draft reference, version and exact predecessor
+[31m[1mAssertionError[22m: promise resolved "undefined" instead of rejecting[39m
+
+[32m- Expected:[39m
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m51:45[22m[39m
+    [90m 49|[39m   [34mexpect[39m(intent[33m.[39mreplacementId)[33m.[39m[34mtoBe[39m(b[33m.[39mresult[33m.[39mfileId)[33m;[39m
+    [90m 50|[39m   await cleanupLegacyReplacements(f.applicationId, "creditReports.ceo"…
+    [90m 51|[39m   [35mawait[39m [34mexpect[39m([34maccess[39m(a[33m.[39mstored[33m.[39mstoragePath))[33m.[39mrejects[33m.[39m[34mtoThrow[39m()[33m;[39m
+    [90m   |[39m                                             [31m^[39m
+    [90m 52|[39m   expect((await readFile(b.stored.storagePath)).toString()).toContain(…
+    [90m 53|[39m   [34mexpect[39m([35mawait[39m [34mretryLegacyFileDeletion[39m(intent[33m.[39mid))[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mstaged candidate cannot expire early; abandoned candidates cannot commit
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m111:96[22m[39m
+    [90m109|[39m   expect(await reconcileLegacyCandidate(stored.candidateId)).toBe(fals…
+    [90m110|[39m   [35mawait[39m [34mexpect[39m([34maccess[39m(stored[33m.[39mstoragePath))[33m.[39mresolves[33m.[39m[34mtoBeUndefined[39m()[33m;[39m
+    [90m111|[39m   await expire(stored.candidateId); expect(await reconcileLegacyCandid…
+    [90m   |[39m                                                                                                [31m^[39m
+    [90m112|[39m   [35mawait[39m [34mexpect[39m([34maccess[39m(stored[33m.[39mstoragePath))[33m.[39mrejects[33m.[39m[34mtoThrow[39m()[33m;[39m
+    [90m113|[39m   await expect(commitApplicantUpload({...f,fieldKey:"creditReports.ceo…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 12:31:37
+[2m   Duration [22m 965ms[2m (transform 82ms, setup 0ms, import 166ms, tests 666ms, environment 0ms)[22m
+

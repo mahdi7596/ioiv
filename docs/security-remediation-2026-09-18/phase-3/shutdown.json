@@ -1,0 +1,18 @@
+{
+  "containerId": "4360c7297caeca0844b4ed36639e34b7320db73231f3cd9137608762d82b8348",
+  "labelVerified": "sana.task=sana-phase3-sz6w9iur",
+  "containerRemoved": true,
+  "serverPidsAbsent": [
+    74790,
+    75971
+  ],
+  "closedBrowserAndProviderPorts": [
+    61873,
+    61872,
+    62110,
+    62109
+  ],
+  "browserHarnessesExited": true,
+  "crashHarnessExited": true,
+  "otherResources": "untouched"
+}

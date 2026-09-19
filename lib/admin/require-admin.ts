@@ -9,7 +9,9 @@ import { db } from "@/lib/db";
  * read a request body, and so it is never registered as a callable action.
  */
 export async function requireActiveAdmin(permission: AdminPermission = "viewAdminPanel") {
-  const session = await requireSession("admin");
+  let session;
+  try { session = await requireSession("admin"); }
+  catch { throw new ActionError("نشست شما پایان یافته است. دوباره وارد شوید.", 401); }
   const admin = await db.admin.findUnique({ where: { id: session.subjectId } });
 
   if (!admin?.active) {

@@ -1,0 +1,110 @@
+{
+  "containerId": "40bd3542a986bd4b9e96005d1481358f4c16f8323bcd830568df2b3016fe52c6",
+  "label": "sana.task=sana-phase7-mf44bhm5",
+  "identityVerifiedBeforeRemoval": true,
+  "containerRemoved": true,
+  "formerDatabasePort": "60943",
+  "recordedProcesses": [
+    {
+      "pid": 12465,
+      "log": "browser.log",
+      "absent": true
+    },
+    {
+      "pid": 12477,
+      "log": "browser.log",
+      "absent": true
+    },
+    {
+      "pid": 14163,
+      "log": "browser.log",
+      "absent": true
+    },
+    {
+      "pid": 17069,
+      "log": "browser-final.log",
+      "absent": true
+    },
+    {
+      "pid": 17084,
+      "log": "browser-final.log",
+      "absent": true
+    },
+    {
+      "pid": 18889,
+      "log": "browser-final.log",
+      "absent": true
+    },
+    {
+      "pid": 22504,
+      "log": "request-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 22505,
+      "log": "request-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 22541,
+      "log": "request-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 23178,
+      "log": "request-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 12180,
+      "log": "request-processes.log",
+      "absent": true
+    },
+    {
+      "pid": 21408,
+      "log": "origin-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 21409,
+      "log": "origin-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 21485,
+      "log": "origin-browser.log",
+      "absent": true
+    },
+    {
+      "pid": 21497,
+      "log": "origin-browser.log",
+      "absent": true
+    }
+  ],
+  "recordedPortsClosed": [
+    61584,
+    61612,
+    61613,
+    61614,
+    61783,
+    62107,
+    62108,
+    62109,
+    62475,
+    63030,
+    63031,
+    63185,
+    63191,
+    63544,
+    63545,
+    63546,
+    63572,
+    63823
+  ],
+  "unrecordedTlsHostilePorts": "origin harness awaited close callbacks and removed certificate scratch; numerical ports not emitted by inherited harness",
+  "workers": "all13 process/crash scenarios exited0",
+  "reviewers": "both completed with local approval; no resources",
+  "otherResources": "untouched",
+  "scratchDirectory": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase7-mf44bhm5",
+  "note": "fresh resources required; never reconnect to former endpoints"
+}

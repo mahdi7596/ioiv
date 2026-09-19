@@ -24,7 +24,7 @@ describe("payment return page", () => {
 
     expect(mocks.paymentFindUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "pay_1" } }));
     expect(markup).toContain("پرداخت با موفقیت ثبت شد");
-    expect(markup).toContain("پرونده شما در صف بررسی قرار گرفت");
+    expect(markup).toContain("وضعیت فعلی پرونده را در داشبورد ببینید");
     expect(markup).toContain("http-equiv=\"refresh\"");
     expect(markup).toContain("url=/dashboard");
   });
@@ -73,4 +73,19 @@ describe("payment return page", () => {
     expect(markup).toContain("وضعیت پرداخت مشخص نیست");
     expect(mocks.paymentFindUnique).not.toHaveBeenCalled();
   });
+  it("shows paid state for an owned old failed authority when the obligation is settled", async () => {
+    mocks.paymentFindUnique.mockResolvedValue({ status: "FAILED", application: { userId: "user-1", paymentObligation: { state: "SETTLED" } } });
+    for (const status of [undefined, "failed", "success"]) {
+      const markup = await render({ status, paymentId: "old-payment" });
+      expect(markup).toContain("پرداخت با موفقیت ثبت شد");
+      expect(markup).not.toContain("می‌توانید دوباره پرداخت را انجام دهید");
+    }
+  });
+  it("uses approved uncertain guidance even when the old attempt says failed", async () => {
+    mocks.paymentFindUnique.mockResolvedValue({ status: "FAILED", application: { userId: "user-1", paymentObligation: { state: "UNCERTAIN" } } });
+    const markup = await render({ paymentId: "old-payment" });
+    expect(markup).toContain("لطفاً دوباره پرداخت نکنید");
+    expect(markup).toContain("برای پیگیری با پشتیبانی تماس بگیرید");
+  });
+
 });

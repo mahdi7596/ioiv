@@ -1,0 +1,42 @@
+{
+  "sourceCount": 133,
+  "testedCount": 132,
+  "mismatches": [],
+  "changedFromPhase9": [
+    "DEPLOYMENT.md",
+    "app/api/payment/callback/route.ts",
+    "app/dashboard/application/page.tsx",
+    "app/payment/return/page.tsx",
+    "components/application/FinalPaymentStep.tsx",
+    "components/facilities/FacilitiesApplicationWizard.tsx",
+    "lib/actions/facilities-payment.ts",
+    "lib/actions/payment.ts",
+    "lib/facilities/submission.ts",
+    "lib/payments/legacy-settlement.ts",
+    "prisma/facilities-runtime-role-grants.sql",
+    "prisma/schema.prisma",
+    "tests/facilities-payment-action.test.ts",
+    "tests/legacy-replacement.db.test.ts",
+    "tests/payment-action.test.ts",
+    "tests/payment-callback.test.ts",
+    "tests/payment-coordination-mock.ts",
+    "tests/payment-coordination.db.test.ts"
+  ],
+  "newFiles": [
+    "lib/facilities-files/qualification.ts",
+    "lib/facilities/document-labels.ts",
+    "lib/files/qualification.ts",
+    "lib/uploads/historical-verification.ts",
+    "lib/uploads/qualification.ts",
+    "prisma/migrations/20260919160000_legacy_file_verification/migration.sql",
+    "prisma/migrations/20260919161000_facilities_editable_snapshot_refresh/migration.sql",
+    "prisma/tests/document-qualification/browser.ts",
+    "scripts/verify-legacy-files.ts",
+    "tests/document-qualification.db.test.ts",
+    "tests/facilities-document-qualification.db.test.ts",
+    "tests/facilities-editable-snapshot.test.ts",
+    "tests/facilities-submission-validation.test.ts",
+    "tests/private-document-read.test.ts"
+  ],
+  "envFilesExcluded": true
+}

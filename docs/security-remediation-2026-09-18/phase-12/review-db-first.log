@@ -1,0 +1,77 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:49082) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source[39m
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcompeting completion/correction preserves one note/history/certificate and notification
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89xmhg0003sivoadxtwq6h","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"cmu89xmh00000sivoobnk8v2u","mobile":"970****c867","hasNote":true,"hasCertificate":false}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcompletion winner preserves exact certificate and stale correction gets409
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89xmkb0009sivotn72tpcy","previousStatus":"SUBMITTED","newStatus":"VALIDATION_COMPLETED","adminId":"cmu89xmk80006sivoujs9e3i7","mobile":"92d****89d6","hasNote":true,"hasCertificate":true}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mmissing token and stale browser note cannot silently overwrite
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89xmlm000jsivo20zs8gg1","previousStatus":"SUBMITTED","newStatus":"UNDER_REVIEW","adminId":"cmu89xmlj000gsivon7dsn4xr","mobile":"276****1243","hasNote":true,"hasCertificate":false}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcertificate stale token maps to HTTP409 and preserves current bytes
+[22m[39m{"level":"info","event":"validation_certificate_replaced","applicationId":"cmu89xmnz0012sivoi1rmk453","adminId":"cmu89xmnw000zsivobzdqhmsp","mobile":"8dd****d88f"}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mSMS failure cannot undo transition or authorize duplicate retry
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89xmp2001asivoy9xiskee","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"cmu89xmp00017sivoqga41g3h","mobile":"658****bfca","hasNote":true,"hasCertificate":false}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mSMS failure cannot undo transition or authorize duplicate retry
+[22m[39m{"level":"error","event":"submission_status_sms_failed","applicationId":"cmu89xmp2001asivoy9xiskee","newStatus":"NEEDS_EDIT","mobile":"658****bfca","error":{"name":"Error","message":"synthetic outage","stack":"Error: synthetic outage\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/admin-review.db.test.ts:68:147\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2msuccessful SMS plus lost commit acknowledgement never becomes retryable
+[22m[39m{"level":"error","event":"facilities_correction_sms_persistence_unconfirmed","applicationId":"r116e1cd7f3d92247dea9461d2437ed729b-application","correctionRequestId":"cmu89xn0s0031sivop88mdjqc","reasonCode":"PERSISTENCE_UNCONFIRMED","error":{"message":"undefined"}}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2muncertain SMS consumes claim and cannot dispatch another send
+[22m[39m{"level":"error","event":"facilities_correction_sms_unconfirmed","applicationId":"r111cc48a07c35a405ab301a2048541995b-application","correctionRequestId":"cmu89xn2z003asivonpc381ub","mobile":"use****995b","reasonCode":"DELIVERY_UNCONFIRMED","error":{"message":"undefined"}}
+
+ [31m❯[39m tests/admin-review.db.test.ts [2m([22m[2m16 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 943[2mms[22m[39m
+     [32m✓[39m competing completion/correction preserves one note/history/certificate and notification[32m 146[2mms[22m[39m
+     [32m✓[39m completion winner preserves exact certificate and stale correction gets409[32m 48[2mms[22m[39m
+     [32m✓[39m missing token and stale browser note cannot silently overwrite[32m 21[2mms[22m[39m
+     [32m✓[39m rechecks inactive authorization after slow certificate scan[32m 22[2mms[22m[39m
+     [32m✓[39m rechecks role authorization after slow certificate scan[32m 19[2mms[22m[39m
+     [32m✓[39m rechecks expired authorization after slow certificate scan[32m 16[2mms[22m[39m
+     [32m✓[39m expired HTTP calls return Persian401 before reading multipart[32m 6[2mms[22m[39m
+     [32m✓[39m certificate stale token maps to HTTP409 and preserves current bytes[32m 40[2mms[22m[39m
+     [32m✓[39m SMS failure cannot undo transition or authorize duplicate retry[32m 20[2mms[22m[39m
+     [32m✓[39m applicant resubmission and admin restart produce one legal winner without recharge[32m 228[2mms[22m[39m
+     [32m✓[39m facilities competing decisions record only winner note/history and at most one SMS[32m 97[2mms[22m[39m
+     [32m✓[39m facilities differing correction duplicates reject rather than claim success[32m 50[2mms[22m[39m
+     [32m✓[39m successful SMS plus lost commit acknowledgement never becomes retryable[32m 54[2mms[22m[39m
+[31m     [31m×[31m uncertain SMS consumes claim and cannot dispatch another send[39m[32m 77[2mms[22m[39m
+     [32m✓[39m resolved correction cannot trigger stale SMS retry[32m 63[2mms[22m[39m
+     [32m✓[39m locking helper grants no admin updates and review version cannot be forged[32m 30[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/admin-review.db.test.ts[2m > [22mR11 restricted concurrent review[2m > [22muncertain SMS consumes claim and cannot dispatch another send
+[31m[1mAssertionError[22m: expected { …(12) } to match object { smsStatus: 'PENDING', …(2) }
+(9 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "smsAttemptCount": 1,[22m
+[32m-   "smsFailureCode": "DELIVERY_UNCONFIRMED",[39m
+[31m+   "smsFailureCode": null,[39m
+[2m    "smsStatus": "PENDING",[22m
+[2m  }[22m
+
+[36m [2m❯[22m tests/admin-review.db.test.ts:[2m83:410[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 14:28:14
+[2m   Duration [22m 1.48s[2m (transform 221ms, setup 0ms, import 403ms, tests 943ms, environment 0ms)[22m
+

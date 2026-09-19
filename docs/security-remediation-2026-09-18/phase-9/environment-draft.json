@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source",
+  "container": "sana-phase9-3l12r0e_",
+  "containerId": "372b6c85daa102d24c6f70d6c0b826c4d567a8ed8c83cea166687f801cd12a67",
+  "label": "sana.task=sana-phase9-3l12r0e_",
+  "port": "59165",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

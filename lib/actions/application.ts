@@ -1,7 +1,7 @@
 "use server";
 
-import { PaymentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
+import { assertLegacyEditable, LegacyFileConflict, legacyDraftData, legacyTransactionOptions, lockLegacyApplication, validateLegacyDraft } from "@/lib/uploads/coordination";
 import { requireSession } from "@/lib/auth/session";
 import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { canEditApplication } from "@/lib/application/status";
@@ -20,6 +20,7 @@ export async function getCurrentUserApplication() {
         orderBy: { createdAt: "desc" },
         include: {
           payments: { orderBy: { createdAt: "desc" }, take: 1 },
+          legacyFileBindings: { where: { slotKey: VALIDATION_CERTIFICATE_FIELD_KEY }, include: { currentFile: true } },
           files: {
             where: { fieldKey: VALIDATION_CERTIFICATE_FIELD_KEY },
             orderBy: { createdAt: "desc" },
@@ -32,6 +33,11 @@ export async function getCurrentUserApplication() {
 
   if (!user) {
     throw new ActionError("کاربر پیدا نشد", 404);
+  }
+
+  for (const application of user.applications) {
+    const certificate = application.legacyFileBindings[0]?.currentFile;
+    if (certificate) application.files = [certificate];
   }
 
   return {
@@ -62,8 +68,8 @@ export async function createOrGetDraftApplication() {
       },
     },
     include: {
+      paymentObligation: { select: { state: true } },
       payments: {
-        where: { status: { in: [PaymentStatus.INITIATED, PaymentStatus.VERIFIED] } },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -85,8 +91,8 @@ export async function createOrGetDraftApplication() {
       applicationRound: APPLICATION_ROUND,
     },
     include: {
+      paymentObligation: { select: { state: true } },
       payments: {
-        where: { status: { in: [PaymentStatus.INITIATED, PaymentStatus.VERIFIED] } },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -109,15 +115,16 @@ export async function saveApplicationDraft(input: unknown) {
 
   const data = parsed.data;
 
-  return db.application.update({
-    where: { id: application.id },
-    data: {
-      currentStep: data.currentStep,
-      taxDeclarations: data.taxDeclarations,
-      financials: data.financials,
-      humanResources: data.humanResources,
-      trialBalance: data.trialBalance,
-      creditReports: data.creditReports,
-    },
-  });
+  try {
+  const saved = await db.$transaction(async tx => {
+    const current = await lockLegacyApplication(tx, application.id);
+    await assertLegacyEditable(tx, current, session.subjectId);
+    await validateLegacyDraft(tx, current, data, data.draftVersion);
+    return tx.application.update({ where: { id: current.id }, data: { ...legacyDraftData(data), draftVersion: { increment: 1 } } });
+  }, legacyTransactionOptions);
+  return { ok: true as const, draftVersion: saved.draftVersion };
+  } catch (error) {
+    if (error instanceof LegacyFileConflict) return { ok: false as const, error: error.message };
+    throw error;
+  }
 }

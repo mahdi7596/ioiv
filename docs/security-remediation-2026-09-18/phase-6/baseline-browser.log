@@ -1,0 +1,7 @@
+(node:86295) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":86332,"port":58324}
+{"pid":86345,"port":58325}
+PASS historical cookie reproduced user
+PASS historical cookie reproduced admin
+Owned browser/Next/provider/TLS/hostile servers stopped

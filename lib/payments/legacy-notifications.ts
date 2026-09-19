@@ -31,3 +31,24 @@ export async function notifyUserOfSubmission(mobile: string, applicationId: stri
     applicationId,
   });
 }
+
+/** One durable logical intent; an interrupted/uncertain SMS is never blindly resent. */
+export async function dispatchSubmissionIntent(applicationId: string, mobile: string) {
+  try { await dispatchIntent(applicationId, mobile); }
+  catch (error) { logger.error("payment_notification_intent_unavailable", error, { applicationId }); }
+}
+
+async function dispatchIntent(applicationId: string, mobile: string) {
+  const { db } = await import("@/lib/db");
+  const obligation = await db.paymentObligation.findUnique({ where: { legacyApplicationId: applicationId } });
+  if (!obligation) return;
+  const claim = await db.paymentNotificationIntent.updateMany({ where: { obligationId: obligation.id, state: "PENDING" }, data: { state: "CLAIMED" } });
+  if (!claim.count) return;
+  try {
+    await Promise.all([notifyAdminOfSubmission(applicationId), notifyUserOfSubmission(mobile, applicationId)]);
+    await db.paymentNotificationIntent.update({ where: { obligationId: obligation.id }, data: { state: "SENT" } });
+  } catch (error) {
+    await db.paymentNotificationIntent.update({ where: { obligationId: obligation.id }, data: { state: "UNKNOWN" } }).catch(() => undefined);
+    logger.error("payment_notification_failed", error, { applicationId });
+  }
+}

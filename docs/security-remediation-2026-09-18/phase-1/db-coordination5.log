@@ -1,0 +1,152 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source[39m
+
+(node:544) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mconcurrent starts cross a provider barrier only once, and replay the same URL
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7962ov0001sbimaz86ea8h","paymentId":"cmu79631m0005sbim3m83cz1p","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mconcurrent starts cross a provider barrier only once, and replay the same URL
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7962ov0001sbimaz86ea8h","paymentId":"cmu79631m0005sbim3m83cz1p"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7969lm0008sbimfw84t4zt","paymentId":"cmu796bso000csbimpakpyvqo","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7969lm0008sbimfw84t4zt","paymentId":"cmu796bso000csbimpakpyvqo"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu796bso000csbimpakpyvqo","applicationId":"cmu7969lm0008sbimfw84t4zt","referenceId":"reference-cmu7969lm0008sbimfw84t4zt"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796ecm000isbimqkd6ljeq","paymentId":"cmu796ehk000msbimq9l7d004","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796ecm000isbimqkd6ljeq","paymentId":"cmu796ehk000msbimq9l7d004"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu796ehk000msbimq9l7d004","applicationId":"cmu796ecm000isbimqkd6ljeq","referenceId":"reference-cmu796ecm000isbimqkd6ljeq"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2munknown request timeout and expired lease never create another remote call
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796g0d0014sbimy3lcaidk","paymentId":"cmu796g4y0018sbim6z6jymlj","amountToman":3000000}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2munknown request timeout and expired lease never create another remote call
+[22m[39m{"level":"error","event":"payment_start_failed","applicationId":"cmu796g0d0014sbimy3lcaidk","paymentId":"cmu796g4y0018sbim6z6jymlj","error":{"name":"TimeoutError","message":"timeout","stack":"TimeoutError: timeout\n    at new DOMException (node:internal/per_context/domexception:79:18)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:90:49\n    at Mock (file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/spy/dist/index.js:332:34)\n    at postZarinpal (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/zarinpal.ts:37:26)\n    at requestZarinpalPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/zarinpal.ts:115:22)\n    at Module.startPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/payment.ts:133:22)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:91:13\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mverification timeout never retries remotely or creates another authority
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796g9q001bsbimviw385n5","paymentId":"cmu796gc8001fsbimbaumyvxx","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mverification timeout never retries remotely or creates another authority
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796g9q001bsbimviw385n5","paymentId":"cmu796gc8001fsbimbaumyvxx"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796i43001qsbimvytxrq0f","paymentId":"cmu796i8e001usbim6f2nounk","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796i43001qsbimvytxrq0f","paymentId":"cmu796i8e001usbim6f2nounk"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"error","event":"payment_verification_persist_failed","paymentId":"cmu796i8e001usbim6f2nounk","applicationId":"cmu796i43001qsbimvytxrq0f","referenceId":"durable-capture","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `tx.statusHistory.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:74:30\n\n  71     submittedAt: new Date(),\n  72   },\n  73 });\n→ 74 await tx.statusHistory.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table StatusHistory\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `tx.statusHistory.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:74:30\n\n  71     submittedAt: new Date(),\n  72   },\n  73 });\n→ 74 await tx.statusHistory.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table StatusHistory\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:74:7\n    at Proxy._transactionWithCallback (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:8120)\n    at Module.settleLegacyPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:49:15)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:125:18\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu796i8e001usbim6f2nounk","applicationId":"cmu796i43001qsbimvytxrq0f","referenceId":"durable-capture"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mrestricted role rejects cross-application selection, amount mutation and result deletion
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796j0o0022sbim1rpwj2ty","paymentId":"cmu796j4w0026sbim0xlfvpb6","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mrestricted role rejects cross-application selection, amount mutation and result deletion
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796j0o0022sbim1rpwj2ty","paymentId":"cmu796j4w0026sbim0xlfvpb6"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796jdk002dsbim8zsirdr2","paymentId":"cmu796jh1002hsbimmm1es2d8","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796jdk002dsbim8zsirdr2","paymentId":"cmu796jh1002hsbimmm1es2d8"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu796jh1002hsbimmm1es2d8","applicationId":"cmu796jdk002dsbim8zsirdr2","referenceId":"reference-cmu796jdk002dsbim8zsirdr2"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu796jdk002dsbim8zsirdr2","reason":"missing_admin_alert_mobile"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"error","event":"payment_notification_failed","applicationId":"cmu796jdk002dsbim8zsirdr2","error":{"name":"Error","message":"isolated SMS failure","stack":"Error: isolated SMS failure\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:142:58\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2ma late original worker may persist capture after expiry without enabling takeover
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796kcs002nsbim4mzsd9as","paymentId":"cmu796kfy002rsbim4bjnymc9","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2ma late original worker may persist capture after expiry without enabling takeover
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796kcs002nsbim4mzsd9as","paymentId":"cmu796kfy002rsbim4bjnymc9"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2ma late original worker may persist capture after expiry without enabling takeover
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu796kfy002rsbim4bjnymc9","applicationId":"cmu796kcs002nsbim4mzsd9as","referenceId":"reference-cmu796kcs002nsbim4mzsd9as"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcompleted rejection evidence recovers despite crash and unrelated callback evidence
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796kta002xsbimprske9ds","paymentId":"cmu796kun0031sbimahpc1t0g","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcompleted rejection evidence recovers despite crash and unrelated callback evidence
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796kta002xsbimprske9ds","paymentId":"cmu796kun0031sbimahpc1t0g"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcompleted rejection evidence recovers despite crash and unrelated callback evidence
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu796kun0031sbimahpc1t0g","applicationId":"cmu796kta002xsbimprske9ds","referenceId":"reference-cmu796kta002xsbimprske9ds"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mprovider capture with failed evidence persistence remains blocked after DB recovery
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu796l9p003bsbimgq9qv0m6","paymentId":"cmu796nim003fsbimgzn324z3","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mprovider capture with failed evidence persistence remains blocked after DB recovery
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu796l9p003bsbimgq9qv0m6","paymentId":"cmu796nim003fsbimgzn324z3"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mprovider capture with failed evidence persistence remains blocked after DB recovery
+[22m[39m{"level":"error","event":"payment_capture_evidence_persist_failed","paymentId":"cmu796nim003fsbimgzn324z3","applicationId":"cmu796l9p003bsbimgq9qv0m6","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `db.paymentOperationResult.createMany()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/coordination.ts:46:35\n\n  43 export async function savePaymentResult(claim: PaymentClaim, outcome: \"AUTHORITY\" | \"CAPTURED\" | \"REJECTED\" | \"UNKNOWN\", details: { authority?: string; referenceId?: string } = {}) {\n  44   // Independent commit: a later business transaction may fail. A late owner is\n  45   // allowed to preserve its result, never to authorize another external operation.\n→ 46   await db.paymentOperationResult.createMany(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table PaymentOperationResult\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `db.paymentOperationResult.createMany()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/coordination.ts:46:35\n\n  43 export async function savePaymentResult(claim: PaymentClaim, outcome: \"AUTHORITY\" | \"CAPTURED\" | \"REJECTED\" | \"UNKNOWN\", details: { authority?: string; referenceId?: string } = {}) {\n  44   // Independent commit: a later business transaction may fail. A late owner is\n  45   // allowed to preserve its result, never to authorize another external operation.\n→ 46   await db.paymentOperationResult.createMany(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table PaymentOperationResult\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at savePaymentResult (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/coordination.ts:46:3)\n    at Module.settleLegacyPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:40:7)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:175:18\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mfacilities concurrent starts/callbacks and old-authority barriers use the same durable coordination
+[22m[39m{"level":"warn","event":"facilities_payment_start_unresolved","applicationId":"fda770330a6af43aea55309afbd68c5f6-application"}
+
+ [31m❯[39m tests/payment-coordination.db.test.ts [2m([22m[2m13 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 38519[2mms[22m[39m
+     [33m[2m✓[22m[39m concurrent starts cross a provider barrier only once, and replay the same URL [33m 9003[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes duplicate callbacks and creates one settlement/history/notification intent [33m 6249[2mms[22m[39m
+     [33m[2m✓[22m[39m old authorities before and after settlement never reach provider and retain separate evidence [33m 2149[2mms[22m[39m
+     [33m[2m✓[22m[39m unknown request timeout and expired lease never create another remote call [33m 347[2mms[22m[39m
+     [33m[2m✓[22m[39m verification timeout never retries remotely or creates another authority [33m 935[2mms[22m[39m
+     [33m[2m✓[22m[39m crash after authority evidence replays only local persistence and the original URL [33m 1404[2mms[22m[39m
+     [33m[2m✓[22m[39m capture evidence survives failed submission commit and retries without provider [33m 1174[2mms[22m[39m
+     [33m[2m✓[22m[39m restricted role rejects cross-application selection, amount mutation and result deletion [33m 467[2mms[22m[39m
+     [33m[2m✓[22m[39m notification failure preserves settlement and consumes one durable intent [33m 1254[2mms[22m[39m
+     [33m[2m✓[22m[39m a late original worker may persist capture after expiry without enabling takeover [33m 606[2mms[22m[39m
+     [33m[2m✓[22m[39m completed rejection evidence recovers despite crash and unrelated callback evidence [33m 579[2mms[22m[39m
+     [33m[2m✓[22m[39m provider capture with failed evidence persistence remains blocked after DB recovery [33m 8988[2mms[22m[39m
+[31m     [31m×[31m facilities concurrent starts/callbacks and old-authority barriers use the same durable coordination[39m[33m 4928[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mfacilities concurrent starts/callbacks and old-authority barriers use the same durable coordination
+[31m[1mAssertionError[22m: expected { ok: true, state: 'pending', …(1) } to match object { state: 'redirect' }
+(2 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "state": "redirect",[39m
+[31m+   "state": "pending",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m206:38[22m[39m
+    [90m204|[39m     const first = startFacilitiesPayment({ applicationId: id, confirme…
+    [90m205|[39m     expect(await startFacilitiesPayment({ applicationId: id, confirmed…
+    [90m206|[39m     b.release(); expect(await first).toMatchObject({ state: "redirect"…
+    [90m   |[39m                                      [31m^[39m
+    [90m207|[39m     const p = await db.facilitiesPaymentAttempt.findFirstOrThrow({ whe…
+    [90m208|[39m     const old = await db.facilitiesPaymentAttempt.create({ data: { app…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 21:18:56
+[2m   Duration [22m 44.71s[2m (transform 3.29s, setup 0ms, import 4.82s, tests 38.52s, environment 1ms)[22m
+

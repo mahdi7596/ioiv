@@ -1,0 +1,7 @@
+(node:86613) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":86638,"port":56709,"scannerPort":56708}
+PASS 390px real production profile upload, scanner failure/unavailability, prior private bytes, denied anonymous/foreign access, new-key retry, refresh
+PASS 1440px real production profile upload, scanner failure/unavailability, prior private bytes, denied anonymous/foreign access, new-key retry, refresh
+PASS controlled INSTREAM scanner calls8; no external requests
+Owned Next/browser/scanner stopped

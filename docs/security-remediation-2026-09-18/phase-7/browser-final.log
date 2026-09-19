@@ -1,0 +1,21 @@
+(node:17060) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"providerPort":62107}
+{"pid":17069,"port":62108}
+{"pid":17084,"port":62109}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"ok","durationsMs":[13233,13287,13257],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"slow","durationsMs":[13052,13053,13117],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"failure","durationsMs":[13153,13183,13078],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"malformed","durationsMs":[13208,13225,13320],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"timeout","durationsMs":[13177,13078,13059],"unknownInactiveOtp":0,"sends":1}
+PASS12 distinct unknown probes/two processes/spoofed headers:4 admitted8 denied, no SMS/OTP/account
+{"pid":18889,"port":62475}
+{"pass":"maximum30s provider timeout uniform42s floor","durationsMs":[42634,42874,42735]}
+PASS 390px unknown accessible conditional code entry, verification, cooldown,refresh
+PASS 390px inactive accessible conditional code entry, verification, cooldown,refresh
+PASS 390px active accessible conditional code entry, verification, cooldown,refresh
+PASS 1440px unknown accessible conditional code entry, verification, cooldown,refresh
+PASS 1440px inactive accessible conditional code entry, verification, cooldown,refresh
+PASS 1440px active accessible conditional code entry, verification, cooldown,refresh
+PASS fixture OTPs absent from logs
+Owned browser/Next/provider stopped

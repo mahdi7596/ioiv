@@ -20,12 +20,14 @@
     "test:db:m9-suppliers": "sh prisma/tests/test-facilities-m9-supplier-provisioning.sh",
     "facilities:reconcile-files": "tsx scripts/reconcile-facilities-files.ts",
     "facilities:check-readiness": "tsx scripts/check-facilities-readiness.ts",
+    "auth:prune-verification": "tsx scripts/prune-auth-verification.ts",
     "auth:prune-otp": "tsx scripts/prune-otp-codes.ts",
     "facilities:m9:validate": "tsx scripts/validate-facilities-m9-release.ts --decisions operations/facilities-m9/decision-register.pending.example.json --evidence operations/facilities-m9/evidence-ledger.pending.example.json",
     "facilities:m9:manifest": "tsx scripts/create-facilities-m9-candidate-manifest.ts",
     "facilities:m9:preflight": "tsx scripts/check-facilities-m9-preflight.ts",
     "facilities:m9:provision-suppliers": "tsx scripts/provision-facilities-suppliers.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "legacy:reconcile-files": "tsx scripts/reconcile-legacy-files.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -40,7 +42,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.74.0",
-    "tsx": "^4.21.0",
+    "tsx": "4.23.13",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.3.6"
   },
@@ -57,5 +59,10 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "4.1.11"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.0"
+    }
   }
 }

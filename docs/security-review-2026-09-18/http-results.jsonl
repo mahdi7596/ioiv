@@ -1,0 +1,9 @@
+{"check":"concurrent wrong OTP attempts","requests":12,"statuses":[400,400,400,400,400,400,400,400,400,400,400,400],"storedAttemptCount":12}
+{"check":"cross-origin text/plain login","status":200,"sessionCookieIssued":true,"body":{"redirectTo":"/dashboard"}}
+{"check":"anonymous route","path":"/api/health","status":200,"location":null,"hasCsp":true,"serverError":false,"bytes":11}
+{"check":"anonymous route","path":"/dashboard","status":307,"location":"/","hasCsp":true,"serverError":false,"bytes":6769}
+{"check":"anonymous route","path":"/admin","status":307,"location":"/admin/login","hasCsp":true,"serverError":false,"bytes":6772}
+{"check":"anonymous route","path":"/api/admin/export","status":401,"location":null,"hasCsp":true,"serverError":false,"bytes":24}
+{"check":"anonymous route","path":"/api/files/nonexistent","status":401,"location":null,"hasCsp":true,"serverError":false,"bytes":24}
+{"check":"anonymous route","path":"/api/facilities/files/nonexistent","status":404,"location":null,"hasCsp":true,"serverError":false,"bytes":26}
+{"check":"anonymous route","path":"/payment/return?status=success&paymentId=nonexistent","status":200,"location":null,"hasCsp":true,"serverError":false,"bytes":10181}

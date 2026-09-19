@@ -1,0 +1,7 @@
+
+> sana-registration-review-platform@0.1.0 facilities:m9:validate
+> tsx scripts/validate-facilities-m9-release.ts --decisions operations/facilities-m9/decision-register.pending.example.json --evidence operations/facilities-m9/evidence-ledger.pending.example.json
+
+(node:3659) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"event":"facilities_m9_release_validation","valid":true,"requiredGate":null,"errorCount":0,"pendingCount":20,"errors":[]}

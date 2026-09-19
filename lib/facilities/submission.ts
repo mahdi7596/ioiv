@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import type { FacilitiesApplication, FacilitiesApplicationEvidence, FacilitiesFileBinding, FacilitiesFileUpload, StoredFile, User } from "@prisma/client";
 
+import { facilitiesDocumentLabel } from "./document-labels";
 import { FACILITIES_EDITABLE_STATUSES } from "@/lib/facilities/review-status";
 import { isCeoRole } from "@/lib/validations/facilities-company";
 
@@ -57,6 +58,7 @@ export const requiredFacilitiesSlots = [
 ] as const;
 
 export const facilitiesSubmissionInclude = {
+  paymentObligation: { select: { state: true } },
   companySnapshot: true,
   shareholders: true,
   officers: true,
@@ -120,7 +122,7 @@ async function syncFacilitiesOfficerSnapshot(tx: Prisma.TransactionClient, appli
       : await tx.facilitiesApplicationOfficer.create({ data: { applicationId, sourceCompanyOfficerId: officer.id, fullName: officer.fullName, position: officer.position, isChiefExecutive: officer.isChiefExecutive } });
     retained.push(saved.id);
   }
-  await tx.facilitiesApplicationOfficer.deleteMany({ where: { applicationId, id: { notIn: retained }, creditReports: { none: {} } } });
+  await tx.$executeRaw`SELECT public.prune_editable_facilities_officers(${applicationId}, ${retained}::text[])`;
 }
 
 /**
@@ -132,8 +134,10 @@ async function syncFacilitiesOfficerSnapshot(tx: Prisma.TransactionClient, appli
  * populating the board-member dropdown when officers were added after the draft was created.
  */
 export async function refreshFacilitiesEditableSnapshot(tx: Prisma.TransactionClient, applicationId: string) {
+  await tx.$queryRaw`SELECT id FROM "FacilitiesApplication" WHERE id=${applicationId} FOR UPDATE`;
   const application = await tx.facilitiesApplication.findUnique({ where: { id: applicationId }, select: { companyId: true, status: true } });
   if (!application || !FACILITIES_EDITABLE_STATUSES.includes(application.status)) return;
+  await tx.$queryRaw`SELECT id FROM "Company" WHERE id=${application.companyId} FOR UPDATE`;
   const company = await tx.company.findUnique({
     where: { id: application.companyId },
     include: { shareholders: true, officers: true },
@@ -154,12 +158,13 @@ export async function refreshFacilitiesEditableSnapshot(tx: Prisma.TransactionCl
       contactMobile: company.contactMobile,
     },
   });
-  await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
+  await tx.$executeRaw`SELECT public.clear_editable_facilities_shareholders(${applicationId})`;
   await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, nationalId: shareholder.nationalId, ownershipPercentage: shareholder.ownershipPercentage })) });
   await syncFacilitiesOfficerSnapshot(tx, applicationId, company.officers);
 }
 
 export async function refreshFacilitiesProfileSnapshot(tx: Prisma.TransactionClient, applicationId: string) {
+  await tx.$queryRaw`SELECT id FROM "FacilitiesApplication" WHERE id=${applicationId} FOR UPDATE`;
   const application = await tx.facilitiesApplication.findUnique({ where: { id: applicationId }, select: { companyId: true, status: true } });
   if (!application || application.status !== "DRAFT") return;
   await tx.company.update({ where: { id: application.companyId }, data: { updatedAt: new Date() } });
@@ -196,7 +201,7 @@ export async function refreshFacilitiesProfileSnapshot(tx: Prisma.TransactionCli
       contactMobile: company.contactMobile,
     },
   });
-  await tx.facilitiesApplicationShareholder.deleteMany({ where: { applicationId } });
+  await tx.$executeRaw`SELECT public.clear_editable_facilities_shareholders(${applicationId})`;
   await tx.facilitiesApplicationShareholder.createMany({ data: company.shareholders.map((shareholder) => ({ applicationId, fullName: shareholder.fullName, nationalId: shareholder.nationalId, ownershipPercentage: shareholder.ownershipPercentage })) });
   await syncFacilitiesOfficerSnapshot(tx, applicationId, company.officers);
 }
@@ -244,7 +249,7 @@ export function checkFacilitiesSubmissionReadiness(
   if (!["FIXED_CAPITAL", "WORKING_CAPITAL"].includes(application.facilityType)) issues.push("نوع تسهیلات معتبر نیست");
 
   for (const slotKey of requiredFacilitiesSlots) {
-    if (!hasReadySlot(application, slotKey)) issues.push(`مدرک «${slotKey}» کامل و بررسی‌شده نیست`);
+    if (!hasReadySlot(application, slotKey)) issues.push(`مدرک «${facilitiesDocumentLabel(slotKey)}» کامل و بررسی‌شده نیست`);
   }
 
   if (!Number.isInteger(input.employeeCount) || input.employeeCount < 0) issues.push("تعداد کارکنان معتبر نیست");

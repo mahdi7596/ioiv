@@ -1,0 +1,8 @@
+(node:77907) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":77916,"port":62253,"hostilePort":62252}
+PASS user 390px valid hostileGET preserves, foreignPOST403, GETlogout405, actualform logout, refresh/back, deleted/malformed/expired/absent recovery
+PASS admin 390px valid hostileGET preserves, foreignPOST403, GETlogout405, actualform logout, refresh/back, deleted/malformed/expired/absent recovery
+PASS user 1440px valid hostileGET preserves, foreignPOST403, GETlogout405, actualform logout, refresh/back, deleted/malformed/expired/absent recovery
+PASS admin 1440px valid hostileGET preserves, foreignPOST403, GETlogout405, actualform logout, refresh/back, deleted/malformed/expired/absent recovery
+Owned Next/browser/hostile fixture stopped

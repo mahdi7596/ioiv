@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source",
+  "container": "sana-phase8-7ax2qqj2",
+  "containerId": "3526dada9d045fc53ff61ec95eb7d7bf8cb5d3260ca947dab25ce5d14f65175e",
+  "label": "sana.task=sana-phase8-7ax2qqj2",
+  "port": "64625",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

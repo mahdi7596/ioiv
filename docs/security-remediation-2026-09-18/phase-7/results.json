@@ -1,0 +1,69 @@
+{
+  "tests-final": {
+    "exitCode": 0,
+    "log": "tests-final.log",
+    "tests": 549,
+    "files": 78,
+    "restrictedDatabaseCases": 97
+  },
+  "build-final": {
+    "exitCode": 0,
+    "log": "build-final.log"
+  },
+  "types-final": {
+    "exitCode": 0,
+    "log": "types-final.log"
+  },
+  "lint-final": {
+    "exitCode": 0,
+    "log": "lint-final.log"
+  },
+  "browser-final": {
+    "exitCode": 0,
+    "log": "browser-final.log"
+  },
+  "request-processes": {
+    "exitCode": 0,
+    "log": "request-processes.log"
+  },
+  "resource-check-final": {
+    "exitCode": 0,
+    "log": "resource-check-final.log"
+  },
+  "baseline-tests": {
+    "exitCode": 1,
+    "expectedFailures": 7,
+    "passed": 13
+  },
+  "tests": {
+    "exitCode": 1,
+    "failed": 9,
+    "passed": 540,
+    "unhandledErrors": 1,
+    "cause": "concurrent fixture resets; final serial run passes"
+  },
+  "browser": {
+    "exitCode": 1,
+    "cause": "ambiguous role=alert selector; exact error IDs fixed; final run passes"
+  },
+  "resource-check": {
+    "exitCode": 1,
+    "cause": "read-only query table-name typo; corrected"
+  },
+  "origin-browser": {
+    "exitCode": 0,
+    "log": "origin-browser.log"
+  },
+  "request-browser": {
+    "exitCode": 0,
+    "log": "request-browser.log"
+  },
+  "verification-processes": {
+    "exitCode": 0,
+    "log": "verification-processes.log"
+  },
+  "payment-processes": {
+    "exitCode": 0,
+    "log": "payment-processes.log"
+  }
+}

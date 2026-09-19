@@ -1,0 +1,382 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:17347) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source[39m
+
+ [31m❯[39m tests/legacy-replacement.db.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m14 failed[39m[2m)[22m[32m 139[2mms[22m[39m
+[31m     [31m×[31m atomically saves current pointer, draft reference, version and exact predecessor[39m[32m 76[2mms[22m[39m
+[31m     [31m×[31m same-slot competitors leave exactly one committed winner with surviving bytes[39m[32m 5[2mms[22m[39m
+[31m     [31m×[31m different slots merge against locked current draft without overwriting siblings[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m rejects stale full drafts and current-version drafts pointing to a predecessor[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m direct runtime writes cannot restore retired JSON or mutate file identity[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m rechecks ownership and editability after staging[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m rejects leading-zero slot aliases before object allocation[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m scan rejection and unavailability preserve the previous current object[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m enforces 20 MiB boundary without introducing aggregate quota[39m[32m 5[2mms[22m[39m
+[31m     [31m×[31m staged candidate cannot expire early; abandoned candidates cannot commit[39m[32m 6[2mms[22m[39m
+[31m     [31m×[31m committed candidate survives reconciliation and lost acknowledgement[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m retains unsafe historical paths and rejects path traversal[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m certificate binding commits only in completed status and retains unknown history[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m preserves original tax-row positions across file persistence[39m[32m 5[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 14 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22matomically saves current pointer, draft reference, version and exact predecessor
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m44:13[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22msame-slot competitors leave exactly one committed winner with surviving bytes
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m56:13[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mdifferent slots merge against locked current draft without overwriting siblings
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m65:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mrejects stale full drafts and current-version drafts pointing to a predecessor
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m73:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mdirect runtime writes cannot restore retired JSON or mutate file identity
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m78:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mrechecks ownership and editability after staging
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m84:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mrejects leading-zero slot aliases before object allocation
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m91:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mscan rejection and unavailability preserve the previous current object
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m95:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22menforces 20 MiB boundary without introducing aggregate quota
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m101:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mstaged candidate cannot expire early; abandoned candidates cannot commit
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m108:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mcommitted candidate survives reconciliation and lost acknowledgement
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m116:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mretains unsafe historical paths and rejects path traversal
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m125:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mcertificate binding commits only in completed status and retains unknown history
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m132:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/14]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/legacy-replacement.db.test.ts[2m > [22mR8 legacy replacement restricted DB and real bytes[2m > [22mpreserves original tax-row positions across file persistence
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `owner!.application.create()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase9-3l12r0e_/source/tests/legacy-replacement.db.test.ts:21:47
+
+  18 async function fixture() {
+  19  const id = randomUUID();
+  20  const user = await owner!.user.create({ data: { mobile: id } });
+→ 21  const application = await owner!.application.create(
+The column `new` does not exist in the current database.[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m fixture tests/legacy-replacement.db.test.ts:[2m21:22[22m[39m
+    [90m 19|[39m  [35mconst[39m id [33m=[39m [34mrandomUUID[39m()[33m;[39m
+    [90m 20|[39m  [35mconst[39m user [33m=[39m [35mawait[39m owner[33m![39m[33m.[39muser[33m.[39m[34mcreate[39m({ data[33m:[39m { mobile[33m:[39m id } })[33m;[39m
+    [90m 21|[39m  const application = await owner!.application.create({ data: { userId:…
+    [90m   |[39m                      [31m^[39m
+    [90m 22|[39m  [35mreturn[39m { applicationId[33m:[39m application[33m.[39mid[33m,[39m userId[33m:[39m user[33m.[39mid }[33m;[39m
+    [90m 23|[39m }
+[90m [2m❯[22m tests/legacy-replacement.db.test.ts:[2m139:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/14]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m14 failed[39m[22m[90m (14)[39m
+[2m   Start at [22m 12:30:43
+[2m   Duration [22m 1.57s[2m (transform 80ms, setup 0ms, import 833ms, tests 139ms, environment 0ms)[22m
+

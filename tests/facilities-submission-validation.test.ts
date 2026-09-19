@@ -30,10 +30,10 @@ describe("facilities submission validation", () => {
   it("requires every scanned application document including the 1404 tax and 1404/1403 financial statements", () => {
     const result = checkFacilitiesSubmissionReadiness(application(), { employeeCount: 0, boardOfficerId: "board" });
     expect(result.ready).toBe(false);
-    expect(result.issues).toContain("مدرک «tax-1404» کامل و بررسی‌شده نیست");
-    expect(result.issues).toContain("مدرک «financial-1404» کامل و بررسی‌شده نیست");
-    expect(result.issues).toContain("مدرک «financial-1403» کامل و بررسی‌شده نیست");
-    expect(result.issues.some((issue) => issue.includes("questionnaire"))).toBe(true);
+    expect(result.issues).toContain("مدرک «اظهارنامه مالیاتی 1404» کامل و بررسی‌شده نیست");
+    expect(result.issues).toContain("مدرک «صورت مالی 1404» کامل و بررسی‌شده نیست");
+    expect(result.issues).toContain("مدرک «صورت مالی 1403» کامل و بررسی‌شده نیست");
+    expect(result.issues.some((issue) => issue.includes("پرسشنامه"))).toBe(true);
   });
 
   it("allows correction submissions to replace saved employee and board-member evidence", () => {

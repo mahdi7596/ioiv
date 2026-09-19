@@ -1,0 +1,39 @@
+{
+  "priorCheckpointCount": 95,
+  "unchangedProtectedRuntimeFiles": [
+    "app/api/auth/request-otp/route.ts",
+    "app/api/auth/verify-otp/route.ts",
+    "app/api/payment/callback/route.ts",
+    "lib/actions/auth.ts",
+    "lib/actions/facilities-payment.ts",
+    "lib/auth/admin-response.ts",
+    "lib/auth/request-guard.ts",
+    "lib/auth/request.ts",
+    "lib/auth/verification.ts",
+    "lib/payments/coordination.ts",
+    "lib/payments/legacy-notifications.ts",
+    "lib/payments/legacy-settlement.ts",
+    "lib/payments/messages.ts",
+    "lib/payments/zarinpal-errors.ts",
+    "lib/payments/zarinpal.ts",
+    "lib/sms/ghasedak.ts",
+    "lib/sms/index.ts",
+    "lib/sms/timeout.ts"
+  ],
+  "intentionalProtectedChanges": {
+    "lib/actions/payment.ts": "R8 current-reference/version validation under existing payment lock, original array positions, safe conflict response; gateway/settlement/coordination unchanged and regressions requalified."
+  },
+  "changedFromPhase8Checkpoint": [
+    "DEPLOYMENT.md",
+    "app/dashboard/application/page.tsx",
+    "components/application/ApplicationWizard.tsx",
+    "lib/actions/admin.ts",
+    "lib/actions/application.ts",
+    "lib/actions/payment.ts",
+    "prisma/facilities-runtime-role-grants.sql",
+    "prisma/schema.prisma",
+    "tests/admin-actions-permissions.test.ts",
+    "tests/payment-coordination-mock.ts",
+    "tests/payment-coordination.db.test.ts"
+  ]
+}

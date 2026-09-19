@@ -1,0 +1,16 @@
+
+> sana-registration-review-platform@0.1.0 lint
+> eslint
+
+
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source/app/(public)/page.tsx
+  60:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source/prisma/tests/facilities-replacement/browser.ts
+  17:157  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:222  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:187  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:140  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 5 problems (4 errors, 1 warning)
+

@@ -1,0 +1,66 @@
+// AUDIT-ONLY reproduction. Passing means the vulnerability was reproduced.
+// Remove after recording evidence; these assertions are NOT desired behavior.
+import { ApplicationStatus, PaymentStatus } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  verify: vi.fn(),
+  db: { payment: { update: vi.fn(), updateMany: vi.fn() }, application: { update: vi.fn() }, statusHistory: { create: vi.fn() }, $transaction: vi.fn() },
+}));
+vi.mock("@/lib/db", () => ({ db: mocks.db }));
+vi.mock("@/lib/payments/zarinpal", () => ({ verifyZarinpalPayment: mocks.verify }));
+vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
+import { markLegacyPaymentFailed, settleLegacyPayment } from "@/lib/payments/legacy-settlement";
+
+function snapshot(id: string) {
+  return { id, applicationId: "audit-app", amountToman: 3000000, authority: `authority-${id}`, status: PaymentStatus.INITIATED,
+    application: { status: ApplicationStatus.PENDING_PAYMENT, payments: [{ id, status: PaymentStatus.INITIATED }] } };
+}
+
+describe("AUDIT ONLY: legacy payment race reproductions", () => {
+  const rows = new Map<string, PaymentStatus>();
+  let applicationStatus: ApplicationStatus;
+  beforeEach(() => {
+    vi.clearAllMocks(); rows.clear(); applicationStatus = ApplicationStatus.PENDING_PAYMENT;
+    mocks.db.payment.update.mockImplementation(async ({ where, data }) => { rows.set(where.id, data.status); return data; });
+    mocks.db.payment.updateMany.mockImplementation(async ({ where, data }) => {
+      if (rows.get(where.id) === where.status.not) return { count: 0 };
+      rows.set(where.id, data.status); return { count: 1 };
+    });
+    mocks.db.application.update.mockImplementation(async ({ data }) => { applicationStatus = data.status; return data; });
+    mocks.db.statusHistory.create.mockResolvedValue({});
+    mocks.db.$transaction.mockImplementation(async (work) => typeof work === "function" ? work(mocks.db) : Promise.all(work));
+    mocks.verify.mockResolvedValue({ referenceId: "audit-reference" });
+  });
+
+  it("reproduces stale cancellation overwriting a completed verification", async () => {
+    const staleCancellationSnapshot = snapshot("payment-a");
+    rows.set("payment-a", PaymentStatus.INITIATED);
+    expect(await settleLegacyPayment(snapshot("payment-a"), "authority-payment-a")).toBe("verified");
+    expect(rows.get("payment-a")).toBe(PaymentStatus.VERIFIED);
+    await markLegacyPaymentFailed(staleCancellationSnapshot, { reason: "callback_not_ok" });
+    expect(rows.get("payment-a")).toBe(PaymentStatus.FAILED);
+    expect(applicationStatus).toBe(ApplicationStatus.DRAFT);
+  });
+
+  it("reproduces concurrent different-authority captures for one application", async () => {
+    rows.set("payment-a", PaymentStatus.INITIATED); rows.set("payment-b", PaymentStatus.INITIATED);
+    let release!: () => void;
+    const bothInsideGateway = new Promise<void>((resolve) => { release = resolve; });
+    let arrivals = 0;
+    mocks.verify.mockImplementation(async ({ authority }) => {
+      arrivals += 1;
+      if (arrivals === 2) release();
+      await bothInsideGateway;
+      return { referenceId: `reference-${authority}` };
+    });
+    const results = await Promise.all([
+      settleLegacyPayment(snapshot("payment-a"), "authority-payment-a"),
+      settleLegacyPayment(snapshot("payment-b"), "authority-payment-b"),
+    ]);
+    expect(results).toEqual(["verified", "verified"]);
+    expect([...rows.values()]).toEqual([PaymentStatus.VERIFIED, PaymentStatus.VERIFIED]);
+    expect(mocks.verify).toHaveBeenCalledTimes(2);
+    expect(mocks.db.statusHistory.create).toHaveBeenCalledTimes(2);
+  });
+});

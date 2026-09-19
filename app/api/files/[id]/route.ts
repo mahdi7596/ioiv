@@ -50,6 +50,8 @@ export async function GET(_request: Request, context: RouteContext<"/api/files/[
       }
     }
 
+    const deletion = await db.legacyFileDeletionIntent.findUnique({ where: { predecessorId: file.id }, select: { status: true } });
+    if (deletion?.status === "AUTHORIZED" || deletion?.status === "SUCCEEDED") return Response.json({ error: "File not found" }, { status: 404 });
     const bytes = await readFile(file.storagePath);
     const encodedName = encodeURIComponent(path.basename(file.originalName));
     logger.info("file_download_succeeded", {
@@ -68,6 +70,7 @@ export async function GET(_request: Request, context: RouteContext<"/api/files/[
       },
     });
   } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return Response.json({ error: "File not found" }, { status: 404 });
     logger.error("file_download_failed", error);
     return Response.json({ error: "File download failed" }, { status: 500 });
   }

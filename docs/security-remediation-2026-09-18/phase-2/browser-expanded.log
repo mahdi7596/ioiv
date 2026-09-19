@@ -1,0 +1,5 @@
+(node:47082) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS 390px: NOK uncertainty/refresh then durable capture replay, repeat/refresh preserves review/correction state, real correction button commits one history without repayment, RTL return no overflow
+PASS 1440px: NOK uncertainty/refresh then durable capture replay, repeat/refresh preserves review/correction state, real correction button commits one history without repayment, RTL return no overflow
+PASS signed-out return discloses no payment confirmation; external browser requests blocked

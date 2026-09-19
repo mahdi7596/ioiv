@@ -1,0 +1,40 @@
+Branch: master
+HEAD: 29705da7e148b75a56d3a4aedc3565530c1d6974
+
+ M DEPLOYMENT.md
+ M app/api/payment/callback/route.ts
+ M app/dashboard/application/page.tsx
+ M app/payment/return/page.tsx
+ M components/application/ApplicationWizard.tsx
+ M components/application/FinalPaymentStep.tsx
+ M components/facilities/FacilitiesApplicationWizard.tsx
+ M docs/2026-09-16-payment-upload-security-audit.md
+ M lib/actions/application.ts
+ M lib/actions/facilities-payment.ts
+ M lib/actions/payment.ts
+ M lib/facilities/payment-notice.ts
+ M lib/facilities/submission.ts
+ M lib/payments/legacy-notifications.ts
+ M lib/payments/legacy-settlement.ts
+ M lib/payments/zarinpal-errors.ts
+ M lib/payments/zarinpal.ts
+ M prisma/facilities-runtime-role-grants.sql
+ M prisma/schema.prisma
+ M tests/facilities-payment-action.test.ts
+ M tests/payment-action.test.ts
+ M tests/payment-callback.test.ts
+ M tests/payment-return-page.test.tsx
+ M tests/zarinpal.test.ts
+?? docs/2026-09-18-prelaunch-security-review.md
+?? docs/2026-09-18-security-remediation-master-prompt.md
+?? docs/security-remediation-2026-09-18/
+?? docs/security-remediation-progress.md
+?? docs/security-review-2026-09-18/
+?? lib/payments/coordination.ts
+?? lib/payments/messages.ts
+?? prisma/migrations/20260918120000_payment_coordination/
+?? prisma/migrations/20260918121000_payment_audit_status/
+?? prisma/migrations/20260918122000_payment_audit_actions/
+?? prisma/tests/payment-coordination/
+?? tests/payment-coordination-mock.ts
+?? tests/payment-coordination.db.test.ts

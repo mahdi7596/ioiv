@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source",
+  "container": "sana-phase4-armlocl7",
+  "containerId": "6c15d7de30fa383f26bebc065885906d8deeed2345b7290c3edfd06d1d6ef110",
+  "label": "sana.task=sana-phase4-armlocl7",
+  "port": "63828",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

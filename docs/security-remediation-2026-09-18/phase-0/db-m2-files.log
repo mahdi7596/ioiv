@@ -1,0 +1,59 @@
+
+> sana-registration-review-platform@0.1.0 test:db:m2-files
+> sh prisma/tests/test-facilities-private-files.sh
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase0", schema "public" at "127.0.0.1:59677"
+
+24 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+> sana-registration-review-platform@0.1.0 db:seed
+> tsx prisma/seed.ts
+
+(node:2439) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+BEGIN
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 4
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+DO
+UPDATE 1
+UPDATE 1
+INSERT 0 5
+INSERT 0 5
+DO
+INSERT 0 1
+UPDATE 1
+DO
+UPDATE 5
+UPDATE 1
+UPDATE 1
+DO
+UPDATE 1
+INSERT 0 1
+UPDATE 1
+UPDATE 1
+DELETE 1
+DO
+ROLLBACK

@@ -15,15 +15,16 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/admin/facilities-access", () => ({ requireFacilitiesAdmin: mocks.requireFacilitiesAdmin, getFacilitiesAdminAccess: vi.fn() }));
+vi.mock("@/lib/admin/review-guard", () => ({ requireLockedReviewAdmin: vi.fn(async () => undefined) }));
 vi.mock("@/lib/db", () => ({ db: mocks.db }));
 vi.mock("@/lib/sms", () => ({ sendSms: mocks.sendSms }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() }, maskMobile: () => "0912***0000" }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const application = { id: "app_1", status: ApplicationStatus.UNDER_REVIEW };
+const application = { id: "app_1", status: ApplicationStatus.UNDER_REVIEW, reviewVersion: 0 };
 const correction = {
   id: "correction_1", applicationId: "app_1", sequence: 1, reviewerId: "admin_1", note: "مدارک را اصلاح کنید",
-  smsStatus: FacilitiesCorrectionSmsStatus.PENDING, smsAttemptCount: 0, application: { user: { mobile: "09120000000" } },
+  smsStatus: FacilitiesCorrectionSmsStatus.PENDING, smsAttemptCount: 0, resolvedAt: null, application: { user: { mobile: "09120000000" } },
 };
 
 describe("facilities review actions", () => {
@@ -32,9 +33,10 @@ describe("facilities review actions", () => {
     mocks.requireFacilitiesAdmin.mockResolvedValue({ id: "admin_1", active: true, role: "ADMIN" });
     mocks.db.$transaction.mockImplementation(async (work: (tx: typeof mocks.db) => unknown) => work(mocks.db));
     mocks.db.$queryRaw.mockResolvedValue([{ id: "app_1" }]);
-    mocks.db.facilitiesApplication.update.mockResolvedValue(application);
+    let live = {...application};
+    mocks.db.facilitiesApplication.update.mockImplementation(async ({data}) => {live={...live,...data};return live;});
     mocks.db.facilitiesApplication.findUnique.mockResolvedValue(application);
-    mocks.db.facilitiesApplication.findUniqueOrThrow.mockResolvedValue(application);
+    mocks.db.facilitiesApplication.findUniqueOrThrow.mockImplementation(async () => live);
     mocks.db.facilitiesCorrectionRequest.aggregate.mockResolvedValue({ _max: { sequence: null } });
     mocks.db.facilitiesCorrectionRequest.create.mockResolvedValue(correction);
     mocks.db.facilitiesCorrectionRequest.findUnique.mockResolvedValue(correction);
@@ -47,7 +49,7 @@ describe("facilities review actions", () => {
 
   it("commits a correction before sending its one referenced SMS", async () => {
     const { requestFacilitiesCorrection } = await import("@/lib/actions/facilities-review");
-    await expect(requestFacilitiesCorrection({ applicationId: "app_1", note: " مدارک را اصلاح کنید " })).resolves.toEqual({ correctionId: "correction_1", smsSent: true });
+    await expect(requestFacilitiesCorrection({ applicationId: "app_1", expectedVersion: 0, expectedStatus: "UNDER_REVIEW", note: " مدارک را اصلاح کنید " })).resolves.toEqual({ correctionId: "correction_1", smsSent: true });
     expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith(expect.objectContaining({ data: { status: ApplicationStatus.NEEDS_EDIT } }));
     expect(mocks.sendSms).toHaveBeenCalledWith(expect.objectContaining({ to: "09120000000", clientReferenceId: "correction_1" }));
     expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ smsStatus: FacilitiesCorrectionSmsStatus.SENT }) }));
@@ -56,20 +58,21 @@ describe("facilities review actions", () => {
   it("keeps the correction active and records safe failure state when SMS fails", async () => {
     mocks.sendSms.mockRejectedValue(new Error("provider secret response"));
     const { requestFacilitiesCorrection } = await import("@/lib/actions/facilities-review");
-    await expect(requestFacilitiesCorrection({ applicationId: "app_1", note: "اصلاح لازم است" })).resolves.toMatchObject({ smsSent: false });
+    await expect(requestFacilitiesCorrection({ applicationId: "app_1", expectedVersion: 0, expectedStatus: "UNDER_REVIEW", note: "اصلاح لازم است" })).resolves.toMatchObject({ smsSent: false });
     expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith(expect.objectContaining({ data: { status: ApplicationStatus.NEEDS_EDIT } }));
-    expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ smsStatus: FacilitiesCorrectionSmsStatus.FAILED, smsFailureCode: "PROVIDER_ERROR" }) }));
+    expect(mocks.db.facilitiesCorrectionRequest.updateMany).toHaveBeenCalledWith(expect.objectContaining({ data: { smsFailureCode: "DELIVERY_UNCONFIRMED" } }));
+    expect(mocks.db.facilitiesCorrectionRequest.update).not.toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({smsStatus:"FAILED"})}));
   });
 
   it("rejects empty correction notes before changing state", async () => {
     const { requestFacilitiesCorrection } = await import("@/lib/actions/facilities-review");
-    await expect(requestFacilitiesCorrection({ applicationId: "app_1", note: "   " })).rejects.toThrow("۱ تا ۲۰۰۰");
+    await expect(requestFacilitiesCorrection({ applicationId: "app_1", expectedVersion: 0, expectedStatus: "UNDER_REVIEW", note: "   " })).rejects.toThrow("۱ تا ۲۰۰۰");
     expect(mocks.db.$transaction).not.toHaveBeenCalled();
   });
 
   it("rejects a correction note without Persian text", async () => {
     const { requestFacilitiesCorrection } = await import("@/lib/actions/facilities-review");
-    await expect(requestFacilitiesCorrection({ applicationId: "app_1", note: "replace the document" })).rejects.toThrow("فارسی");
+    await expect(requestFacilitiesCorrection({ applicationId: "app_1", expectedVersion: 0, expectedStatus: "UNDER_REVIEW", note: "replace the document" })).rejects.toThrow("فارسی");
     expect(mocks.db.$transaction).not.toHaveBeenCalled();
   });
 });

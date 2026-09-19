@@ -1,0 +1,127 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source[39m
+
+(node:1967) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mcookie failure spends the code and retry cannot create another session
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mcleanup failure denies before bcrypt and recovers after capability restoration
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mreservation DB failure denies before compare; commit failure cannot authorize a cookie
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mmissing or inconsistent secrets deny without resetting budgets
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mmissing or inconsistent secrets deny without resetting budgets
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+ [31m❯[39m tests/otp-verification.db.test.ts [2m([22m[2m18 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 9176[2mms[22m[39m
+     [33m[2m✓[22m[39m twelve concurrent wrong requests compare the real code at most five times [33m 737[2mms[22m[39m
+     [33m[2m✓[22m[39m twelve concurrent correct requests issue exactly one session [33m 831[2mms[22m[39m
+     [32m✓[39m expiry during bcrypt prevents user creation and session[32m 24[2mms[22m[39m
+[31m     [31m×[31m reserve rechecks expiry after an unchanged row-lock wait[39m[33m 2527[2mms[22m[39m
+[31m     [31m×[31m consume rechecks expiry after an unchanged row-lock wait[39m[33m 2527[2mms[22m[39m
+     [32m✓[39m consumed and initially expired codes cannot reserve or issue cookies[32m 188[2mms[22m[39m
+     [32m✓[39m cookie failure spends the code and retry cannot create another session[32m 99[2mms[22m[39m
+     [32m✓[39m active admin succeeds without granting runtime administrative UPDATE[32m 26[2mms[22m[39m
+     [32m✓[39m admin deactivated during comparison receives no session[32m 26[2mms[22m[39m
+     [32m✓[39m missing-code flood spends mobile budget; rejected mobile probes still spend address budget[32m 155[2mms[22m[39m
+     [33m[2m✓[22m[39m unknown address is shared across mobiles and purposes [33m 1237[2mms[22m[39m
+     [32m✓[39m exact rolling window ignores stale events and retains recent events[32m 17[2mms[22m[39m
+     [32m✓[39m cleanup only removes inactive keys; direct DELETE is denied[32m 20[2mms[22m[39m
+     [32m✓[39m cleanup failure denies before bcrypt and recovers after capability restoration[32m 24[2mms[22m[39m
+     [32m✓[39m reservation DB failure denies before compare; commit failure cannot authorize a cookie[32m 25[2mms[22m[39m
+     [32m✓[39m missing or inconsistent secrets deny without resetting budgets[32m 13[2mms[22m[39m
+     [32m✓[39m new accounting contains no raw mobile or IP[32m 10[2mms[22m[39m
+     [32m✓[39m ignores untrusted forwarded identity; canonicalizes qualified IPv6[32m 25[2mms[22m[39m
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2minvalidates older unused OTPs before creating a replacement
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2minvalidates older unused OTPs before creating a replacement
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects OTP requests made too soon for the same mobile and purpose
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects OTP requests after five requests in an hour for the same mobile and purpose
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for mobiles outside the active admin list
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for mobiles outside the active admin list
+[22m[39m{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for inactive admin mobiles
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for inactive admin mobiles
+[22m[39m{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mallows active entry viewer admins to request an admin OTP
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"093****6801"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mallows active entry viewer admins to request an admin OTP
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"093****6801","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not reveal whether a user mobile is already registered when requesting an OTP
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not reveal whether a user mobile is already registered when requesting an OTP
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****0001"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"warn","event":"otp_ip_limit_hit","clientIp":"203.0.113.5","purpose":"USER_LOGIN","count":30}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mapplies rate limits before revealing whether an admin mobile exists
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mfails closed before comparison on database failure
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+ [32m✓[39m tests/auth-actions.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/otp-verification.db.test.ts[2m > [22mR3 restricted PostgreSQL verification[2m > [22mreserve rechecks expiry after an unchanged row-lock wait
+[41m[1m FAIL [22m[49m tests/otp-verification.db.test.ts[2m > [22mR3 restricted PostgreSQL verification[2m > [22mconsume rechecks expiry after an unchanged row-lock wait
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'void'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/otp-verification.db.test.ts:[2m72:5[22m[39m
+    [90m 70|[39m     }
+    [90m 71|[39m     [34mexpect[39m(waiting)[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m 72|[39m     await owner!.$queryRaw`SELECT pg_sleep(GREATEST(0,EXTRACT(EPOCH FR…
+    [90m   |[39m     [31m^[39m
+    [90m 73|[39m     held[33m.[39m[34mrelease[39m()[33m;[39m [35mawait[39m blocker[33m;[39m
+    [90m 74|[39m     [35mconst[39m result[33m=[39m[35mawait[39m pending[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m30 passed[39m[22m[90m (32)[39m
+[2m   Start at [22m 09:47:50
+[2m   Duration [22m 10.17s[2m (transform 70ms, setup 0ms, import 752ms, tests 9.19s, environment 0ms)[22m
+

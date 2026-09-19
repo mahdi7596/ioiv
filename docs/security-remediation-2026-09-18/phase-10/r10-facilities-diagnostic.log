@@ -1,0 +1,48 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source[39m
+
+(node:88414) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [31m❯[39m tests/facilities-document-qualification.db.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m6 skipped[39m[2m)[22m[33m 951[2mms[22m[39m
+[31m     [31m×[31m qualifies application and officer/profile evidence, starts valid payment[39m[33m 945[2mms[22m[39m
+     [2m[90m↓[39m[22m blocks missing insurance bytes without new payment
+     [2m[90m↓[39m[22m blocks missing profile-articles-of-association bytes without new payment
+     [2m[90m↓[39m[22m blocks missing officer bytes without new payment
+     [2m[90m↓[39m[22m rejects changed hash and foreign caller ownership
+     [2m[90m↓[39m[22m free submission also checks actual bytes
+     [2m[90m↓[39m[22m capture survives missing profile file and repaired paid draft submits without another charge
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mqualifies application and officer/profile evidence, starts valid payment
+[31m[1mPrismaClientUnknownRequestError[22m: 
+Invalid `tx.facilitiesApplicationShareholder.deleteMany()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source/lib/facilities/submission.ts:200:45
+
+  197     contactMobile: company.contactMobile,
+  198   },
+  199 });
+→ 200 await tx.facilitiesApplicationShareholder.deleteMany(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "42501", message: "permission denied for table FacilitiesApplicationShareholder", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m237:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m Module.refreshFacilitiesProfileSnapshot lib/facilities/submission.ts:[2m200:3[22m[39m
+
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m fixture tests/facilities-document-qualification.db.test.ts:[2m52:2[22m[39m
+[90m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m60:98[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m6 skipped[39m[90m (7)[39m
+[2m   Start at [22m 13:33:54
+[2m   Duration [22m 1.52s[2m (transform 173ms, setup 0ms, import 330ms, tests 951ms, environment 0ms)[22m
+

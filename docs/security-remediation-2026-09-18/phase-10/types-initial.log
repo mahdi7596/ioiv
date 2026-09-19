@@ -1,0 +1,2 @@
+app/api/files/[id]/route.ts(21,55): error TS2304: Cannot find name 'RouteContext'.
+tests/protected-file-route.test.ts(64,8): error TS2304: Cannot find name 'RouteContext'.

@@ -1,0 +1,28 @@
+// AUDIT ONLY; copy as phase0-http-probe.mjs in the isolated source and use run.py.
+// Synthetic fixtures only. Never print OTP values, hashes or session cookies.
+import {PrismaClient} from '@prisma/client';
+import bcrypt from 'bcryptjs';
+const db = new PrismaClient();
+const base = 'http://127.0.0.1:3198';
+if (!process.env.DATABASE_URL?.includes('/phase0') || !process.env.DATABASE_URL.includes('127.0.0.1:')) throw Error('Requires isolated phase0 database');
+const emit = x => console.log(JSON.stringify(x));
+const post = (route, body, headers={}) => fetch(base+route,{method:'POST',headers:{'content-type':'application/json',origin:base,...headers},body:JSON.stringify(body)});
+try {
+ for (const path of ['/api/health','/dashboard','/admin','/api/admin/export','/api/files/nonexistent','/api/facilities/files/nonexistent','/payment/return?status=success&paymentId=nonexistent']) {
+  const r=await fetch(base+path,{redirect:'manual'});emit({check:'anonymous',path,status:r.status,location:r.headers.get('location'),hasCsp:r.headers.has('content-security-policy')});await r.text();
+ }
+ const mobile='09900000801';
+ const codeHash=await bcrypt.hash('638294',10);
+ const otp=await db.otpCode.create({data:{id:'phase0-guesses',mobile,purpose:'USER_LOGIN',codeHash,expiresAt:new Date(Date.now()+120000)}});
+ const responses=await Promise.all(Array.from({length:12},()=>post('/api/auth/verify-otp',{mobile,mode:'user',code:'000000'})));
+ const after=await db.otpCode.findUnique({where:{id:otp.id}});
+ emit({check:'twelve concurrent wrong guesses',statuses:responses.map(r=>r.status),storedAttemptCount:after.attemptCount,limit:5});
+ const foreignMobile='09900000802';
+ await db.otpCode.create({data:{id:'phase0-foreign',mobile:foreignMobile,purpose:'USER_LOGIN',codeHash,expiresAt:new Date(Date.now()+120000)}});
+ const foreign=await post('/api/auth/verify-otp',{mobile:foreignMobile,mode:'user',code:'638294',padding:'='},{origin:'https://hostile.invalid','content-type':'text/plain'});
+ emit({check:'foreign text/plain login HTTP only',status:foreign.status,sessionCookieIssued:foreign.headers.get('set-cookie')?.includes('sana_session=')===true});
+ const requests=await Promise.all(Array.from({length:8},()=>post('/api/auth/request-otp',{mobile:'09900000803',mode:'user'})));
+ emit({check:'eight concurrent OTP requests',statuses:requests.map(r=>r.status),records:await db.otpCode.count({where:{mobile:'09900000803'}}),smsCredentialsBlank:!process.env.GHASEDAK_API_KEY});
+ const probes=await Promise.all(Array.from({length:35},()=>post('/api/auth/request-otp',{mobile:'09900000804',mode:'admin'},{'x-real-ip':'192.0.2.20'})));
+ emit({check:'unknown admin probes',statuses:probes.map(r=>r.status),records:await db.otpCode.count({where:{mobile:'09900000804'}})});
+} finally { await db.$disconnect(); }

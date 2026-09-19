@@ -6,7 +6,7 @@ import type { StepProps, YearFileRow } from "./types";
 
 export function FinancialStatementsStep({
   draft,
-  uploadingKey,
+  uploadingKeys,
   uploadProgress,
   uploadErrors,
   readOnly,
@@ -48,13 +48,10 @@ export function FinancialStatementsStep({
               required
               value={row.file}
               readOnly={readOnly}
-              uploading={uploadingKey === fieldKey}
+              uploading={Boolean(uploadingKeys?.[fieldKey])}
               progress={uploadProgress[fieldKey]}
               error={uploadErrors[fieldKey]}
-              onUpload={async (file) => {
-                const uploaded = await onUpload(fieldKey, file);
-                if (uploaded) updateRow(index, { ...row, file: uploaded });
-              }}
+              onUpload={async (file) => { await onUpload(fieldKey, file); }}
             />
           </div>
         );

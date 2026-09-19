@@ -1,0 +1,27 @@
+{
+  "sourceCount": 145,
+  "testedCount": 144,
+  "mismatches": [],
+  "changedFromPhase10": [
+    "DEPLOYMENT.md",
+    "package.json",
+    "prisma/facilities-runtime-role-grants.sql",
+    "prisma/schema.prisma",
+    "scripts/reconcile-facilities-files.ts"
+  ],
+  "newFiles": [
+    "lib/maintenance/cursor.ts",
+    "lib/maintenance/facilities-files.ts",
+    "lib/maintenance/file-job.ts",
+    "lib/maintenance/legacy-files.ts",
+    "lib/maintenance/otp.ts",
+    "operations/data-maintenance.example.cron",
+    "prisma/migrations/20260919170000_bounded_otp_maintenance/migration.sql",
+    "prisma/tests/maintenance/facilities-cli.ts",
+    "prisma/tests/maintenance/worker.ts",
+    "scripts/prune-otp-codes.ts",
+    "scripts/reconcile-legacy-files.ts",
+    "tests/maintenance.db.test.ts"
+  ],
+  "envFilesExcluded": true
+}

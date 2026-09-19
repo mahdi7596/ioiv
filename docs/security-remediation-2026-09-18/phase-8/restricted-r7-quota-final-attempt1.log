@@ -1,0 +1,46 @@
+BEGIN
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+SET
+INSERT 0 4
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+DO
+UPDATE 1
+UPDATE 1
+INSERT 0 5
+INSERT 0 5
+DO
+INSERT 0 1
+UPDATE 1
+DO
+UPDATE 5
+UPDATE 1
+UPDATE 1
+DO
+UPDATE 1
+INSERT 0 1
+UPDATE 1
+UPDATE 1
+DELETE 1
+DO
+UPDATE 5
+INSERT 0 1
+INSERT 0 1
+ERROR:  facilities file deletion tombstone requires stored content
+CONTEXT:  PL/pgSQL function enforce_facilities_file_deletion_tombstone_integrity() line 5 at RAISE
+SQL statement "INSERT INTO "FacilitiesFileDeletionTombstone" ("id","uploadId","updatedAt") VALUES ('r7-active-delete','r7-reserve',CURRENT_TIMESTAMP)"
+PL/pgSQL function inline_code_block line 6 at SQL statement

@@ -1,0 +1,7 @@
+
+> sana-registration-review-platform@0.1.0 facilities:m9:validate
+> tsx scripts/validate-facilities-m9-release.ts --decisions operations/facilities-m9/decision-register.pending.example.json --evidence operations/facilities-m9/evidence-ledger.pending.example.json --require-gate G3
+
+(node:3690) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"event":"facilities_m9_release_validation","valid":false,"requiredGate":"G3","errorCount":5,"pendingCount":20,"errors":["gate 'G3' requires every G0 decision to be approved","required gate 'G0' has not passed","required gate 'G1' has not passed","required gate 'G2' has not passed","required gate 'G3' has not passed"]}

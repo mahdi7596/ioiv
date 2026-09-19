@@ -1,0 +1,10 @@
+{
+  "migrationCount": 31,
+  "migrationChecksum": "38ac352e457cb9f97d9bc3e83c46ef7115c65e48da1c9f2dff72572a5a28ebdc",
+  "enabledFacilities": 0,
+  "runtimeSuperuser": false,
+  "legacyFileDeleteAllowed": false,
+  "candidateCount": 56,
+  "bindingCount": 30,
+  "intentCount": 14
+}

@@ -1,0 +1,185 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:86724) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v/source[39m
+
+[90mstderr[2m | tests/auth-request-guard.test.ts[2m > [22m[2mauthentication mutation trust boundary[2m > [22m[2mrejects malformed same-origin JSON without action
+[22m[39m{"level":"warn","event":"api_request_otp_failed","reason":"invalid_request"}
+
+[90mstderr[2m | tests/auth-request-guard.test.ts[2m > [22m[2mauthentication mutation trust boundary[2m > [22m[2mrejects malformed same-origin JSON without action
+[22m[39m{"level":"warn","event":"api_verify_otp_failed","reason":"invalid_request_or_internal_failure"}
+
+ [31m❯[39m tests/auth-request-guard.test.ts [2m([22m[2m58 tests[22m[2m | [22m[31m51 failed[39m[2m)[22m[32m 33[2mms[22m[39m
+[31m     [31m×[31m rejects origin null before parsing/action[39m[32m 16[2mms[22m[39m
+[31m     [31m×[31m rejects origin null before parsing/action[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://evil.example before parsing/action[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects origin http://sana.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example:444 before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example/ before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example@evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example https://evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example, https://evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media text/plain before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/x-www-form-urlencoded before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media multipart/form-data before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/jsonp before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/problem+json before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/json, text/plain before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/json; charset=latin1 before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media  before parsing/action[39m[32m 0[2mms[22m[39m
+     [32m✓[39m accepts browser JSON application/json independent of internal Host/proxy[32m 0[2mms[22m[39m
+     [32m✓[39m accepts browser JSON Application/JSON; charset=UTF-8 independent of internal Host/proxy[32m 0[2mms[22m[39m
+     [32m✓[39m accepts browser JSON application/json; charset="utf-8" independent of internal Host/proxy[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config [39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config broken[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://user:pass@sana.example[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://sana.example/path[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://sana.example/?x=1[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://sana.example/#x[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config http://sana.example[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config file:///tmp[39m[32m 0[2mms[22m[39m
+     [32m✓[39m rejects malformed same-origin JSON without action[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects origin null before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin null before parsing/action[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin http://sana.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example:444 before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example/ before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example@evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example https://evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects origin https://sana.example, https://evil.example before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media text/plain before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/x-www-form-urlencoded before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media multipart/form-data before parsing/action[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects media application/jsonp before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/problem+json before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/json, text/plain before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media application/json; charset=latin1 before parsing/action[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects media  before parsing/action[39m[32m 0[2mms[22m[39m
+     [32m✓[39m accepts browser JSON application/json independent of internal Host/proxy[32m 0[2mms[22m[39m
+     [32m✓[39m accepts browser JSON Application/JSON; charset=UTF-8 independent of internal Host/proxy[32m 0[2mms[22m[39m
+     [32m✓[39m accepts browser JSON application/json; charset="utf-8" independent of internal Host/proxy[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config [39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config broken[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://user:pass@sana.example[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://sana.example/path[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://sana.example/?x=1[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config https://sana.example/#x[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config http://sana.example[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on config file:///tmp[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects malformed same-origin JSON without action[39m[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 51 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin null before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin null before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin http://sana.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example:444 before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example/ before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example@evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example https://evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example, https://evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin null before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin null before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin http://sana.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example:444 before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example/ before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example@evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example https://evil.example before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects origin https://sana.example, https://evil.example before parsing/action
+[31m[1mAssertionError[22m: expected 200 to be 403 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 403[39m
+[31m+ 200[39m
+
+[36m [2m❯[22m tests/auth-request-guard.test.ts:[2m13:29[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/51]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media text/plain before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/x-www-form-urlencoded before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media multipart/form-data before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/jsonp before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/problem+json before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/json, text/plain before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/json; charset=latin1 before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media  before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media text/plain before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/x-www-form-urlencoded before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media multipart/form-data before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/jsonp before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/problem+json before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/json, text/plain before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media application/json; charset=latin1 before parsing/action
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects media  before parsing/action
+[31m[1mAssertionError[22m: expected 200 to be 415 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 415[39m
+[31m+ 200[39m
+
+[36m [2m❯[22m tests/auth-request-guard.test.ts:[2m16:115[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/51]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config 
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config broken
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://user:pass@sana.example
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://sana.example/path
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://sana.example/?x=1
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://sana.example/#x
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config http://sana.example
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config file:///tmp
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config 
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config broken
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://user:pass@sana.example
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://sana.example/path
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://sana.example/?x=1
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config https://sana.example/#x
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config http://sana.example
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mfails closed on config file:///tmp
+[31m[1mAssertionError[22m: expected 200 to be 503 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 503[39m
+[31m+ 200[39m
+
+[36m [2m❯[22m tests/auth-request-guard.test.ts:[2m19:361[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/51]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-request-guard.test.ts[2m > [22mauthentication mutation trust boundary[2m > [22mrejects malformed same-origin JSON without action
+[31m[1mAssertionError[22m: expected 500 to be 400 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 400[39m
+[31m+ 500[39m
+
+[36m [2m❯[22m tests/auth-request-guard.test.ts:[2m20:224[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/51]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m51 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (58)[39m
+[2m   Start at [22m 10:46:09
+[2m   Duration [22m 269ms[2m (transform 43ms, setup 0ms, import 103ms, tests 33ms, environment 0ms)[22m
+

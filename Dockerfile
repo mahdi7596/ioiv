@@ -1,12 +1,9 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine@sha256:b6f26b36c8ff49624cfdac716b8ea1138d606df02586a77d364bb5536a634f85 AS base
 
 WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-ARG ALPINE_REPOSITORY=https://mirror.arvancloud.ir/alpine/v3.23
-
-RUN printf '%s/main\n%s/community\n' "$ALPINE_REPOSITORY" "$ALPINE_REPOSITORY" > /etc/apk/repositories
 RUN apk add --no-cache libc6-compat openssl
 
 FROM base AS deps
@@ -21,9 +18,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN rm -rf node_modules/.prisma node_modules/@prisma \
-  && cp -R prisma-engine-export/.prisma node_modules/.prisma \
-  && cp -R prisma-engine-export/@prisma node_modules/@prisma \
+RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build npx --no-install prisma generate \
   && npm run build
 
 # Maintenance-only image. It retains the Prisma CLI and is selected explicitly by
@@ -32,6 +27,7 @@ FROM base AS maintenance
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build npx --no-install prisma generate
 
 USER node
 
@@ -44,7 +40,7 @@ ENV PORT=3000
 COPY package.json package-lock.json ./
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm prune --omit=dev \
-  && rm -rf node_modules/prisma node_modules/@prisma \
+  && rm -rf node_modules/prisma node_modules/@prisma node_modules/.bin/prisma \
   && npm cache clean --force
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client

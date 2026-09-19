@@ -1,0 +1,8 @@
+{
+  "priorMigrations": 33,
+  "rollbackInjection": "passed",
+  "historicalOtpPreserved": true,
+  "newMigrationApplied": true,
+  "grantsReappliedTwice": true,
+  "productionAccess": false
+}

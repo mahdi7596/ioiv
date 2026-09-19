@@ -375,9 +375,14 @@ model FacilitiesFileUpload {
   storedFile        StoredFile?                      @relation("FacilitiesFileUploadStoredFile", fields: [storedFileId], references: [id], onDelete: Restrict)
   idempotencyKey    String
   revisionNumber    Int
-  replacesUploadId  String?                          @unique
+  replacesUploadId  String?
   replacesUpload    FacilitiesFileUpload?            @relation("FacilitiesFileReplacement", fields: [replacesUploadId], references: [id], onDelete: Restrict)
-  replacedBy        FacilitiesFileUpload?            @relation("FacilitiesFileReplacement")
+  replacedBy        FacilitiesFileUpload[]           @relation("FacilitiesFileReplacement")
+  committedPredecessorId String? @unique
+  committedPredecessor FacilitiesFileUpload? @relation("FacilitiesCommittedReplacement", fields: [committedPredecessorId], references: [id], onDelete: Restrict)
+  committedSuccessor FacilitiesFileUpload? @relation("FacilitiesCommittedReplacement")
+  committedRevisionNumber Int?
+  retryToken String?
   lifecycleStatus   FacilitiesFileLifecycleStatus    @default(PENDING)
   failureReason     FacilitiesFileFailureReason?
   reservedByteSize  Int
@@ -387,6 +392,7 @@ model FacilitiesFileUpload {
 
   @@unique([bindingId, idempotencyKey])
   @@unique([bindingId, revisionNumber])
+  @@unique([bindingId, committedRevisionNumber])
   @@index([lifecycleStatus, createdAt])
 }
 
@@ -497,6 +503,9 @@ model QuestionnaireTemplateVersion {
 }
 
 model FacilitiesApplication {
+  reviewVersion Int @default(0)
+  paymentObligation PaymentObligation? @relation("FacilitiesObligation")
+
   id                             String                                @id @default(cuid())
   userId                         String
   user                           User                                  @relation("FacilitiesApplicationApplicant", fields: [userId], references: [id], onDelete: Restrict)
@@ -680,6 +689,8 @@ model FacilitiesCreditReport {
 }
 
 model FacilitiesPaymentAttempt {
+  selectedObligation PaymentObligation? @relation("FacilitiesSelection")
+
   id             String                  @id @default(cuid())
   applicationId  String
   application    FacilitiesApplication   @relation(fields: [applicationId], references: [id], onDelete: Restrict)
@@ -777,7 +788,7 @@ model OtpCode {
   purpose      OtpPurpose
   expiresAt    DateTime
   consumedAt   DateTime?
-  /// Wrong-code verifications against this code; the code is unusable once it reaches the cap.
+  /// Reserved verifications (correct or wrong), capped atomically before comparison.
   attemptCount Int        @default(0)
   /// Client address that requested the code, for the per-IP request cap.
   requestIp    String?
@@ -788,6 +799,8 @@ model OtpCode {
 }
 
 model Application {
+  paymentObligation PaymentObligation? @relation("LegacyObligation")
+
   id                         String            @id @default(cuid())
   userId                     String
   user                       User              @relation(fields: [userId], references: [id])
@@ -809,6 +822,8 @@ model Application {
   submittedAt                DateTime?
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
+  draftVersion               Int               @default(0)
+  legacyFileBindings         LegacyFileBinding[]
   files                      ApplicationFile[]
   payments                   Payment[]
   history                    StatusHistory[]
@@ -822,6 +837,13 @@ model Application {
 }
 
 model ApplicationFile {
+  verifications LegacyFileVerification[]
+  currentBinding LegacyFileBinding?
+  sha256 String?
+  scanVerdict String?
+  scannerName String?
+  scannerVersion String?
+  verifiedAt DateTime?
   id            String      @id @default(cuid())
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id])
@@ -835,7 +857,47 @@ model ApplicationFile {
   @@index([applicationId, fieldKey])
 }
 
+/// Exact authoritative slot, independent of creation-time ordering.
+model LegacyFileBinding {
+  id String @id @default(cuid())
+  applicationId String
+  application Application @relation(fields: [applicationId], references: [id])
+  slotKey String
+  currentFileId String @unique
+  currentFile ApplicationFile @relation(fields: [currentFileId], references: [id])
+  generation Int @default(1)
+  @@unique([applicationId, slotKey])
+}
+
+/// Created by the binding trigger; retained after physical deletion for replay safety.
+model LegacyFileDeletionIntent {
+  id String @id
+  predecessorId String @unique
+  replacementId String
+  applicationId String
+  slotKey String
+  storagePath String
+  status String @default("PENDING")
+  attempts Int @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  @@index([status, createdAt])
+}
+
+/// Immutable migration inventory; historical bytes and verification remain unchanged.
+model LegacyFileBindingRepair {
+  id String @id
+  applicationId String
+  slotKey String
+  fileId String?
+  reason String
+  createdAt DateTime @default(now())
+}
+
 model Payment {
+  selectedObligation PaymentObligation? @relation("LegacySelection")
+
   id            String        @id @default(cuid())
   applicationId String
   application   Application   @relation(fields: [applicationId], references: [id])
@@ -885,4 +947,118 @@ model AuditLog {
   @@index([entityType, entityId, createdAt])
   @@index([requestId])
   @@index([createdAt])
+}
+
+// R2: remote calls are claimed durably; expiry never permits a new charge.
+model PaymentObligation {
+  id String @id @default(cuid())
+  legacyApplicationId String? @unique
+  legacyApplication Application? @relation("LegacyObligation", fields: [legacyApplicationId], references: [id], onDelete: Restrict)
+  facilitiesApplicationId String? @unique
+  facilitiesApplication FacilitiesApplication? @relation("FacilitiesObligation", fields: [facilitiesApplicationId], references: [id], onDelete: Restrict)
+  legacyPaymentId String? @unique
+  legacyPayment Payment? @relation("LegacySelection", fields: [legacyPaymentId], references: [id], onDelete: Restrict)
+  facilitiesPaymentId String? @unique
+  facilitiesPayment FacilitiesPaymentAttempt? @relation("FacilitiesSelection", fields: [facilitiesPaymentId], references: [id], onDelete: Restrict)
+  amountToman Int
+  currency String @default("IRT")
+  state String
+  generation Int @default(0)
+  owner String?
+  operation String?
+  leaseUntil DateTime?
+  reason String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  results PaymentOperationResult[]
+  notification PaymentNotificationIntent?
+}
+
+model PaymentOperationResult {
+  id String @id @default(cuid())
+  obligationId String
+  obligation PaymentObligation @relation(fields: [obligationId], references: [id], onDelete: Restrict)
+  generation Int
+  owner String
+  operation String
+  outcome String
+  authority String?
+  referenceId String?
+  createdAt DateTime @default(now())
+  @@unique([obligationId, generation, outcome, owner])
+}
+
+model PaymentNotificationIntent {
+  obligationId String @id
+  obligation PaymentObligation @relation(fields: [obligationId], references: [id], onDelete: Restrict)
+  state String @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Verification-only pseudonymous rolling-hour accounting; inactive keys pruned at2h.
+model AuthVerifyBucket {
+  key String @id
+  secretTag String?
+  attempts DateTime[] @db.Timestamptz(6)
+  touchedAt DateTime @db.Timestamptz(6)
+  @@index([touchedAt])
+}
+
+// Protected short-lived admission/one-use SMS dispatch claim; no message material.
+model AuthRequestIntent {
+  id        String @id
+  mobileKey String
+  createdAt DateTime @db.Timestamptz(6)
+  claimedAt DateTime? @db.Timestamptz(6)
+
+  @@index([createdAt])
+}
+
+/// Append-only safe migration evidence; no file content or storage identities.
+model FacilitiesFileLineageRepair {
+  uploadId String @id
+  bindingId String
+  attemptedRevisionNumber Int
+  attemptedPredecessorId String?
+  committedRevisionNumber Int
+  committedPredecessorId String?
+  recordedAt DateTime @default(now())
+}
+
+/// Allocation journal fences abandoned candidates before any physical cleanup.
+model LegacyUploadCandidate {
+  id String @id
+  applicationId String
+  slotKey String
+  storagePath String @unique
+  status String @default("STAGING")
+  createdAt DateTime @default(now())
+  fileId String? @unique
+  lastError String?
+  deletedAt DateTime?
+  @@index([status, createdAt])
+}
+
+/// Append-only historical verification evidence; never changes historical file identity.
+model LegacyFileVerification {
+  sequence BigInt @unique @default(autoincrement())
+  id String @id @default(cuid())
+  fileId String
+  file ApplicationFile @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  verdict String
+  sha256 String?
+  mimeType String?
+  byteSize Int?
+  scannerName String?
+  scannerVersion String?
+  createdAt DateTime @default(now())
+  @@index([fileId, createdAt])
+}
+
+/// Fair bounded maintenance traversal; objects retain their independent safety fences.
+model MaintenanceCursor {
+  name String @id
+  afterId String?
+  updatedAt DateTime @updatedAt
 }

@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source",
+  "container": "sana-phase12-ixzihxm_",
+  "containerId": "d175613299af34b0fe1db69358174f8fa02002c27b7d709dd4b58505cae2b567",
+  "label": "sana.task=sana-phase12-ixzihxm_",
+  "port": "50575",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

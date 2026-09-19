@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
       count: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
     },
     applicationFile: {
@@ -24,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     statusHistory: {
       create: vi.fn(),
     },
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
   },
 }));
@@ -44,6 +46,9 @@ vi.mock("@/lib/sms", () => ({
   sendSms: mocks.sendSms,
 }));
 
+vi.mock("@/lib/uploads/candidates", () => ({ stageLegacyUpload: mocks.storeUploadFile }));
+vi.mock("@/lib/uploads/replace", () => ({ cleanupLegacyReplacements: vi.fn(async () => undefined) }));
+vi.mock("@/lib/uploads/coordination", async original => ({ ...await original<typeof import("@/lib/uploads/coordination")>(), commitLegacyFile: async (_tx: unknown, input: { application: { id: string }; fieldKey: string; stored: object }) => mocks.db.applicationFile.create({ data: { applicationId: input.application.id, fieldKey: input.fieldKey, ...input.stored } }) }));
 vi.mock("@/lib/uploads/storage", () => ({
   storeUploadFile: mocks.storeUploadFile,
 }));
@@ -59,6 +64,8 @@ vi.mock("@/lib/logger", () => ({
 function statusFormData(status = ApplicationStatus.UNDER_REVIEW) {
   const formData = new FormData();
   formData.set("applicationId", "app-1");
+  formData.set("expectedVersion", "0");
+  formData.set("expectedStatus", "SUBMITTED");
   formData.set("status", status);
   formData.set("note", "review note");
   return formData;
@@ -80,11 +87,13 @@ describe("admin action permissions", () => {
       mobile: "09123456789",
       status: ApplicationStatus.SUBMITTED,
       adminNote: null,
+      draftVersion: 0, updatedAt: new Date(0), legacyFileBindings: [], files: [],
     });
     mocks.db.application.update.mockReturnValue({ operation: "application.update" });
     mocks.db.statusHistory.create.mockReturnValue({ operation: "statusHistory.create" });
     mocks.db.applicationFile.create.mockResolvedValue({ id: "file-1" });
-    mocks.db.$transaction.mockResolvedValue([]);
+    mocks.db.$transaction.mockImplementation(async work => work(mocks.db));
+    mocks.db.application.findUniqueOrThrow.mockImplementation(() => mocks.db.application.findUnique());
     mocks.sendSms.mockResolvedValue({ ok: true });
     mocks.storeUploadFile.mockResolvedValue({
       originalName: "certificate.pdf",
@@ -145,6 +154,7 @@ describe("admin action permissions", () => {
       where: { id: "app-1" },
       data: {
         status: ApplicationStatus.UNDER_REVIEW,
+        draftVersion: { increment: 1 },
         adminNote: "review note",
       },
     });
@@ -170,10 +180,13 @@ describe("admin action permissions", () => {
       id: "app-1",
       mobile: "09123456789",
       status: ApplicationStatus.VALIDATION_COMPLETED,
+      draftVersion: 0, updatedAt: new Date(0),
     });
     const { replaceValidationCertificate } = await import("@/lib/actions/admin");
     const formData = new FormData();
     formData.set("applicationId", "app-1");
+    formData.set("expectedVersion", "0");
+    formData.set("expectedStatus", "VALIDATION_COMPLETED");
     formData.set("certificate", new File(["pdf"], "certificate.pdf", { type: "application/pdf" }));
 
     await expect(replaceValidationCertificate(formData)).resolves.toBeUndefined();

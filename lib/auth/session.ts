@@ -39,31 +39,32 @@ export async function createSession(payload: SessionPayload) {
   });
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+export type SessionInspection =
+  | { state: "absent" | "invalid" | "unavailable" }
+  | { state: "valid"; session: SessionPayload };
+
+export async function inspectSession(): Promise<SessionInspection> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
-
-  if (!token) {
-    return null;
-  }
-
+  if (!token) return { state: "absent" };
+  let secret: Uint8Array;
+  try { secret = getSessionSecret(); }
+  catch { return { state: "unavailable" }; }
   try {
-    const { payload } = await jwtVerify(token, getSessionSecret(), { algorithms: ["HS256"] });
-
-    if (
-      typeof payload.subjectId !== "string" ||
-      (payload.kind !== "user" && payload.kind !== "admin")
-    ) {
-      return null;
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+    if (typeof payload.subjectId !== "string" || !payload.subjectId ||
+        (payload.kind !== "user" && payload.kind !== "admin")) {
+      return { state: "invalid" };
     }
-
-    return {
-      subjectId: payload.subjectId,
-      kind: payload.kind,
-    };
+    return { state: "valid", session: { subjectId: payload.subjectId, kind: payload.kind } };
   } catch {
-    return null;
+    return { state: "invalid" };
   }
+}
+
+export async function getSession(): Promise<SessionPayload | null> {
+  const result = await inspectSession();
+  return result.state === "valid" ? result.session : null;
 }
 
 export async function requireSession(kind?: SessionKind) {

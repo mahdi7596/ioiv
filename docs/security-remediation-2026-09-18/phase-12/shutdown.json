@@ -1,0 +1,17 @@
+{
+  "containerRemoved": "d175613299af34b0fe1db69358174f8fa02002c27b7d709dd4b58505cae2b567",
+  "labelVerified": true,
+  "closedPorts": [
+    50575,
+    59259,
+    59258,
+    57512,
+    57511,
+    58009,
+    58008,
+    58572,
+    58571
+  ],
+  "activeCopiedSourceProcesses": [],
+  "productionTouched": false
+}

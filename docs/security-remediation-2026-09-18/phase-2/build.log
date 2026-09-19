@@ -1,0 +1,26 @@
+
+> sana-registration-review-platform@0.1.0 build
+> next build
+
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 2.1s
+
+  Creating an optimized production build ...
+(node:39801) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ Compiled successfully in 4.5s
+  Running TypeScript ...
+tests/payment-coordination.db.test.ts(83,75): error TS2352: Conversion of type '(args: Parameters<(<T extends Prisma.PaymentFindUniqueArgs>(args: Prisma.SelectSubset<T, Prisma.PaymentFindUniqueArgs<DefaultArgs>>) => Prisma.Prisma__PaymentClient<...>)>[0]) => Promise<...>' to type '<T extends PaymentFindUniqueArgs>(args: SelectSubset<T, PaymentFindUniqueArgs<DefaultArgs>>) => Prisma__PaymentClient<GetFindResult<$PaymentPayload<DefaultArgs>, T, PrismaClientOptions> | null, null, DefaultArgs, PrismaClientOptions>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of parameters 'args' and 'args' are incompatible.
+    Type 'SelectSubset<any, PaymentFindUniqueArgs<DefaultArgs>>' is not comparable to type '{ select?: PaymentSelect<DefaultArgs> | null | undefined; omit?: PaymentOmit<DefaultArgs> | null | undefined; include?: PaymentInclude<...> | ... 1 more ... | undefined; where: PaymentWhereUniqueInput; }'.
+      Property 'where' is missing in type '{ [x: string]: never; } & String' but required in type '{ select?: PaymentSelect<DefaultArgs> | null | undefined; omit?: PaymentOmit<DefaultArgs> | null | undefined; include?: PaymentInclude<...> | ... 1 more ... | undefined; where: PaymentWhereUniqueInput; }'.
+tests/payment-coordination.db.test.ts(158,79): error TS2352: Conversion of type '(args: Parameters<(<T extends Prisma.ApplicationFindUniqueArgs>(args: Prisma.SelectSubset<T, Prisma.ApplicationFindUniqueArgs<DefaultArgs>>) => Prisma.Prisma__ApplicationClient<...>)>[0]) => Promise<...>' to type '<T extends ApplicationFindUniqueArgs>(args: SelectSubset<T, ApplicationFindUniqueArgs<DefaultArgs>>) => Prisma__ApplicationClient<GetFindResult<$ApplicationPayload<DefaultArgs>, T, PrismaClientOptions> | null, null, DefaultArgs, PrismaClientOptions>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of parameters 'args' and 'args' are incompatible.
+    Type 'SelectSubset<any, ApplicationFindUniqueArgs<DefaultArgs>>' is not comparable to type '{ select?: ApplicationSelect<DefaultArgs> | null | undefined; omit?: ApplicationOmit<DefaultArgs> | null | undefined; include?: ApplicationInclude<...> | ... 1 more ... | undefined; where: ApplicationWhereUniqueInput; }'.
+      Property 'where' is missing in type '{ [x: string]: never; } & String' but required in type '{ select?: ApplicationSelect<DefaultArgs> | null | undefined; omit?: ApplicationOmit<DefaultArgs> | null | undefined; include?: ApplicationInclude<...> | ... 1 more ... | undefined; where: ApplicationWhereUniqueInput; }'.
+tests/payment-coordination.db.test.ts(199,92): error TS2352: Conversion of type '(args: Parameters<(<T extends Prisma.FacilitiesPaymentAttemptFindUniqueArgs>(args: Prisma.SelectSubset<T, Prisma.FacilitiesPaymentAttemptFindUniqueArgs<DefaultArgs>>) => Prisma.Prisma__FacilitiesPaymentAttemptClient<...>)>[0]) => Promise<...>' to type '<T extends FacilitiesPaymentAttemptFindUniqueArgs>(args: SelectSubset<T, FacilitiesPaymentAttemptFindUniqueArgs<DefaultArgs>>) => Prisma__FacilitiesPaymentAttemptClient<...>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of parameters 'args' and 'args' are incompatible.
+    Type 'SelectSubset<any, FacilitiesPaymentAttemptFindUniqueArgs<DefaultArgs>>' is not comparable to type '{ select?: FacilitiesPaymentAttemptSelect<DefaultArgs> | null | undefined; omit?: FacilitiesPaymentAttemptOmit<DefaultArgs> | null | undefined; include?: FacilitiesPaymentAttemptInclude<...> | ... 1 more ... | undefined; where: FacilitiesPaymentAttemptWhereUniqueInput; }'.
+      Property 'where' is missing in type '{ [x: string]: never; } & String' but required in type '{ select?: FacilitiesPaymentAttemptSelect<DefaultArgs> | null | undefined; omit?: FacilitiesPaymentAttemptOmit<DefaultArgs> | null | undefined; include?: FacilitiesPaymentAttemptInclude<...> | ... 1 more ... | undefined; where: FacilitiesPaymentAttemptWhereUniqueInput; }'.
+Failed to type check.
+

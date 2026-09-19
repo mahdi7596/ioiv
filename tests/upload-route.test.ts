@@ -8,9 +8,13 @@ const mocks = vi.hoisted(() => ({
   applicationFileDeleteMany: vi.fn(),
   storeUploadFile: vi.fn(),
   unlink: vi.fn(),
+  commit: vi.fn(),
+  cleanup: vi.fn(),
 }));
 
-vi.mock("node:fs/promises", () => ({ unlink: mocks.unlink }));
+vi.mock("@/lib/uploads/candidates", () => ({ stageLegacyUpload: mocks.storeUploadFile }));
+vi.mock("@/lib/uploads/replace", () => ({ cleanupLegacyReplacements: mocks.cleanup }));
+vi.mock("@/lib/uploads/coordination", async original => ({ ...await original<typeof import("@/lib/uploads/coordination")>(), commitApplicantUpload: mocks.commit }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db", () => ({
   db: {
@@ -25,6 +29,7 @@ import { POST } from "@/app/api/uploads/route";
 
 function request(fields: Record<string, string>, file: File | null = new File(["%PDF-"], "doc.pdf", { type: "application/pdf" })) {
   const form = new FormData();
+  form.set("generation", "0");
   for (const [key, value] of Object.entries(fields)) form.set(key, value);
   if (file) form.set("file", file);
   return new Request("http://test.local/api/uploads", { method: "POST", body: form });
@@ -40,6 +45,8 @@ describe("legacy upload route", () => {
     mocks.applicationFileFindMany.mockResolvedValue([]);
     mocks.applicationFileDeleteMany.mockResolvedValue({ count: 0 });
     mocks.unlink.mockResolvedValue(undefined);
+    mocks.commit.mockResolvedValue({ fileId: "file-1", name: "doc.pdf", fieldKey: "creditReports.ceo", generation: 1, draftVersion: 1 });
+    mocks.cleanup.mockResolvedValue(undefined);
   });
 
   it("rejects an oversized declared body before parsing or touching the database", async () => {
@@ -93,19 +100,12 @@ describe("legacy upload route", () => {
     await expect(response.json()).resolves.toMatchObject({ fileId: "file-1" });
   });
 
-  it("replaces earlier uploads for the same field and tolerates a failed unlink", async () => {
-    mocks.applicationFileFindMany.mockResolvedValue([
-      { id: "old-1", storagePath: "/uploads/app-1/creditReports.ceo/old-1.pdf" },
-      { id: "old-2", storagePath: "/uploads/app-1/creditReports.ceo/old-2.pdf" },
-    ]);
-    mocks.unlink.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("ENOENT"));
-
+  it("preserves committed success when durable cleanup must retry", async () => {
+    mocks.cleanup.mockRejectedValueOnce(new Error("synthetic cleanup unavailable"));
     const response = await POST(request({ applicationId: "app-1", fieldKey: "creditReports.ceo" }));
-
     expect(response.status).toBe(200);
-    expect(mocks.applicationFileFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ applicationId: "app-1", fieldKey: "creditReports.ceo", storagePath: { not: "/uploads/app-1/creditReports.ceo/x.pdf" } }) }));
-    expect(mocks.applicationFileDeleteMany).toHaveBeenCalledWith({ where: { id: { in: ["old-1", "old-2"] } } });
-    expect(mocks.unlink).toHaveBeenCalledTimes(2);
+    expect(mocks.commit).toHaveBeenCalledWith(expect.objectContaining({ expectedGeneration: 0 }));
+    expect(mocks.applicationFileDeleteMany).not.toHaveBeenCalled();
   });
 
   it("maps scanner outcomes to 422 and 503", async () => {

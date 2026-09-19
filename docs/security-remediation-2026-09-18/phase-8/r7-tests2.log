@@ -1,0 +1,72 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:39386) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source[39m
+
+ [31m❯[39m tests/facilities-replacement.db.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1677[2mms[22m[39m
+     [33m[2m✓[22m[39m new-key retry after FAILED preserves old good bytes and commits successful lineage [33m 327[2mms[22m[39m
+     [32m✓[39m new-key retry after UNAVAILABLE preserves old good bytes and commits successful lineage[32m 146[2mms[22m[39m
+     [32m✓[39m new-key retry after storage preserves old good bytes and commits successful lineage[32m 143[2mms[22m[39m
+     [32m✓[39m same-key replay cannot scan or allocate again, including rejected content[32m 69[2mms[22m[39m
+     [32m✓[39m concurrent successful candidates cannot replace a newer winner[32m 183[2mms[22m[39m
+     [32m✓[39m A→B→C supports delayed deletion and cannot rebind old current[32m 156[2mms[22m[39m
+     [32m✓[39m unavailable recovery has one acknowledged scan owner and one successful successor[32m 114[2mms[22m[39m
+[31m     [31m×[31m expired unavailable and abandoned pending claims cannot publish or reset retention[39m[32m 108[2mms[22m[39m
+[31m     [31m×[31m expiry during a retry scan cannot overwrite current or delete it[39m[32m 97[2mms[22m[39m
+     [32m✓[39m stale unavailable retains original quarantine rather than replacing a newer winner[32m 141[2mms[22m[39m
+     [32m✓[39m lost acknowledgement after successful commit preserves current bytes[32m 76[2mms[22m[39m
+     [32m✓[39m deletion outage keeps durable intent and a later retry removes only obsolete bytes[32m 110[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mexpired unavailable and abandoned pending claims cannot publish or reset retention
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m57:444[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mexpiry during a retry scan cannot overwrite current or delete it
+[31m[1mPrismaClientUnknownRequestError[22m: 
+Invalid `tx.facilitiesFileUpload.update()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source/lib/facilities-files/coordination.ts:29:48
+
+  26 }
+  27 
+  28 export async function setUploadOutcome(tx: Prisma.TransactionClient, id: string, status: FacilitiesFileLifecycleStatus, reason: FacilitiesFileFailureReason | null, storedFileId?: string) {
+→ 29   const upload = await tx.facilitiesFileUpload.update(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23514", message: "new row for relation \"FacilitiesFileUpload\" violates check constraint \"FacilitiesFileUpload_status_reason_check\"", severity: "ERROR", detail: Some("Failing row contains (cmu83jxn4004tsie3nqch7ll5, cmu83jxlu004ksie3mylmr37c, cmu83jxnd004usie385iyz947, 0634728df3cd45e48b1d56b706cbd431, 2, cmu83jxm5004osie3o57ue646, FAILED, UPLOAD_INTERRUPTED, 89, 2026-09-18 06:59:38.547, 2026-09-19 07:59:38.557, null, null, db8da832-2df6-4f99-9325-49ff18b78dae)."), column: None, hint: None }), transient: false })[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m237:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m setUploadOutcome lib/facilities-files/coordination.ts:[2m29:18[22m[39m
+    [90m 27|[39m
+    [90m 28|[39m export async function setUploadOutcome(tx: Prisma.TransactionClient, i…
+    [90m 29|[39m   const upload = await tx.facilitiesFileUpload.update({where:{id},data…
+    [90m   |[39m                  [31m^[39m
+    [90m 30|[39m   await tx.facilitiesFileUploadAttempt.updateMany({where:{uploadId:id}…
+    [90m 31|[39m   [35mreturn[39m upload[33m;[39m
+[90m [2m❯[22m lib/facilities-files/service.ts:[2m327:5[22m[39m
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m61:224[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 11:29:36
+[2m   Duration [22m 2.13s[2m (transform 116ms, setup 0ms, import 331ms, tests 1.68s, environment 0ms)[22m
+

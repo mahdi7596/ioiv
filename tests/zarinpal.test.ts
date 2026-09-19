@@ -24,7 +24,7 @@ describe("zarinpal payment adapter", () => {
   it("requests payment through sandbox v4 endpoint with callback metadata", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: { authority: "A000000000000000000000000000000123456" } }),
+      json: async () => ({ data: { code: 100, authority: "S00000000000000000000000000000123456" }, errors: [] }),
     });
     vi.stubGlobal("fetch", fetchMock);
     const { requestZarinpalPayment } = await import("@/lib/payments/zarinpal");
@@ -52,18 +52,18 @@ describe("zarinpal payment adapter", () => {
       }),
     );
     expect(result).toEqual({
-      authority: "A000000000000000000000000000000123456",
-      paymentUrl: "https://sandbox.zarinpal.com/pg/StartPay/A000000000000000000000000000000123456",
+      authority: "S00000000000000000000000000000123456",
+      paymentUrl: "https://sandbox.zarinpal.com/pg/StartPay/S00000000000000000000000000000123456",
     });
   });
 
-  it("retries a transient fetch failure before returning the payment authority", async () => {
+  it("does not repeat an uncertain payment creation request", async () => {
     const fetchMock = vi
       .fn()
       .mockRejectedValueOnce(new TypeError("fetch failed"))
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ data: { authority: "A000000000000000000000000000000123456" } }),
+        json: async () => ({ data: { code: 100, authority: "S00000000000000000000000000000123456" }, errors: [] }),
       });
     vi.stubGlobal("fetch", fetchMock);
     const { requestZarinpalPayment } = await import("@/lib/payments/zarinpal");
@@ -75,22 +75,16 @@ describe("zarinpal payment adapter", () => {
         callbackUrl: "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1",
         mobile: "09123456789",
       }),
-    ).resolves.toEqual({
-      authority: "A000000000000000000000000000000123456",
-      paymentUrl: "https://sandbox.zarinpal.com/pg/StartPay/A000000000000000000000000000000123456",
-    });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    const [firstInit, secondInit] = fetchMock.mock.calls.map((call) => call[1] as RequestInit);
-    expect(firstInit.signal).toBeInstanceOf(AbortSignal);
-    expect(secondInit.signal).toBeInstanceOf(AbortSignal);
-    expect(firstInit.signal).not.toBe(secondInit.signal);
+    ).rejects.toThrow("fetch failed");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
   });
 
-  it("bounds each gateway call with a timeout and retries a timeout only once", async () => {
+  it("bounds the call with a timeout without retrying an uncertain request", async () => {
     const timeout = () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
     const fetchMock = vi.fn().mockRejectedValueOnce(timeout()).mockRejectedValueOnce(timeout()).mockResolvedValue({
       ok: true,
-      json: async () => ({ data: { authority: "A000000000000000000000000000000123456" } }),
+      json: async () => ({ data: { code: 100, authority: "S00000000000000000000000000000123456" }, errors: [] }),
     });
     vi.stubGlobal("fetch", fetchMock);
     const { requestZarinpalPayment } = await import("@/lib/payments/zarinpal");
@@ -103,14 +97,14 @@ describe("zarinpal payment adapter", () => {
         mobile: "09123456789",
       }),
     ).rejects.toMatchObject({ name: "TimeoutError" });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("verifies production payments and returns the reference id", async () => {
     process.env.ZARINPAL_SANDBOX = "false";
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: { ref_id: 123456789 } }),
+      json: async () => ({ data: { code: 100, ref_id: 123456789 }, errors: [] }),
     });
     vi.stubGlobal("fetch", fetchMock);
     const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
@@ -118,7 +112,7 @@ describe("zarinpal payment adapter", () => {
     await expect(
       verifyZarinpalPayment({
         amountToman: 3000000,
-        authority: "A000000000000000000000000000000123456",
+        authority: "A00000000000000000000000000000123456",
       }),
     ).resolves.toEqual({ referenceId: "123456789" });
 
@@ -129,7 +123,7 @@ describe("zarinpal payment adapter", () => {
           merchant_id: merchantId,
           amount: 3000000,
           currency: "IRT",
-          authority: "A000000000000000000000000000000123456",
+          authority: "A00000000000000000000000000000123456",
         }),
       }),
     );
@@ -173,7 +167,7 @@ describe("zarinpal payment adapter", () => {
     process.env.ZARINPAL_MERCHANT_ID = "00000000-0000-0000-0000-000000000000";
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: { authority: "A000000000000000000000000000000123456" } }),
+      json: async () => ({ data: { code: 100, authority: "S00000000000000000000000000000123456" }, errors: [] }),
     });
     vi.stubGlobal("fetch", fetchMock);
     const { requestZarinpalPayment } = await import("@/lib/payments/zarinpal");
@@ -197,6 +191,7 @@ describe("zarinpal payment adapter", () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       json: async () => ({
+        data: [],
         errors: {
           code: -9,
           message: "Validation error",
@@ -236,7 +231,7 @@ describe("zarinpal payment adapter", () => {
     const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
     const { ZarinpalRejectedError, isZarinpalRejection } = await import("@/lib/payments/zarinpal-errors");
 
-    const error = await verifyZarinpalPayment({ amountToman: 3000000, authority: "authority_1" }).catch((caught: unknown) => caught);
+    const error = await verifyZarinpalPayment({ amountToman: 3000000, authority: "S00000000000000000000000000000123456" }).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(ZarinpalRejectedError);
     expect(isZarinpalRejection(error)).toBe(true);
@@ -256,7 +251,7 @@ describe("zarinpal payment adapter", () => {
     const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
     for (const answer of answers) {
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(answer));
-      const error = await verifyZarinpalPayment({ amountToman: 3000000, authority: "authority_1" }).catch((caught: unknown) => caught);
+      const error = await verifyZarinpalPayment({ amountToman: 3000000, authority: "S00000000000000000000000000000123456" }).catch((caught: unknown) => caught);
       expect(error).toBeInstanceOf(ZarinpalUnavailableError);
       expect(isZarinpalRejection(error)).toBe(false);
     }
@@ -270,7 +265,7 @@ describe("zarinpal payment adapter", () => {
     }));
     const { verifyZarinpalPayment } = await import("@/lib/payments/zarinpal");
 
-    await expect(verifyZarinpalPayment({ amountToman: 3000000, authority: "authority_1" })).resolves.toEqual({ referenceId: "987654" });
+    await expect(verifyZarinpalPayment({ amountToman: 3000000, authority: "S00000000000000000000000000000123456" })).resolves.toEqual({ referenceId: "987654" });
   });
 
   it("treats successful HTTP responses with an errors object as provider failures", async () => {
@@ -290,7 +285,7 @@ describe("zarinpal payment adapter", () => {
     await expect(
       verifyZarinpalPayment({
         amountToman: 3000000,
-        authority: "authority_1",
+        authority: "S00000000000000000000000000000123456",
       }),
     ).rejects.toThrow("Zarinpal request failed");
   });

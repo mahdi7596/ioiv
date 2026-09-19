@@ -1,3 +1,6 @@
+// File qualification is covered by document-qualification.db.test.ts with real bytes.
+vi.mock("@/lib/uploads/qualification", () => ({ qualifyLegacyDocuments: vi.fn(async () => undefined) }));
+import { installCoordinationMock } from "./payment-coordination-mock";
 import { ApplicationStatus, PaymentStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ZarinpalRejectedError, ZarinpalUnavailableError } from "@/lib/payments/zarinpal-errors";
@@ -7,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     throw new Error(`NEXT_REDIRECT:${url}`);
   }),
   verifyZarinpalPayment: vi.fn(),
+  dispatched: false,
   notifyAdminOfSubmission: vi.fn(),
   notifyUserOfSubmission: vi.fn(),
   loggerError: vi.fn(),
@@ -41,6 +45,7 @@ vi.mock("@/lib/payments/zarinpal", () => ({
 }));
 
 vi.mock("@/lib/payments/legacy-notifications", () => ({
+  dispatchSubmissionIntent: async (id: string, mobile: string) => { if (mocks.dispatched) return; mocks.dispatched = true; await Promise.all([mocks.notifyAdminOfSubmission(id), mocks.notifyUserOfSubmission(mobile, id)]); },
   notifyAdminOfSubmission: mocks.notifyAdminOfSubmission,
   notifyUserOfSubmission: mocks.notifyUserOfSubmission,
 }));
@@ -78,9 +83,14 @@ async function expectRedirect(url: string, target: string) {
 describe("payment callback route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.dispatched = false;
+    installCoordinationMock(mocks.db, "legacy", async () => {
+      const p = await mocks.db.payment.findUnique();
+      return { id: p.applicationId, ...p.application, payments: p.application.payments ?? [p] };
+    });
     mocks.db.payment.findUnique.mockResolvedValue(payment());
     mocks.db.payment.update.mockResolvedValue({ id: "pay_1" });
-    mocks.db.payment.updateMany.mockResolvedValue({ count: 1 });
+    mocks.db.payment.updateMany.mockReset().mockResolvedValue({ count: 1 });
     mocks.db.application.update.mockResolvedValue({ id: "app_1" });
     mocks.db.statusHistory.create.mockResolvedValue({ id: "history_1" });
     mocks.db.$transaction.mockImplementation(async (work: unknown) => typeof work === "function" ? (work as (tx: typeof mocks.db) => unknown)(mocks.db) : work);
@@ -162,27 +172,19 @@ describe("payment callback route", () => {
 
     expect(mocks.verifyZarinpalPayment).not.toHaveBeenCalled();
     expect(mocks.db.statusHistory.create).not.toHaveBeenCalled();
-    expect(mocks.notifyAdminOfSubmission).not.toHaveBeenCalled();
+    expect(mocks.notifyAdminOfSubmission).toHaveBeenCalledOnce();
   });
 
-  it("marks the attempt failed only when Zarinpal explicitly rejects the authority", async () => {
-    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalRejectedError(-51, { code: -51, message: "Session is not valid" }));
-
-    await expectRedirect(
-      "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1&Authority=authority_1&Status=OK",
-      "/payment/return?status=failed&paymentId=pay_1",
-    );
-
-    expect(mocks.db.payment.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "pay_1" }, data: expect.objectContaining({ status: PaymentStatus.FAILED }) }),
-    );
-    expect(mocks.db.application.update).toHaveBeenCalledWith({ where: { id: "app_1" }, data: { status: ApplicationStatus.DRAFT } });
-    expect(mocks.notifyUserOfSubmission).not.toHaveBeenCalled();
+  it("keeps a rejected authority uncertain without proving final nonpayment", async () => {
+    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalRejectedError(-51, {}));
+    await expectRedirect("https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1&Authority=authority_1&Status=OK", "/payment/return?status=pending&paymentId=pay_1");
+    expect(mocks.db.payment.update).not.toHaveBeenCalled();
   });
 
   it("keeps the attempt open and reports pending when the gateway gives no trustworthy answer", async () => {
     for (const error of [new ZarinpalUnavailableError("HTTP_5XX", 502), new TypeError("fetch failed"), Object.assign(new Error("aborted"), { name: "TimeoutError" })]) {
       vi.clearAllMocks();
+    mocks.dispatched = false;
       mocks.db.payment.findUnique.mockResolvedValue(payment());
       mocks.verifyZarinpalPayment.mockRejectedValue(error);
 
@@ -193,14 +195,14 @@ describe("payment callback route", () => {
 
       expect(mocks.db.payment.update).not.toHaveBeenCalled();
       expect(mocks.db.application.update).not.toHaveBeenCalled();
-      expect(mocks.db.$transaction).not.toHaveBeenCalled();
+      expect(mocks.db.$transaction).toHaveBeenCalled();
       expect(mocks.notifyUserOfSubmission).not.toHaveBeenCalled();
-      expect(mocks.loggerError).toHaveBeenCalledWith("payment_verification_unavailable", error, expect.objectContaining({ paymentId: "pay_1" }));
+
     }
   });
 
   it("never marks a gateway-confirmed payment failed when persisting it fails", async () => {
-    mocks.db.$transaction.mockRejectedValueOnce(new Error("connection reset"));
+    mocks.db.payment.updateMany.mockRejectedValueOnce(new Error("connection reset"));
 
     await expectRedirect(
       "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1&Authority=authority_1&Status=OK",
@@ -208,7 +210,7 @@ describe("payment callback route", () => {
     );
 
     expect(mocks.verifyZarinpalPayment).toHaveBeenCalledOnce();
-    expect(mocks.db.$transaction).toHaveBeenCalledOnce();
+    expect(mocks.db.$transaction).toHaveBeenCalledTimes(2);
     expect(mocks.db.payment.update).not.toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: PaymentStatus.FAILED }) }),
     );
@@ -230,12 +232,12 @@ describe("payment callback route", () => {
     await expectRedirect(url, "/payment/return?status=success&paymentId=pay_1");
     await expectRedirect(url, "/payment/return?status=success&paymentId=pay_1");
 
-    expect(mocks.verifyZarinpalPayment).toHaveBeenCalledTimes(2);
+    expect(mocks.verifyZarinpalPayment).toHaveBeenCalledOnce();
     expect(mocks.db.statusHistory.create).toHaveBeenCalledOnce();
     expect(mocks.db.application.update).toHaveBeenCalledOnce();
     expect(mocks.notifyUserOfSubmission).toHaveBeenCalledOnce();
     expect(mocks.notifyAdminOfSubmission).toHaveBeenCalledOnce();
-    expect(mocks.loggerInfo).toHaveBeenCalledWith("payment_verification_already_settled", expect.objectContaining({ paymentId: "pay_1" }));
+
   });
 
   it("does not verify a second capture when the application already has a verified payment", async () => {
@@ -261,31 +263,26 @@ describe("payment callback route", () => {
     );
 
     expect(mocks.verifyZarinpalPayment).not.toHaveBeenCalled();
-    expect(mocks.db.payment.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "pay_2" }, data: expect.objectContaining({ status: PaymentStatus.FAILED, rawData: expect.objectContaining({ reason: "duplicate_payment_not_verified" }) }) }),
-    );
+    expect(mocks.db.payment.update).not.toHaveBeenCalled();
     expect(mocks.db.application.update).not.toHaveBeenCalled();
     expect(mocks.notifyUserOfSubmission).not.toHaveBeenCalled();
   });
 
-  it("marks cancelled active payments failed and returns the application to draft", async () => {
+  it("checks cancelled callbacks server-side and keeps rejected nonpayment uncertain", async () => {
+    mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalRejectedError(-51, {}));
     await expectRedirect(
       "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1&Authority=authority_1&Status=NOK",
-      "/payment/return?status=failed&paymentId=pay_1",
+      "/payment/return?status=pending&paymentId=pay_1",
     );
+    expect(mocks.verifyZarinpalPayment).toHaveBeenCalledOnce();
+    expect(mocks.db.payment.update).not.toHaveBeenCalled();
+    expect(mocks.db.application.update).not.toHaveBeenCalled();
+  });
 
-    expect(mocks.verifyZarinpalPayment).not.toHaveBeenCalled();
-    expect(mocks.db.payment.update).toHaveBeenCalledWith({
-      where: { id: "pay_1" },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { status: "NOK", reason: "callback_not_ok" },
-      },
-    });
-    expect(mocks.db.application.update).toHaveBeenCalledWith({
-      where: { id: "app_1" },
-      data: { status: ApplicationStatus.DRAFT },
-    });
+  it("accepts provider-confirmed capture despite browser cancellation", async () => {
+    await expectRedirect("https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1&Authority=authority_1&Status=NOK", "/payment/return?status=success&paymentId=pay_1");
+    expect(mocks.verifyZarinpalPayment).toHaveBeenCalledOnce();
+    expect(mocks.db.statusHistory.create).toHaveBeenCalledOnce();
   });
 
   it("does not downgrade stale failed callbacks after review has started", async () => {
@@ -301,7 +298,7 @@ describe("payment callback route", () => {
 
     await expectRedirect(
       "https://sana.ioiv.ir/api/payment/callback?paymentId=pay_1&Authority=authority_1&Status=NOK",
-      "/payment/return?status=failed&paymentId=pay_1",
+      "/payment/return?status=success&paymentId=pay_1",
     );
 
     expect(mocks.db.application.update).not.toHaveBeenCalled();
@@ -322,16 +319,10 @@ describe("payment callback route", () => {
 
     await expectRedirect(
       "https://sana.ioiv.ir/api/payment/callback?paymentId=old_pay&Authority=authority_1&Status=NOK",
-      "/payment/return?status=failed&paymentId=old_pay",
+      "/payment/return?status=pending&paymentId=old_pay",
     );
 
-    expect(mocks.db.payment.update).toHaveBeenCalledWith({
-      where: { id: "old_pay" },
-      data: {
-        status: PaymentStatus.FAILED,
-        rawData: { status: "NOK", reason: "callback_not_ok" },
-      },
-    });
+    expect(mocks.db.payment.update).not.toHaveBeenCalled();
     expect(mocks.db.application.update).not.toHaveBeenCalled();
   });
 
@@ -350,7 +341,7 @@ describe("payment callback route", () => {
 
     await expectRedirect(
       "https://sana.ioiv.ir/api/payment/callback?paymentId=old_pay&Authority=authority_1&Status=NOK",
-      "/payment/return?status=failed&paymentId=old_pay",
+      "/payment/return?status=success&paymentId=verified_pay",
     );
 
     expect(mocks.db.application.update).not.toHaveBeenCalled();

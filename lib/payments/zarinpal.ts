@@ -3,9 +3,7 @@ import { ZarinpalRejectedError, ZarinpalUnavailableError } from "@/lib/payments/
 const ZARINPAL_PRODUCTION_URL = "https://payment.zarinpal.com";
 const ZARINPAL_SANDBOX_URL = "https://sandbox.zarinpal.com";
 const ZARINPAL_MERCHANT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ZARINPAL_NETWORK_RETRY_DELAYS_MS = [300, 900];
 const ZARINPAL_DEFAULT_TIMEOUT_MS = 10_000;
-const ZARINPAL_MAX_TIMEOUT_RETRIES = 1;
 
 function requestTimeoutMs() {
   const configured = Number(process.env.ZARINPAL_REQUEST_TIMEOUT_MS || ZARINPAL_DEFAULT_TIMEOUT_MS);
@@ -36,7 +34,8 @@ function getMerchantId() {
  * payload). See `zarinpal-errors.ts` for why the two must never be conflated.
  */
 async function postZarinpal(path: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const response = await fetchWithNetworkRetry(`${getBaseUrl()}${path}`, {
+  const response = await fetch(`${getBaseUrl()}${path}`, {
+    signal: AbortSignal.timeout(requestTimeoutMs()),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -52,99 +51,43 @@ async function postZarinpal(path: string, body: Record<string, unknown>): Promis
   } catch {
     throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
   }
-  if (!payload || typeof payload !== "object") {
+  if (!isRecord(payload)) throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
+  const { data, errors } = payload;
+  // A rejection must be explicit and noncontradictory. Never reinterpret a
+  // malformed success/error mixture as permission to replay provider I/O.
+  const emptyData = (Array.isArray(data) && data.length === 0) || (isRecord(data) && Object.keys(data).length === 0);
+  const code = isRecord(errors) ? errors.code : undefined;
+  const rejectionCodes = path.endsWith("/request.json")
+    ? [-9, -10, -11, -12, -13, -14, -15, -16, -17, -18, -19, -40, -41]
+    : [-9, -10, -11, -12, -13, -14, -15, -16, -17, -18, -19, -50, -51, -52, -53, -54, -55];
+  if (emptyData && typeof code === "number" && rejectionCodes.includes(code)) {
+    // Provider-controlled messages/validations may echo credentials or card data.
+    throw new ZarinpalRejectedError(code, { code });
+  }
+  if (!response.ok) throw new ZarinpalUnavailableError("HTTP_ERROR", status);
+  if (!isRecord(data) || !Array.isArray(errors) || errors.length !== 0) {
     throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
   }
-
-  const { data, errors } = payload as { data?: unknown; errors?: unknown };
-  if (hasZarinpalErrors(errors)) {
-    const code = errors && typeof errors === "object" && !Array.isArray(errors) && typeof (errors as { code?: unknown }).code === "number"
-      ? (errors as { code: number }).code
-      : undefined;
-    throw new ZarinpalRejectedError(code, sanitizeZarinpalError(errors));
-  }
-  if (!response.ok) {
-    throw new ZarinpalUnavailableError("HTTP_ERROR", status);
-  }
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
-    throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
-  }
-
-  return data as Record<string, unknown>;
-}
-
-async function fetchWithNetworkRetry(input: string, init: RequestInit) {
-  let lastError: unknown;
-  let timeoutRetries = 0;
-
-  for (let attempt = 0; attempt <= ZARINPAL_NETWORK_RETRY_DELAYS_MS.length; attempt += 1) {
-    try {
-      // A fresh signal per attempt: an aborted signal would abort every retry.
-      return await fetch(input, { ...init, signal: AbortSignal.timeout(requestTimeoutMs()) });
-    } catch (error) {
-      lastError = error;
-
-      const timedOut = isTimeoutError(error);
-      if (timedOut) timeoutRetries += 1;
-      if (
-        (!timedOut && !isTransientFetchError(error)) ||
-        attempt === ZARINPAL_NETWORK_RETRY_DELAYS_MS.length ||
-        timeoutRetries > ZARINPAL_MAX_TIMEOUT_RETRIES
-      ) {
-        throw error;
-      }
-
-      await wait(ZARINPAL_NETWORK_RETRY_DELAYS_MS[attempt]);
+  // These echoes are optional (absent in official examples), but cannot disagree.
+  for (const key of ["authority", "amount", "currency"] as const) {
+    if (key in body && key in data && data[key] !== body[key]) {
+      throw new ZarinpalUnavailableError("MALFORMED_RESPONSE", status);
     }
   }
-
-  throw lastError;
+  return data;
 }
 
-function isTransientFetchError(error: unknown) {
-  return error instanceof TypeError && error.message === "fetch failed";
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function isTimeoutError(error: unknown) {
-  return error instanceof Error && error.name === "TimeoutError";
+function validAuthority(value: unknown): value is string {
+  const pattern = process.env.ZARINPAL_SANDBOX === "true" ? /^S[A-Za-z0-9]{35}$/ : /^A[A-Za-z0-9]{35}$/;
+  return typeof value === "string" && pattern.test(value);
 }
 
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function sanitizeZarinpalError(errorPayload: unknown): unknown {
-  if (Array.isArray(errorPayload)) {
-    return errorPayload.map(sanitizeZarinpalError);
-  }
-
-  if (errorPayload && typeof errorPayload === "object") {
-    const source = errorPayload as Record<string, unknown>;
-
-    return {
-      code: source.code,
-      message: source.message,
-      validations: source.validations,
-    };
-  }
-
-  return errorPayload;
-}
-
-function hasZarinpalErrors(errors: unknown) {
-  if (!errors) {
-    return false;
-  }
-
-  if (Array.isArray(errors)) {
-    return errors.length > 0;
-  }
-
-  if (typeof errors === "object") {
-    return Object.keys(errors).length > 0;
-  }
-
-  return Boolean(errors);
+function validAmount(value: number) {
+  if (!Number.isSafeInteger(value) || value <= 0) throw new ZarinpalUnavailableError("MALFORMED_RESPONSE");
 }
 
 export async function requestZarinpalPayment(input: {
@@ -153,6 +96,7 @@ export async function requestZarinpalPayment(input: {
   callbackUrl: string;
   mobile: string;
 }): Promise<{ authority: string; paymentUrl: string }> {
+  validAmount(input.amountToman);
   const data = await postZarinpal("/pg/v4/payment/request.json", {
     merchant_id: getMerchantId(),
     amount: input.amountToman,
@@ -164,7 +108,7 @@ export async function requestZarinpalPayment(input: {
     },
   });
   const authority = data.authority;
-  if (typeof authority !== "string" || !authority) {
+  if (data.code !== 100 || !validAuthority(authority)) {
     throw new ZarinpalUnavailableError("MALFORMED_RESPONSE");
   }
 
@@ -178,6 +122,8 @@ export async function verifyZarinpalPayment(input: {
   amountToman: number;
   authority: string;
 }): Promise<{ referenceId: string }> {
+  validAmount(input.amountToman);
+  if (!validAuthority(input.authority)) throw new ZarinpalUnavailableError("MALFORMED_RESPONSE");
   const data = await postZarinpal("/pg/v4/payment/verify.json", {
     merchant_id: getMerchantId(),
     amount: input.amountToman,
@@ -186,7 +132,7 @@ export async function verifyZarinpalPayment(input: {
   });
   // code 100 = verified now, 101 = already verified earlier; both confirm capture.
   const referenceId = data.ref_id;
-  if ((typeof referenceId !== "string" && typeof referenceId !== "number") || referenceId === "") {
+  if ((data.code !== 100 && data.code !== 101) || typeof referenceId !== "number" || !Number.isSafeInteger(referenceId) || referenceId <= 0) {
     throw new ZarinpalUnavailableError("MALFORMED_RESPONSE");
   }
 

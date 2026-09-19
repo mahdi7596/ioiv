@@ -1,0 +1,17 @@
+(node:88341) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":88353,"port":58624}
+{"pid":88365,"port":58625}
+PASS hostile form rejected without cookie or DB effects user
+PASS hostile form rejected without cookie or DB effects admin
+PASS browser sandbox null-Origin form denied
+{"pid":88494,"port":58792}
+{"pid":88525,"port":58795}
+PASS real process invalid-config503; unavailable DB foreign403 before access and valid503/no send
+PASS HTTP malformed/media/origin/spoof matrix and 12 hostile requests across two Next processes, no side effects
+PASS HTTPS user 390px request/verify/dashboard/refresh Secure HttpOnly Lax cookie
+PASS HTTPS admin 390px request/verify/dashboard/refresh Secure HttpOnly Lax cookie
+PASS HTTPS user 1440px request/verify/dashboard/refresh Secure HttpOnly Lax cookie
+PASS HTTPS admin 1440px request/verify/dashboard/refresh Secure HttpOnly Lax cookie
+PASS all fixture OTPs absent from logs
+Owned browser/Next/provider/TLS/hostile servers stopped

@@ -1,0 +1,7 @@
+
+> sana-registration-review-platform@0.1.0 auth:prune-verification
+> tsx scripts/prune-auth-verification.ts
+
+(node:56288) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"event":"auth_verify_prune_completed","removed":0}

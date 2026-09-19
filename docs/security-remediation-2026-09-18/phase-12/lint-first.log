@@ -1,0 +1,27 @@
+
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/app/(public)/page.tsx
+  60:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/components/admin/StatusChangeForm.tsx
+  33:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/components/admin/StatusChangeForm.tsx:33:5
+  31 |   const [isPending, startTransition] = useTransition();
+  32 |   useEffect(() => {
+> 33 |     setSelectedStatus(getAllowedNextApplicationStatuses(currentStatus)[0] || "");
+     |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |     setIsConfirming(false);
+  35 |     setPendingFormData(undefined);
+  36 |   }, [currentStatus, draftVersion]);  react-hooks/set-state-in-effect
+
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/prisma/tests/admin-review/browser.ts
+  13:5  error  'mode' is never reassigned. Use 'const' instead  prefer-const
+
+✖ 3 problems (2 errors, 1 warning)
+

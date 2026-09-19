@@ -1,0 +1,11 @@
+{"check":"anonymous","path":"/api/health","status":200,"location":null,"hasCsp":true}
+{"check":"anonymous","path":"/dashboard","status":307,"location":"/","hasCsp":true}
+{"check":"anonymous","path":"/admin","status":307,"location":"/admin/login","hasCsp":true}
+{"check":"anonymous","path":"/api/admin/export","status":401,"location":null,"hasCsp":true}
+{"check":"anonymous","path":"/api/files/nonexistent","status":401,"location":null,"hasCsp":true}
+{"check":"anonymous","path":"/api/facilities/files/nonexistent","status":404,"location":null,"hasCsp":true}
+{"check":"anonymous","path":"/payment/return?status=success&paymentId=nonexistent","status":200,"location":null,"hasCsp":true}
+{"check":"twelve concurrent wrong guesses","statuses":[400,400,400,400,400,400,400,400,400,400,400,400],"storedAttemptCount":12,"limit":5}
+{"check":"foreign text/plain login HTTP only","status":200,"sessionCookieIssued":true}
+{"check":"eight concurrent OTP requests","statuses":[200,200,200,200,200,200,200,200],"records":8,"smsCredentialsBlank":true}
+{"check":"unknown admin probes","statuses":[403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403,403],"records":0}

@@ -16,6 +16,7 @@ vi.mock("@/lib/auth/session", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
+    legacyFileDeletionIntent: { findUnique: vi.fn(async () => null) },
     applicationFile: {
       findUnique: vi.fn(),
     },
@@ -39,6 +40,7 @@ const fileRecord = {
   originalName: "certificate.pdf",
   mimeType: "application/pdf",
   size: 4,
+  sha256: null, scanVerdict: null, scannerName: null, scannerVersion: null, verifiedAt: null,
   storagePath: "/tmp/certificate.pdf",
   createdAt: new Date("2026-05-01T00:00:00.000Z"),
   application: {

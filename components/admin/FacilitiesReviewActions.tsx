@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { ArrowDown, ClipboardCheck } from "lucide-react";
 
 import { showToast } from "@/components/ui/toast";
-import { completeFacilitiesValidation, requestFacilitiesCorrection, retryFacilitiesCorrectionSms, startFacilitiesReview } from "@/lib/actions/facilities-review";
+import { performFacilitiesReview } from "@/lib/actions/facilities-review";
 
 const NOTE_LIMIT = 2000;
 
-export function FacilitiesReviewActions({ applicationId, status, failedCorrectionId }: { applicationId: string; status: string; failedCorrectionId?: string }) {
+export function FacilitiesReviewActions({ applicationId, status, reviewVersion, failedCorrectionId }: { applicationId: string; status: string; reviewVersion: number; failedCorrectionId?: string }) {
   const [note, setNote] = useState("");
+  const [message, setMessage] = useState<string>();
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [pending, startTransition] = useTransition();
   const [showJump, setShowJump] = useState(false);
   const router = useRouter();
@@ -31,12 +33,23 @@ export function FacilitiesReviewActions({ applicationId, status, failedCorrectio
   function run(work: () => Promise<unknown>, success: string) {
     startTransition(async () => {
       try {
-        const result = await work() as { smsSent?: boolean } | undefined;
-        showToast({ type: result?.smsSent === false ? "error" : "success", message: result?.smsSent === false ? "درخواست اصلاح ثبت شد، اما پیامک ارسال نشد؛ امکان تلاش مجدد وجود دارد." : success });
+        const result = await work() as { ok: boolean; status?: number; error?: string; smsSent?: boolean };
+        if (!result.ok) {
+          const errorMessage = result.error || "عملیات ناموفق بود";
+          setMessage(errorMessage);
+          setSessionExpired(result.status === 401);
+          showToast({type: "error", message: errorMessage});
+          if (result.status === 409) router.refresh();
+          return;
+        }
+        setMessage(result.smsSent === false ? "درخواست اصلاح ثبت شد؛ نتیجه ارسال پیامک مشخص نیست. برای بررسی با پشتیبانی تماس بگیرید." : success);
+        showToast({ type: result?.smsSent === false ? "error" : "success", message: result?.smsSent === false ? "درخواست اصلاح ثبت شد؛ نتیجه ارسال پیامک مشخص نیست. برای بررسی با پشتیبانی تماس بگیرید." : success });
         setNote("");
         router.refresh();
       } catch (error) {
-        showToast({ type: "error", message: error instanceof Error ? error.message : "عملیات ناموفق بود؛ دوباره تلاش کنید" });
+        const errorMessage = error instanceof Error ? error.message : "عملیات ناموفق بود؛ دوباره تلاش کنید";
+        setMessage(errorMessage);
+        showToast({ type: "error", message: errorMessage });
       }
     });
   }
@@ -50,11 +63,13 @@ export function FacilitiesReviewActions({ applicationId, status, failedCorrectio
     <>
       <section ref={sectionRef} id="review-action" className="panel profile-form review-panel" aria-labelledby="facilities-review-actions-heading">
         <h2 id="facilities-review-actions-heading"><ClipboardCheck aria-hidden="true" size={19} />اقدام بررسی</h2>
+        {message ? <p role="status" aria-live="polite">{message}</p> : null}
+        {sessionExpired ? <a className="button button--ghost" href="/admin/login">ورود دوباره</a> : null}
         {status === "SUBMITTED" ? (
           <>
             <p className="review-panel__hint">پرونده در صف بررسی است. با شروع بررسی، وضعیت به «در حال بررسی» تغییر می‌کند.</p>
             <div className="review-actions__row">
-              <button className="button button--primary" disabled={pending} onClick={() => run(() => startFacilitiesReview(applicationId), "بررسی پرونده آغاز شد")}>شروع بررسی</button>
+              <button className="button button--primary" disabled={pending} onClick={() => run(() => performFacilitiesReview({operation: "start", applicationId, expectedVersion: reviewVersion, expectedStatus: status}), "بررسی پرونده آغاز شد")}>شروع بررسی</button>
             </div>
           </>
         ) : null}
@@ -69,15 +84,15 @@ export function FacilitiesReviewActions({ applicationId, status, failedCorrectio
               <span className="review-note__counter" aria-live="polite">{note.length.toLocaleString("fa-IR")} / {NOTE_LIMIT.toLocaleString("fa-IR")}</span>
             </div>
             <div className="review-actions__row">
-              <button className="button button--primary" disabled={pending || !note.trim()} onClick={() => run(() => requestFacilitiesCorrection({ applicationId, note }), "درخواست اصلاح ثبت و پیامک ارسال شد")}>درخواست اصلاح</button>
-              <button className="button button--ghost" disabled={pending} onClick={() => run(() => completeFacilitiesValidation({ applicationId, note }), "فرآیند اعتبارسنجی پایان یافت")}>پایان فرآیند اعتبارسنجی</button>
+              <button className="button button--primary" disabled={pending || !note.trim()} onClick={() => run(() => performFacilitiesReview({ operation: "correction", applicationId, note, expectedVersion: reviewVersion, expectedStatus: status }), "درخواست اصلاح ثبت و پیامک ارسال شد")}>درخواست اصلاح</button>
+              <button className="button button--ghost" disabled={pending} onClick={() => run(() => performFacilitiesReview({ operation: "complete", applicationId, note, expectedVersion: reviewVersion, expectedStatus: status }), "فرآیند اعتبارسنجی پایان یافت")}>پایان فرآیند اعتبارسنجی</button>
             </div>
           </>
         ) : null}
         {!(["SUBMITTED", "UNDER_REVIEW"].includes(status)) ? <p role="status">در وضعیت فعلی اقدام جدیدی برای این پرونده وجود ندارد.</p> : null}
         {failedCorrectionId ? (
           <div className="review-actions__row">
-            <button className="button button--ghost" disabled={pending} onClick={() => run(() => retryFacilitiesCorrectionSms(failedCorrectionId), "پیامک اصلاح ارسال شد")}>تلاش مجدد برای پیامک اصلاح</button>
+            <button className="button button--ghost" disabled={pending} onClick={() => run(() => performFacilitiesReview({operation: "retrySms", correctionId: failedCorrectionId}), "پیامک اصلاح ارسال شد")}>تلاش مجدد برای پیامک اصلاح</button>
           </div>
         ) : null}
       </section>

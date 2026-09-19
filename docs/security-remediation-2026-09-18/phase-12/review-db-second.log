@@ -1,0 +1,42 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source[39m
+
+(node:50331) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcompeting completion/correction preserves one note/history/certificate and notification
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89z7mn0003siuhdsa1mmr9","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"cmu89z7m90000siuh6cf1moxz","mobile":"b2a****e06f","hasNote":true,"hasCertificate":false}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcompletion winner preserves exact certificate and stale correction gets409
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89z7ow0009siuhtfb7e9jc","previousStatus":"SUBMITTED","newStatus":"VALIDATION_COMPLETED","adminId":"cmu89z7os0006siuh4yjlkukf","mobile":"b91****c276","hasNote":true,"hasCertificate":true}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mmissing token and stale browser note cannot silently overwrite
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89z7q2000jsiuhxrfz64xm","previousStatus":"SUBMITTED","newStatus":"UNDER_REVIEW","adminId":"cmu89z7pz000gsiuhm9xzevaf","mobile":"370****9d21","hasNote":true,"hasCertificate":false}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcertificate stale token maps to HTTP409 and preserves current bytes
+[22m[39m{"level":"info","event":"validation_certificate_replaced","applicationId":"cmu89z7s70012siuh8r69fh2g","adminId":"cmu89z7s4000zsiuhy6p6d71c","mobile":"79c****a0bc"}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mSMS failure cannot undo transition or authorize duplicate retry
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89z7t0001asiuhvlr4msbz","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"cmu89z7sx0017siuh25nrit1w","mobile":"d02****531e","hasNote":true,"hasCertificate":false}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mSMS failure cannot undo transition or authorize duplicate retry
+[22m[39m{"level":"error","event":"submission_status_sms_failed","applicationId":"cmu89z7t0001asiuhvlr4msbz","newStatus":"NEEDS_EDIT","mobile":"d02****531e","error":{"name":"Error","message":"synthetic outage","stack":"Error: synthetic outage\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/admin-review.db.test.ts:68:147\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mapplicant resubmission and admin restart produce one legal winner without recharge
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu89z7tk001gsiuhoow3ilbs","previousStatus":"NEEDS_EDIT","newStatus":"UNDER_REVIEW","adminId":"cmu89z7th001dsiuhuxq7uz6a","mobile":"fca****e398","hasNote":true,"hasCertificate":false}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2msuccessful SMS plus lost commit acknowledgement never becomes retryable
+[22m[39m{"level":"error","event":"facilities_correction_sms_persistence_unconfirmed","applicationId":"r113907b9daaaaf433f84d2b8be1fd875da-application","correctionRequestId":"cmu89z84v0031siuhkttcke7v","reasonCode":"PERSISTENCE_UNCONFIRMED","error":{"message":"undefined"}}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2muncertain SMS consumes claim and cannot dispatch another send
+[22m[39m{"level":"error","event":"facilities_correction_sms_unconfirmed","applicationId":"r11ba03dfa8419d4ff8b20e4c117330b3eb-application","correctionRequestId":"cmu89z87e003asiuhi688lhcy","mobile":"use****b3eb","reasonCode":"DELIVERY_UNCONFIRMED","error":{"message":"undefined"}}
+
+ [32m✓[39m tests/admin-review.db.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 919[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 14:29:28
+[2m   Duration [22m 1.37s[2m (transform 191ms, setup 0ms, import 338ms, tests 919ms, environment 0ms)[22m
+

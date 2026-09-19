@@ -1,0 +1,27 @@
+
+> sana-registration-review-platform@0.1.0 test:db:m6-payment
+> sh prisma/tests/test-facilities-m6-payment.sh
+
+BEGIN
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+DO
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+DO
+ROLLBACK

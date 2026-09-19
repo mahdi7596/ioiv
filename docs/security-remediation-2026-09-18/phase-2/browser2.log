@@ -1,0 +1,12 @@
+(node:44911) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+page.waitForURL: Timeout 30000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "http://127.0.0.1:3198/dashboard" until "load"
+  navigated to "http://127.0.0.1:3198/dashboard/facilities-profile"
+  navigated to "http://127.0.0.1:3198/dashboard/facilities-profile"
+============================================================
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase2-7q3nwb6w/source/prisma/tests/payment-coordination/phase2-browser.ts:46:18) {
+  log: [],
+  name: 'TimeoutError'
+}

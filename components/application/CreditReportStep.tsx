@@ -5,11 +5,10 @@ import type { StepProps } from "./types";
 
 export function CreditReportStep({
   draft,
-  uploadingKey,
+  uploadingKeys,
   uploadProgress,
   uploadErrors,
   readOnly,
-  onDraftChange,
   onUpload,
 }: StepProps) {
   return (
@@ -29,15 +28,10 @@ export function CreditReportStep({
           required
           value={draft.creditReports.company}
           readOnly={readOnly}
-          uploading={uploadingKey === "creditReports.company"}
+          uploading={Boolean(uploadingKeys?.["creditReports.company"])}
           progress={uploadProgress["creditReports.company"]}
           error={uploadErrors["creditReports.company"]}
-          onUpload={async (file) => {
-            const uploaded = await onUpload("creditReports.company", file);
-            if (uploaded) {
-              onDraftChange({ ...draft, creditReports: { ...draft.creditReports, company: uploaded } });
-            }
-          }}
+          onUpload={async (file) => { await onUpload("creditReports.company", file); }}
         />
         <FileUploadControl
           id="creditReports.ceo"
@@ -45,15 +39,10 @@ export function CreditReportStep({
           required
           value={draft.creditReports.ceo}
           readOnly={readOnly}
-          uploading={uploadingKey === "creditReports.ceo"}
+          uploading={Boolean(uploadingKeys?.["creditReports.ceo"])}
           progress={uploadProgress["creditReports.ceo"]}
           error={uploadErrors["creditReports.ceo"]}
-          onUpload={async (file) => {
-            const uploaded = await onUpload("creditReports.ceo", file);
-            if (uploaded) {
-              onDraftChange({ ...draft, creditReports: { ...draft.creditReports, ceo: uploaded } });
-            }
-          }}
+          onUpload={async (file) => { await onUpload("creditReports.ceo", file); }}
         />
         <FileUploadControl
           id="creditReports.boardMember"
@@ -61,18 +50,10 @@ export function CreditReportStep({
           required
           value={draft.creditReports.boardMember}
           readOnly={readOnly}
-          uploading={uploadingKey === "creditReports.boardMember"}
+          uploading={Boolean(uploadingKeys?.["creditReports.boardMember"])}
           progress={uploadProgress["creditReports.boardMember"]}
           error={uploadErrors["creditReports.boardMember"]}
-          onUpload={async (file) => {
-            const uploaded = await onUpload("creditReports.boardMember", file);
-            if (uploaded) {
-              onDraftChange({
-                ...draft,
-                creditReports: { ...draft.creditReports, boardMember: uploaded },
-              });
-            }
-          }}
+          onUpload={async (file) => { await onUpload("creditReports.boardMember", file); }}
         />
       </div>
     </div>

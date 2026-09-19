@@ -1,0 +1,13 @@
+(node:24339) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"serverPid":24355,"port":50163,"source":"/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source"}
+{"serverPid":24364,"port":50164,"source":"/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source"}
+PASS 390px user: real OTP request, invalid/429 accessible Persian errors, recovery, cookie, refresh and signed-out denial
+PASS 390px admin: real OTP request, invalid/429 accessible Persian errors, recovery, cookie, refresh and signed-out denial
+PASS 1440px user: real OTP request, invalid/429 accessible Persian errors, recovery, cookie, refresh and signed-out denial
+PASS 1440px admin: real OTP request, invalid/429 accessible Persian errors, recovery, cookie, refresh and signed-out denial
+PASS two production Next processes/twelve wrong HTTP guesses: capped reservations, 0 actual cookies
+PASS two production Next processes/twelve correct HTTP guesses: capped reservations, 1 actual cookies
+{"serverPid":25099,"port":50489,"source":"/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source"}
+PASS unavailable loopback PostgreSQL: HTTP503 and no cookie
+Owned browsers and all Next processes stopped

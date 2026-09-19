@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase13-6v11a5ly",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase13-6v11a5ly/source",
+  "container": "sana-phase13-6v11a5ly",
+  "containerId": "0afc808ffd4f1a8b9e37421cd1aa68a2c64b11c608d212a7840a53ae45295eff",
+  "label": "sana.task=sana-phase13-6v11a5ly",
+  "port": "60959",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

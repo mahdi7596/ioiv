@@ -1,0 +1,8 @@
+{
+  "restartHashes": 82,
+  "testedCopyMatch": 81,
+  "staticallyReviewedOnly": [
+    ".env.runtime.example"
+  ],
+  "mismatches": []
+}

@@ -1,0 +1,12 @@
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 2.2s
+
+  Creating an optimized production build ...
+(node:82698) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ Compiled successfully in 9.5s
+  Running TypeScript ...
+prisma/tests/phase6-browser.ts(24,286): error TS2561: Object literal may only specify known properties, but 'isActive' does not exist in type '(Without<AdminUpdateInput, AdminUncheckedUpdateInput> & AdminUncheckedUpdateInput) | (Without<...> & AdminUpdateInput)'. Did you mean to write 'active'?
+prisma/tests/phase6-browser.ts(32,340): error TS2561: Object literal may only specify known properties, but 'isActive' does not exist in type '(Without<AdminUpdateInput, AdminUncheckedUpdateInput> & AdminUncheckedUpdateInput) | (Without<...> & AdminUpdateInput)'. Did you mean to write 'active'?
+Failed to type check.
+

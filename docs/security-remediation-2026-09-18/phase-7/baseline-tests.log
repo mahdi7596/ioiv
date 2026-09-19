@@ -1,0 +1,155 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase7-mf44bhm5/source[39m
+
+(node:6213) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mkeeps code entry available on uncertain delivery without retrying SMS
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not dispatch after claim failure
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mfails closed before comparison on database failure
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2muniform admin response on sms uncertainty, with padding and no replay
+[22m[39m{"level":"warn","event":"otp_sms_unconfirmed","reason":"delivery_unconfirmed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2muniform admin response on lookup uncertainty, with padding and no replay
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2muniform admin response on claim uncertainty, with padding and no replay
+[22m[39m{"level":"warn","event":"otp_request_unavailable","reason":"request_or_dispatch_failed"}
+
+ [31m❯[39m tests/auth-actions.test.ts [2m([22m[2m20 tests[22m[2m | [22m[31m7 failed[39m[2m)[22m[32m 21[2mms[22m[39m
+     [32m✓[39m invalidates older unused OTPs before creating a replacement[32m 4[2mms[22m[39m
+     [32m✓[39m rejects OTP requests made too soon for the same mobile and purpose[32m 1[2mms[22m[39m
+     [32m✓[39m rejects OTP requests after five requests in an hour for the same mobile and purpose[32m 1[2mms[22m[39m
+[31m     [31m×[31m conceals admin OTP requests for mobiles outside the active admin list[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m conceals admin OTP requests for inactive admin mobiles[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m allows active entry viewer admins to request an admin OTP[39m[32m 2[2mms[22m[39m
+     [32m✓[39m does not reveal whether a user mobile is already registered when requesting an OTP[32m 0[2mms[22m[39m
+     [32m✓[39m issues a cookie only for the transaction winner[32m 1[2mms[22m[39m
+     [32m✓[39m passes qualified address to shared accounting[32m 0[2mms[22m[39m
+     [32m✓[39m keeps code entry available on uncertain delivery without retrying SMS[32m 1[2mms[22m[39m
+     [32m✓[39m does not dispatch after claim failure[32m 1[2mms[22m[39m
+     [32m✓[39m applies rate limits before revealing whether an admin mobile exists[32m 0[2mms[22m[39m
+     [32m✓[39m reserves before comparison and does not refund a wrong guess[32m 0[2mms[22m[39m
+     [32m✓[39m bounds dummy comparisons using shared reservations[32m 0[2mms[22m[39m
+     [32m✓[39m fails closed before comparison on database failure[32m 0[2mms[22m[39m
+     [32m✓[39m does not issue a session when live consume rejects[32m 0[2mms[22m[39m
+[31m     [31m×[31m uniform admin response on sms uncertainty, with padding and no replay[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m uniform admin response on lookup uncertainty, with padding and no replay[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m uniform admin response on claim uncertainty, with padding and no replay[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m uniform admin response on false-claim uncertainty, with padding and no replay[39m[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 7 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22mconceals admin OTP requests for mobiles outside the active admin list
+[31m[1mAssertionError[22m: promise rejected "Error: دسترسی مدیریت برای این شماره فعال … { status: … }" instead of resolving[39m
+[36m [2m❯[22m tests/auth-actions.test.ts:[2m139:6[22m[39m
+    [90m137|[39m     [35mawait[39m [34mexpect[39m(
+    [90m138|[39m       [34mrequestOtp[39m({ mobile[33m:[39m [32m"09123456789"[39m[33m,[39m mode[33m:[39m [32m"admin"[39m })[33m,[39m
+    [90m139|[39m     ).resolves.toEqual({ next: "otp", warning: ADMIN_REQUEST_MESSAGE }…
+    [90m   |[39m      [31m^[39m
+    [90m140|[39m     [34mexpect[39m(mocks[33m.[39mdb[33m.[39motpCode[33m.[39mcreate)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m141|[39m     [34mexpect[39m(mocks[33m.[39msendSms)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[1mCaused by: Error[22m: دسترسی مدیریت برای این شماره فعال نیست[39m
+[36m [2m❯[22m Module.requestOtp lib/actions/auth.ts:[2m67:33[22m[39m
+[90m [2m❯[22m tests/auth-actions.test.ts:[2m137:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ status: 403 }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22mconceals admin OTP requests for inactive admin mobiles
+[31m[1mAssertionError[22m: promise rejected "Error: دسترسی مدیریت برای این شماره فعال … { status: … }" instead of resolving[39m
+[36m [2m❯[22m tests/auth-actions.test.ts:[2m153:6[22m[39m
+    [90m151|[39m     [35mawait[39m [34mexpect[39m(
+    [90m152|[39m       [34mrequestOtp[39m({ mobile[33m:[39m [32m"09123456789"[39m[33m,[39m mode[33m:[39m [32m"admin"[39m })[33m,[39m
+    [90m153|[39m     ).resolves.toEqual({ next: "otp", warning: ADMIN_REQUEST_MESSAGE }…
+    [90m   |[39m      [31m^[39m
+    [90m154|[39m     [34mexpect[39m(mocks[33m.[39mdb[33m.[39motpCode[33m.[39mcreate)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m155|[39m     [34mexpect[39m(mocks[33m.[39msendSms)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[1mCaused by: Error[22m: دسترسی مدیریت برای این شماره فعال نیست[39m
+[36m [2m❯[22m Module.requestOtp lib/actions/auth.ts:[2m67:33[22m[39m
+[90m [2m❯[22m tests/auth-actions.test.ts:[2m151:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ status: 403 }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22mallows active entry viewer admins to request an admin OTP
+[31m[1mAssertionError[22m: expected { next: 'otp' } to deeply equal { next: 'otp', …(1) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "next": "otp",[22m
+[32m-   "warning": "اگر این شماره مجاز باشد، کد تأیید برای آن ارسال می‌شود. در صورت دریافت پیامک، کد را وارد کنید؛ برای درخواست دوباره ۹۰ ثانیه صبر کنید.",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/auth-actions.test.ts:[2m165:71[22m[39m
+    [90m163|[39m     })[33m;[39m
+    [90m164|[39m
+    [90m165|[39m     await expect(requestOtp({ mobile: "09362116801", mode: "admin" }))…
+    [90m   |[39m                                                                       [31m^[39m
+    [90m166|[39m       next[33m:[39m [32m"otp"[39m[33m,[39m warning[33m:[39m [33mADMIN_REQUEST_MESSAGE[39m[33m,[39m
+    [90m167|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22muniform admin response on sms uncertainty, with padding and no replay
+[31m[1mAssertionError[22m: expected { next: 'otp', …(1) } to deeply equal { next: 'otp', …(1) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "next": "otp",[22m
+[32m-   "warning": "اگر این شماره مجاز باشد، کد تأیید برای آن ارسال می‌شود. در صورت دریافت پیامک، کد را وارد کنید؛ برای درخواست دوباره ۹۰ ثانیه صبر کنید.",[39m
+[31m+   "warning": "ارسال کد تأیید نشد. اگر پیامک رسید از همان کد استفاده کنید؛ در غیر این صورت پس از ۹۰ ثانیه دوباره تلاش کنید",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/auth-actions.test.ts:[2m245:66[22m[39m
+    [90m243|[39m     if (failure === "claim") mocks.claimDispatch.mockRejectedValueOnce…
+    [90m244|[39m     if (failure === "false-claim") mocks.claimDispatch.mockResolvedVal…
+    [90m245|[39m     await expect(requestOtp({mobile:"09123456789",mode:"admin"})).reso…
+    [90m   |[39m                                                                  [31m^[39m
+    [90m246|[39m     [34mexpect[39m(mocks[33m.[39mwaitResponse)[33m.[39m[34mtoHaveBeenCalledOnce[39m()[33m;[39m
+    [90m247|[39m     expect(mocks.sendSms).toHaveBeenCalledTimes(failure === "sms" ? 1 …
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22muniform admin response on lookup uncertainty, with padding and no replay
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22muniform admin response on claim uncertainty, with padding and no replay
+[41m[1m FAIL [22m[49m tests/auth-actions.test.ts[2m > [22mauth actions[2m > [22muniform admin response on false-claim uncertainty, with padding and no replay
+[31m[1mAssertionError[22m: promise rejected "Error: ارسال کد تأیید نشد. اگر پیامک رسید… { status: … }" instead of resolving[39m
+[36m [2m❯[22m tests/auth-actions.test.ts:[2m245:66[22m[39m
+    [90m243|[39m     if (failure === "claim") mocks.claimDispatch.mockRejectedValueOnce…
+    [90m244|[39m     if (failure === "false-claim") mocks.claimDispatch.mockResolvedVal…
+    [90m245|[39m     await expect(requestOtp({mobile:"09123456789",mode:"admin"})).reso…
+    [90m   |[39m                                                                  [31m^[39m
+    [90m246|[39m     [34mexpect[39m(mocks[33m.[39mwaitResponse)[33m.[39m[34mtoHaveBeenCalledOnce[39m()[33m;[39m
+    [90m247|[39m     expect(mocks.sendSms).toHaveBeenCalledTimes(failure === "sms" ? 1 …
+
+[31m[1mCaused by: Error[22m: ارسال کد تأیید نشد. اگر پیامک رسید از همان کد استفاده کنید؛ در غیر این صورت پس از ۹۰ ثانیه دوباره تلاش کنید[39m
+[36m [2m❯[22m Module.requestOtp lib/actions/auth.ts:[2m83:11[22m[39m
+[90m [2m❯[22m tests/auth-actions.test.ts:[2m245:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ status: 503 }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m7 failed[39m[22m[2m | [22m[1m[32m13 passed[39m[22m[90m (20)[39m
+[2m   Start at [22m 11:00:27
+[2m   Duration [22m 319ms[2m (transform 67ms, setup 0ms, import 155ms, tests 21ms, environment 0ms)[22m
+

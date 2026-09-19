@@ -1,0 +1,14 @@
+(node:97124) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":97147,"port":60364,"scannerPort":60363}
+Owned Next/browser/scanner stopped
+page.waitForURL: Timeout 30000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "http://127.0.0.1:60364/dashboard" until "load"
+  navigated to "http://127.0.0.1:60364/dashboard/facilities-profile"
+  navigated to "http://127.0.0.1:60364/dashboard/facilities-profile"
+============================================================
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source/prisma/tests/document-qualification/browser.ts:38:106) {
+  log: [],
+  name: 'TimeoutError'
+}

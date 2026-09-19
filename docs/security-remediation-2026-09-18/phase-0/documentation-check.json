@@ -1,0 +1,9 @@
+{
+  "phaseRows": 21,
+  "relativeLinksValid": true,
+  "branchHeadUnchanged": true,
+  "reviewAgentsCompleted": true,
+  "gitDiffCheck": "passed",
+  "applicationChanges": false,
+  "productionChanges": false
+}

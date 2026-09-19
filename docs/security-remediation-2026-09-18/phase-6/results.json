@@ -1,0 +1,72 @@
+{
+  "baseline-build2": {
+    "log": "baseline-build2.log",
+    "exitCode": 0
+  },
+  "baseline-browser": {
+    "log": "baseline-browser.log",
+    "exitCode": 0
+  },
+  "tests": {
+    "log": "tests.log",
+    "exitCode": 0,
+    "tests": 531,
+    "files": 76,
+    "restrictedDatabaseCases": 89
+  },
+  "build": {
+    "log": "build.log",
+    "exitCode": 0
+  },
+  "types": {
+    "log": "types.log",
+    "exitCode": 0
+  },
+  "lint": {
+    "log": "lint.log",
+    "exitCode": 0
+  },
+  "browser": {
+    "log": "browser.log",
+    "exitCode": 0
+  },
+  "request-browser": {
+    "log": "request-browser.log",
+    "exitCode": 0
+  },
+  "verification-browser": {
+    "log": "verification-browser.log",
+    "exitCode": 0
+  },
+  "request-processes": {
+    "log": "request-processes.log",
+    "exitCode": 0
+  },
+  "verification-processes": {
+    "log": "verification-processes.log",
+    "exitCode": 0
+  },
+  "payment-processes": {
+    "log": "payment-processes.log",
+    "exitCode": 0
+  },
+  "resource-check": {
+    "log": "resource-check.log",
+    "exitCode": 0
+  },
+  "baseline-safe-tests": {
+    "exitCode": 1,
+    "expectedFailures": 51,
+    "passed": 7
+  },
+  "baseline-build": {
+    "exitCode": 1,
+    "cause": "fixture Admin.isActive typo corrected to active"
+  },
+  "limitations": [
+    "Node26 not release Node22",
+    "local self-signed TLS proxy not actual deployed HTTPS",
+    "controlled SMS not live delivery",
+    "no new migration or retention change"
+  ]
+}

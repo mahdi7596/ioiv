@@ -1,0 +1,231 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source[39m
+
+(node:37362) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [31m❯[39m tests/facilities-replacement.db.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m12 failed[39m[2m)[22m[33m 60396[2mms[22m[39m
+[31m     [31m×[31m new-key retry after FAILED preserves old good bytes and commits successful lineage[39m[32m 132[2mms[22m[39m
+[31m     [31m×[31m new-key retry after UNAVAILABLE preserves old good bytes and commits successful lineage[39m[32m 9[2mms[22m[39m
+[31m     [31m×[31m new-key retry after storage preserves old good bytes and commits successful lineage[39m[32m 7[2mms[22m[39m
+[31m     [31m×[31m same-key replay cannot scan or allocate again, including rejected content[39m[32m 11[2mms[22m[39m
+[31m     [31m×[31m concurrent successful candidates cannot replace a newer winner[39m[33m 20009[2mms[22m[39m
+[31m     [31m×[31m A→B→C supports delayed deletion and cannot rebind old current[39m[32m 75[2mms[22m[39m
+[31m     [31m×[31m unavailable recovery has one acknowledged scan owner and one successful successor[39m[33m 20007[2mms[22m[39m
+[31m     [31m×[31m expired unavailable and abandoned pending claims cannot publish or reset retention[39m[32m 52[2mms[22m[39m
+[31m     [31m×[31m expiry during a retry scan cannot overwrite current or delete it[39m[33m 20020[2mms[22m[39m
+[31m     [31m×[31m stale unavailable retains original quarantine rather than replacing a newer winner[39m[32m 41[2mms[22m[39m
+[31m     [31m×[31m lost acknowledgement after successful commit preserves current bytes[39m[32m 18[2mms[22m[39m
+[31m     [31m×[31m deletion outage keeps durable intent and a later retry removes only obsolete bytes[39m[32m 11[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 12 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mnew-key retry after FAILED preserves old good bytes and commits successful lineage
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mnew-key retry after UNAVAILABLE preserves old good bytes and commits successful lineage
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mnew-key retry after storage preserves old good bytes and commits successful lineage
+[31m[1mAssertionError[22m: expected 'DISALLOWED' to be 'PASSED' // Object.is equality[39m
+
+Expected: [32m"[7mPASS[27mED"[39m
+Received: [31m"[7mDISALLOW[27mED"[39m
+
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m32:60[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22msame-key replay cannot scan or allocate again, including rejected content
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called once, but got 0 times[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m41:217[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mconcurrent successful candidates cannot replace a newer winner
+[31m[1mError[22m: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m44:2[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mA→B→C supports delayed deletion and cannot rebind old current
+[31m[1mPrismaClientValidationError[22m: 
+Invalid `owner!.facilitiesFileDeletionTombstone.findUniqueOrThrow()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source/tests/facilities-replacement.db.test.ts:48:157
+
+  45  await upload();const g=gate(),first=upload(g.scanner);await g.reached;const winner=await upload();g.release();const loser=await first;expect(winner.lifecycleStatus).toBe("PASSED");expect(loser.lifecycleStatus).toBe("FAILED");expect((await current()).currentUploadId).toBe(winner.uploadId);expect(await reconcileTerminalFacilitiesQuarantine({uploadId:loser.uploadId!,storage})).toBe(true);expect(await storage.readReady((await current()).currentUpload!.storedFile!.storageKey as FacilitiesStorageKey)).toEqual(bytes);
+  46 });
+  47 it("A→B→C supports delayed deletion and cannot rebind old current",async()=>{
+→ 48  const a=await upload(),b=await upload(),c=await upload();for(const id of [a.uploadId,b.uploadId]){const tomb=await owner!.facilitiesFileDeletionTombstone.findUniqueOrThrow({
+        where: {
+          uploadId: undefined,
+      ?   id?: String,
+      ?   AND?: FacilitiesFileDeletionTombstoneWhereInput | FacilitiesFileDeletionTombstoneWhereInput[],
+      ?   OR?: FacilitiesFileDeletionTombstoneWhereInput[],
+      ?   NOT?: FacilitiesFileDeletionTombstoneWhereInput | FacilitiesFileDeletionTombstoneWhereInput[],
+      ?   status?: EnumFacilitiesFileDeletionStatusFilter | FacilitiesFileDeletionStatus,
+      ?   attemptCount?: IntFilter | Int,
+      ?   lastError?: EnumFacilitiesFileFailureReasonNullableFilter | FacilitiesFileFailureReason | Null,
+      ?   nextAttemptAt?: DateTimeNullableFilter | DateTime | Null,
+      ?   lastAttemptAt?: DateTimeNullableFilter | DateTime | Null,
+      ?   completedAt?: DateTimeNullableFilter | DateTime | Null,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   upload?: FacilitiesFileUploadScalarRelationFilter | FacilitiesFileUploadWhereInput
+        }
+      })
+
+Argument `where` of type FacilitiesFileDeletionTombstoneWhereUniqueInput needs at least one of `id` or `uploadId` arguments. Available options are marked with ?.[39m
+[90m [2m❯[22m Nn node_modules/@prisma/client/src/runtime/core/errorRendering/throwValidationException.ts:[2m45:8[22m[39m
+[90m [2m❯[22m throwValidationException node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m202:6[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m48:112[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22munavailable recovery has one acknowledged scan owner and one successful successor
+[31m[1mError[22m: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m51:2[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mexpired unavailable and abandoned pending claims cannot publish or reset retention
+[31m[1mAssertionError[22m: expected null to be undefined // Object.is equality[39m
+
+[32m- Expected:[39m
+undefined
+
+[31m+ Received:[39m
+null
+
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m56:333[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mexpiry during a retry scan cannot overwrite current or delete it
+[31m[1mError[22m: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m59:2[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mstale unavailable retains original quarantine rather than replacing a newer winner
+[31m[1mPrismaClientValidationError[22m: 
+Invalid `owner!.facilitiesFileUpload.findUniqueOrThrow()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source/tests/facilities-replacement.db.test.ts:63:125
+
+  60  const first=await upload();const p=await upload(unavailable);const g=gate();const retry=retryUnavailableFacilitiesScan({uploadId:p.uploadId!,storage,scanner:g.scanner});await g.reached;await oldEnough(p.uploadId!);expect(await expireFacilitiesUpload(p.uploadId!)).toBe(true);g.release();expect(await retry).toBe(false);expect((await current()).currentUploadId).toBe(first.uploadId);expect(await storage.readReady((await current()).currentUpload!.storedFile!.storageKey as FacilitiesStorageKey)).toEqual(bytes);
+  61 });
+  62 it("stale unavailable retains original quarantine rather than replacing a newer winner",async()=>{
+→ 63  await upload();const stale=await upload(unavailable),winner=await upload();const before=await owner!.facilitiesFileUpload.findUniqueOrThrow({
+        where: {
+          id: undefined,
+      ?   storedFileId?: String,
+      ?   committedPredecessorId?: String,
+      ?   bindingId_idempotencyKey?: FacilitiesFileUploadBindingIdIdempotencyKeyCompoundUniqueInput,
+      ?   bindingId_revisionNumber?: FacilitiesFileUploadBindingIdRevisionNumberCompoundUniqueInput,
+      ?   bindingId_committedRevisionNumber?: FacilitiesFileUploadBindingIdCommittedRevisionNumberCompoundUniqueInput,
+      ?   AND?: FacilitiesFileUploadWhereInput | FacilitiesFileUploadWhereInput[],
+      ?   OR?: FacilitiesFileUploadWhereInput[],
+      ?   NOT?: FacilitiesFileUploadWhereInput | FacilitiesFileUploadWhereInput[],
+      ?   bindingId?: StringFilter | String,
+      ?   idempotencyKey?: StringFilter | String,
+      ?   revisionNumber?: IntFilter | Int,
+      ?   replacesUploadId?: StringNullableFilter | String | Null,
+      ?   committedRevisionNumber?: IntNullableFilter | Int | Null,
+      ?   retryToken?: StringNullableFilter | String | Null,
+      ?   lifecycleStatus?: EnumFacilitiesFileLifecycleStatusFilter | FacilitiesFileLifecycleStatus,
+      ?   failureReason?: EnumFacilitiesFileFailureReasonNullableFilter | FacilitiesFileFailureReason | Null,
+      ?   reservedByteSize?: IntFilter | Int,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   binding?: FacilitiesFileBindingScalarRelationFilter | FacilitiesFileBindingWhereInput,
+      ?   currentForBinding?: FacilitiesFileBindingNullableScalarRelationFilter | FacilitiesFileBindingWhereInput | Null,
+      ?   attempt?: FacilitiesFileUploadAttemptNullableScalarRelationFilter | FacilitiesFileUploadAttemptWhereInput | Null,
+      ?   storedFile?: StoredFileNullableScalarRelationFilter | StoredFileWhereInput | Null,
+      ?   replacesUpload?: FacilitiesFileUploadNullableScalarRelationFilter | FacilitiesFileUploadWhereInput | Null,
+      ?   replacedBy?: FacilitiesFileUploadListRelationFilter,
+      ?   committedPredecessor?: FacilitiesFileUploadNullableScalarRelationFilter | FacilitiesFileUploadWhereInput | Null,
+      ?   committedSuccessor?: FacilitiesFileUploadNullableScalarRelationFilter | FacilitiesFileUploadWhereInput | Null,
+      ?   deletionTombstone?: FacilitiesFileDeletionTombstoneNullableScalarRelationFilter | FacilitiesFileDeletionTombstoneWhereInput | Null
+        },
+        include: {
+          storedFile: true
+        }
+      })
+
+Argument `where` of type FacilitiesFileUploadWhereUniqueInput needs at least one of `id`, `storedFileId`, `committedPredecessorId`, `bindingId_idempotencyKey`, `bindingId_revisionNumber` or `bindingId_committedRevisionNumber` arguments. Available options are marked with ?.[39m
+[90m [2m❯[22m Nn node_modules/@prisma/client/src/runtime/core/errorRendering/throwValidationException.ts:[2m45:8[22m[39m
+[90m [2m❯[22m throwValidationException node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m202:6[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m63:91[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mlost acknowledgement after successful commit preserves current bytes
+[31m[1mAssertionError[22m: expected 'DISALLOWED' to be 'PASSED' // Object.is equality[39m
+
+Expected: [32m"[7mPASS[27mED"[39m
+Received: [31m"[7mDISALLOW[27mED"[39m
+
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m67:62[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mdeletion outage keeps durable intent and a later retry removes only obsolete bytes
+[31m[1mPrismaClientValidationError[22m: 
+Invalid `owner!.facilitiesFileDeletionTombstone.findUniqueOrThrow()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source/tests/facilities-replacement.db.test.ts:70:101
+
+  67  const result=await upload();expect(result.lifecycleStatus).toBe("PASSED");expect(result.idempotent).toBe(true);expect(await storage.readReady((await current()).currentUpload!.storedFile!.storageKey as FacilitiesStorageKey)).toEqual(bytes);
+  68 });
+  69 it("deletion outage keeps durable intent and a later retry removes only obsolete bytes",async()=>{
+→ 70  const first=await upload();await upload();const tomb=await owner!.facilitiesFileDeletionTombstone.findUniqueOrThrow({
+        where: {
+          uploadId: undefined,
+      ?   id?: String,
+      ?   AND?: FacilitiesFileDeletionTombstoneWhereInput | FacilitiesFileDeletionTombstoneWhereInput[],
+      ?   OR?: FacilitiesFileDeletionTombstoneWhereInput[],
+      ?   NOT?: FacilitiesFileDeletionTombstoneWhereInput | FacilitiesFileDeletionTombstoneWhereInput[],
+      ?   status?: EnumFacilitiesFileDeletionStatusFilter | FacilitiesFileDeletionStatus,
+      ?   attemptCount?: IntFilter | Int,
+      ?   lastError?: EnumFacilitiesFileFailureReasonNullableFilter | FacilitiesFileFailureReason | Null,
+      ?   nextAttemptAt?: DateTimeNullableFilter | DateTime | Null,
+      ?   lastAttemptAt?: DateTimeNullableFilter | DateTime | Null,
+      ?   completedAt?: DateTimeNullableFilter | DateTime | Null,
+      ?   createdAt?: DateTimeFilter | DateTime,
+      ?   updatedAt?: DateTimeFilter | DateTime,
+      ?   upload?: FacilitiesFileUploadScalarRelationFilter | FacilitiesFileUploadWhereInput
+        }
+      })
+
+Argument `where` of type FacilitiesFileDeletionTombstoneWhereUniqueInput needs at least one of `id` or `uploadId` arguments. Available options are marked with ?.[39m
+[90m [2m❯[22m Nn node_modules/@prisma/client/src/runtime/core/errorRendering/throwValidationException.ts:[2m45:8[22m[39m
+[90m [2m❯[22m throwValidationException node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m202:6[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m70:56[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m12 failed[39m[22m[90m (12)[39m
+[2m   Start at [22m 11:27:46
+[2m   Duration [22m 61.68s[2m (transform 148ms, setup 0ms, import 994ms, tests 60.40s, environment 0ms)[22m
+

@@ -1,9 +1,10 @@
 # Sana: Payment and Upload Security Audit
 
 Date: 2026-09-16
-Tree audited: `master` at commit `0d223b4` (clean working tree)
+Tree audited: `master` at commit `0d223b4` (clean working tree; that commit is `ee9c6f6` after the P7 history rewrite)
 Scope: security only, limited to (1) payment handling and (2) file upload, storage and download.
-Method: line-level trace of both flows in the current source; the 2026-09-15 audit was treated as a set of claims and every one was re-checked. No code was changed. `tsc --noEmit` is clean and the 10 payment/upload test files (81 tests) pass at this commit.
+Method: line-level trace of both flows in the current source; the 2026-09-15 audit was treated as a set of claims and every one was re-checked. No code was changed during the audit itself. `tsc --noEmit` was clean and the 10 payment/upload test files (81 tests) passed at that commit.
+Remediation: all twelve findings were fixed on 2026-09-16 in commits `397c55e` and `29705da` (plus the history rewrite). Every finding below carries a **Status** entry; the suite at the remediated head is 68 files, 308 tests, type-check and lint clean.
 
 ## 1. Executive summary
 
@@ -11,24 +12,26 @@ Payments cannot be faked. Both flows verify every callback server-side with Zari
 
 Uploads are the bigger problem. The facilities pipeline is well built (opaque storage keys, magic-byte checks, fail-closed antivirus, quotas, audited downloads), but it hands every spreadsheet to SheetJS 0.18.5, a version with two published vulnerabilities, and in the application-files route it does so before checking that the caller owns the upload slot. Because anyone with an Iranian mobile number can self-register, a stranger can hang or crash the single application container with one crafted file. Separately, the older upload path silently skips virus scanning when clamd is not configured, while the facilities path correctly refuses.
 
-Verdict: not ready until the spreadsheet parser is upgraded and moved behind the ownership check, and the legacy scan is made fail-closed. Both are small changes.
+Verdict at audit time: not ready until the spreadsheet parser is upgraded and moved behind the ownership check, and the legacy scan is made fail-closed. Both are small changes.
+
+**Status after remediation (2026-09-16):** every finding is closed in code with regression tests, and the merchant ID has been removed from git history and from GitHub's branches. What remains is operational: deploy the fix commits together with the late-capture trigger migration, keep clamd configured (it is now mandatory for both upload flows), let the build host reach the SheetJS vendor registry, ask GitHub support to purge cached views of the rewritten commits, and have anyone with an older clone re-clone. The final verdict at the end of this document reflects that.
 
 ## 2. Findings table
 
-| ID | Area | Severity | Confidence | Title | File:line |
-|---|---|---|---|---|---|
-| U1 | Upload | High | Likely | Vulnerable SheetJS 0.18.5 fully parses attacker workbooks, before ownership check, reachable by any self-registered user | `lib/facilities-files/verification.ts:131,225`; `app/api/facilities/application-files/route.ts:20-24`; `package.json:44` |
-| U2 | Upload | Medium | Confirmed | Legacy uploads skip malware scanning when clamd is unset or misconfigured (fail-open) | `lib/uploads/storage.ts:98-102`; `lib/facilities-files/scanner.ts:182-191` |
-| U3 | Upload | Medium | Likely | No upload rate limit; each request buffers and copies the file about five times under a 1 GiB container cap | `app/api/facilities/application-files/route.ts:18-20`; `lib/facilities-files/verification.ts:90`; `lib/facilities-files/service.ts:136`; `lib/facilities-files/lifecycle.ts:23`; `docker-compose.yml:25` |
-| P1 | Payment | Medium | Confirmed | Legacy callback: a database failure after a successful Zarinpal verify marks the payment FAILED and re-opens payment | `app/api/payment/callback/route.ts:62-112` |
-| P2 | Payment | Medium | Likely | Facilities: any non-2xx or error-bearing gateway response is classified as "rejected", so a captured payment can be marked FAILED | `lib/payments/zarinpal.ts:39-40`; `lib/actions/facilities-payment.ts:80-84,367-380` |
-| P3 | Payment | Medium | Needs-verification | Stale re-verify can close an attempt whose bank session is still live; the later real callback is discarded with no reconciliation | `lib/actions/facilities-payment.ts:226,273-280,356-361` |
-| P4 | Payment | Low | Confirmed | Legacy callback has no lock: concurrent callbacks duplicate history and SMS; the retry path leaves the old gateway session payable | `app/api/payment/callback/route.ts:28-47,73-118`; `lib/actions/payment.ts:95-106` |
-| P5 | Payment | Low | Likely | SMS senders are exported from a `"use server"` module and are therefore registered server actions | `lib/actions/payment.ts:1,177,194` |
-| P6 | Payment | Low | Confirmed | Legacy verify uses the compile-time fee constant instead of the amount stored on the payment row | `app/api/payment/callback/route.ts:68-71`; `lib/actions/payment.ts:117` |
-| U4 | Upload | Low | Confirmed | Admin multipart routes parse the whole body before authentication | `app/api/admin/submissions/certificate/route.ts:11`; `app/api/admin/submissions/status/route.ts:7` |
-| U5 | Upload | Low | Confirmed | ZIP members are allow-listed by extension only; member content is never verified | `lib/facilities-files/verification.ts:244-251` |
-| P7 | Payment | Low | Confirmed | Production merchant ID remains in git history | commits `859c20f`, `c18ff2b`, `54e721c` |
+| ID | Area | Severity | Confidence | Title | File:line | Status |
+|---|---|---|---|---|---|---|
+| U1 | Upload | High | Likely | Vulnerable SheetJS 0.18.5 fully parses attacker workbooks, before ownership check, reachable by any self-registered user | `lib/facilities-files/verification.ts:131,225`; `app/api/facilities/application-files/route.ts:20-24`; `package.json:44` | Fixed (397c55e) |
+| U2 | Upload | Medium | Confirmed | Legacy uploads skip malware scanning when clamd is unset or misconfigured (fail-open) | `lib/uploads/storage.ts:98-102`; `lib/facilities-files/scanner.ts:182-191` | Fixed (397c55e) |
+| U3 | Upload | Medium | Likely | No upload rate limit; each request buffers and copies the file about five times under a 1 GiB container cap | `app/api/facilities/application-files/route.ts:18-20`; `lib/facilities-files/verification.ts:90`; `lib/facilities-files/service.ts:136`; `lib/facilities-files/lifecycle.ts:23`; `docker-compose.yml:25` | Fixed (397c55e) |
+| P1 | Payment | Medium | Confirmed | Legacy callback: a database failure after a successful Zarinpal verify marks the payment FAILED and re-opens payment | `app/api/payment/callback/route.ts:62-112` | Fixed (397c55e) |
+| P2 | Payment | Medium | Likely | Facilities: any non-2xx or error-bearing gateway response is classified as "rejected", so a captured payment can be marked FAILED | `lib/payments/zarinpal.ts:39-40`; `lib/actions/facilities-payment.ts:80-84,367-380` | Fixed (397c55e) |
+| P3 | Payment | Medium | Needs-verification | Stale re-verify can close an attempt whose bank session is still live; the later real callback is discarded with no reconciliation | `lib/actions/facilities-payment.ts:226,273-280,356-361` | Fixed (397c55e); migration to deploy |
+| P4 | Payment | Low | Confirmed | Legacy callback has no lock: concurrent callbacks duplicate history and SMS; the retry path leaves the old gateway session payable | `app/api/payment/callback/route.ts:28-47,73-118`; `lib/actions/payment.ts:95-106` | Fixed (397c55e) |
+| P5 | Payment | Low | Likely | SMS senders are exported from a `"use server"` module and are therefore registered server actions | `lib/actions/payment.ts:1,177,194` | Fixed (397c55e) |
+| P6 | Payment | Low | Confirmed | Legacy verify uses the compile-time fee constant instead of the amount stored on the payment row | `app/api/payment/callback/route.ts:68-71`; `lib/actions/payment.ts:117` | Fixed (397c55e) |
+| U4 | Upload | Low | Confirmed | Admin multipart routes parse the whole body before authentication | `app/api/admin/submissions/certificate/route.ts:11`; `app/api/admin/submissions/status/route.ts:7` | Fixed (397c55e) |
+| U5 | Upload | Low | Confirmed | ZIP members are allow-listed by extension only; member content is never verified | `lib/facilities-files/verification.ts:244-251` | Fixed (397c55e) |
+| P7 | Payment | Low | Confirmed | Production merchant ID remains in git history | commits `859c20f`, `c18ff2b`, `54e721c` | Fixed (history rewritten 2026-09-16); GitHub purge pending |
 
 ## 3. Finding detail
 
@@ -40,6 +43,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** `application-files/route.ts` line 20 builds `bytes`, line 22 calls `verifyFacilitiesUpload`, line 24 is the first use of `binding`. `verification.ts:128-137` reads the full workbook with no `bookSheets`, `sheetRows` or `dense` bound. `ZIP` inspection at `:307-313` only bounds inflation, not the object graph. The CVE presence follows from the pinned version; exploitation was not executed.
 - **Fix:** (1) Install SheetJS 0.20.3 from the vendor registry (`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`) and pin it. (2) In `verification.ts:131` use `XLSX.read(bytes, { type: "buffer", bookSheets: true })`, which returns sheet names without parsing cell data, which is all the check needs. (3) In `application-files/route.ts` move the `binding` null check and the `allowed(slot, ...)` gate above `verifyFacilitiesUpload`, matching the order already used in `profile-files/route.ts:21-25`. (4) Consider a per-user in-flight upload limit (see U3).
 - **Assumptions / how to verify:** CVE applicability is from the SheetJS advisories for < 0.19.3 and < 0.20.2; confirm against the exact advisories before closing. To verify the memory effect locally, build a workbook whose `sheet1.xml` is 100 MiB of `<c>` elements compressed below the 1:100 ratio and POST it with a bogus `bindingId` while watching container memory.
+- **Status (2026-09-16): Fixed.** `xlsx` pinned to 0.20.3 from the vendor tarball; the workbook check reads sheet names only (`bookSheets: true`); the application-files route checks binding ownership and the programme gate before buffering or parsing anything. Regression tests in `tests/facilities-application-files-route.test.ts`. Build hosts must be able to reach `cdn.sheetjs.com`.
 
 ### U2. Legacy uploads fail open when no scanner is configured
 
@@ -49,6 +53,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** `storage.ts:99-101`; `scanner.ts:184-186,189-191`. `.env.runtime.example:12-16` says scanning "always requires a reachable clamd", but no code enforces that for the legacy path.
 - **Fix:** Delete the `UnavailableFacilitiesFileScanner` early-return in `scanLegacyUpload` so an unavailable scanner throws `UPLOAD_SCAN_UNAVAILABLE_MESSAGE` (503), exactly like `lifecycle.ts:41-43`. Add a startup assertion (or a `/api/health` check) that fails when `NODE_ENV=production` and the scanner factory returns the unavailable implementation.
 - **Assumptions / how to verify:** The production `.env.runtime` could not be inspected. Check `grep legacy_upload_unscanned` in production logs; any hit means unscanned files are already stored.
+- **Status (2026-09-16): Fixed.** `scanLegacyUpload` now throws the 503 "scan unavailable" message when no scanner is configured, matching the facilities pipeline; the fail-open test was rewritten to assert rejection with nothing written. Operational consequence: clamd is now required in production for both flows (`FACILITIES_CLAMAV_HOST`/`PORT`).
 
 ### U3. No upload rate limit; each request holds about five copies of the file
 
@@ -58,6 +63,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** File list above; `nginx-facilities-upload.example.conf:8-9` shows the 26 MiB limit and `proxy_request_buffering off`, which streams the body straight into the Node process.
 - **Fix:** Reject `Content-Length` above 26 MiB before calling `formData()` in all upload routes. Add a small per-user in-flight counter (the semaphore in `scanner.ts:112` is reusable) and a per-user/per-IP hourly upload count. Pass the same `Buffer` down instead of re-wrapping it; `Buffer.from(buffer)` copies, `Buffer.isBuffer(x) ? x : Buffer.from(x)` does not.
 - **Assumptions / how to verify:** The copy count is from reading the code; measure with `process.memoryUsage()` around one 25 MiB upload. nginx's actual production configuration was not available.
+- **Status (2026-09-16): Fixed.** `lib/uploads/request-guards.ts` rejects a declared `Content-Length` above the file limit plus 1 MiB with 413 before `formData()`, on all six upload routes. `lib/uploads/rate-limit.ts` bounds bodies in memory per user (default 2) and globally (default 6) and applies sliding hourly caps per user (60) and per client IP (120), returning 429 with `Retry-After`; limits are environment-tunable (`UPLOAD_MAX_*`). `asBuffer` removed the three redundant copies, so a request holds about two copies instead of five. Tests: `tests/upload-rate-limit.test.ts`, `tests/upload-request-guards.test.ts`, plus route tests.
 
 ### P1. Legacy callback marks a captured payment FAILED if the database write fails
 
@@ -67,6 +73,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** Compare with the facilities flow, which was fixed for this exact case: `lib/actions/facilities-payment.ts:383-397` records `VERIFIED` in its own transaction first and only then attempts submission.
 - **Fix:** Split the `try`: on a verify exception keep the current failure path; on a transaction exception after a successful verify, log `payment_verification_persist_failed`, leave the row `INITIATED`, and return the user to a "pending" page. Add the same "already VERIFIED at gateway" re-verify on the next `startPayment` call, or reuse the facilities two-phase pattern. Add a test mirroring `facilities-payment-action.test.ts:126`.
 - **Assumptions / how to verify:** Confirmed by reading; not reproduced. `tests/payment-callback.test.ts` has no case for "verify succeeds, transaction throws".
+- **Status (2026-09-16): Fixed.** `lib/payments/legacy-settlement.ts` separates verification from persistence: a database failure after a confirmed verify logs `payment_verification_persist_failed`, leaves the row `INITIATED` with its authority, and sends the applicant to a new `pending` return state; `startPayment` re-verifies an open attempt before charging again and completes the submission with no new fee when Zarinpal confirms it. Tests in `tests/payment-callback.test.ts`, `tests/payment-action.test.ts`, `tests/payment-return-page.test.tsx`.
 
 ### P2. Facilities flow classifies every gateway error as "rejected"
 
@@ -76,6 +83,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** `zarinpal.ts:37-40`; `facilities-payment.ts:80-84,367-380`. `tests/facilities-payment-action.test.ts:167` covers "cannot be reached" (network) but not "reachable, returns 5xx JSON".
 - **Fix:** In `postZarinpal`, throw a distinct error class for `response.status >= 500` and for network/timeout, and reserve the "rejected" classification for a 2xx/4xx body whose `errors.code` is a documented Zarinpal rejection (for example -51, -53, -54). Keep `PENDING` for everything else so the 20-minute stale re-verify (line 226) picks it up.
 - **Assumptions / how to verify:** Zarinpal's exact status codes on internal errors were not verified offline; the fix is safe regardless.
+- **Status (2026-09-16): Fixed.** `lib/payments/zarinpal-errors.ts` distinguishes an explicit gateway rejection from an unavailable answer (HTTP 5xx, non-JSON body, non-2xx without a gateway error, missing fields). Both flows close an attempt only on a rejection; everything else stays open for re-verification. Tests in `tests/zarinpal.test.ts` and `tests/facilities-payment-action.test.ts`.
 
 ### P3. Stale re-verify can close an attempt whose bank session is still open
 
@@ -85,6 +93,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** The three line ranges above; `STALE_PAYMENT_ATTEMPT_MS` at `:28`.
 - **Fix:** When the callback hits a terminal attempt with `gatewayStatus === "OK"`, still call `verifyZarinpalPayment`; if it succeeds, record `VERIFIED` on that attempt and write an audit row flagged for manual review, rather than discarding it. Alternatively, on stale re-verify, treat a "not paid" answer as `PENDING` rather than `FAILED` until the gateway session has definitely expired.
 - **Assumptions / how to verify:** Depends on Zarinpal's StartPay session lifetime being 20 minutes or longer, which could not be verified offline. If Zarinpal expires the session sooner, this collapses into P2.
+- **Status (2026-09-16): Fixed; migration to deploy.** A callback with `Status=OK` for a closed attempt is verified with the gateway; a confirmed capture is recorded as VERIFIED with reason `LATE_CAPTURE` under the row lock and completes the submission. Migration `20260916150000_facilities_payment_late_capture` relaxes the trigger for FAILED/CANCELLED → VERIFIED (and legalises TIMED_OUT → FAILED, which the stale-attempt cleanup already wrote but the original trigger never allowed). A second capture on an already-paid application is never verified (`DUPLICATE_NOT_VERIFIED`) so the gateway reverses it. The migration has not yet been applied to a database; run it on staging followed by `prisma/tests/test-facilities-m6-payment.sh`.
 
 ### P4. Legacy callback: no lock, duplicate notifications, and a retry path that leaves the old session payable
 
@@ -94,6 +103,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** File lines above. The facilities flow does this correctly with `lockFacilitiesPayment` (`facilities-payment.ts:105-108`).
 - **Fix:** Wrap the status read and update in an interactive transaction with an `update` on the payment row first (the pattern at `facilities-payment.ts:105-108`), and use `updateMany({ where: { id, status: INITIATED } })` so only one caller proceeds to history and SMS. In the callback, refuse to verify if the application already has a VERIFIED payment.
 - **Assumptions / how to verify:** Confirmed by reading; concurrency not reproduced.
+- **Status (2026-09-16): Fixed.** The legacy settlement claims the row with a conditional update (`status <> VERIFIED`) inside one transaction; under concurrent delivery only the winner writes history and sends SMS (`payment_verification_already_settled` marks the loser). A callback for a second payment on an already-paid application is not verified and the row is closed with `duplicate_payment_not_verified`. Tests in `tests/payment-callback.test.ts`.
 
 ### P5. SMS senders are registered server actions
 
@@ -103,6 +113,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **Evidence:** Lines above; `lib/sms/messages.ts:28-35` accepts any `to`.
 - **Fix:** Move both functions to a non-action module (for example `lib/payments/notifications.ts`) and import them from the callback route. Two-line change, closes the surface regardless of ID secrecy.
 - **Assumptions / how to verify:** Whether the tree-shaken client bundle still contains the unused action's ID was not checked against a production build; grep the built `.next/static` for the manifest entry after `next build`.
+- **Status (2026-09-16): Fixed.** Both helpers moved to `lib/payments/legacy-notifications.ts`, a plain module; `lib/actions/payment.ts` now exports only `startPayment`.
 
 ### P6. Legacy verify uses the compile-time constant, not the stored amount
 
@@ -110,6 +121,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **What an attacker does:** None. A fee change deployed while a payment is in flight makes the verify amount differ from the requested amount; Zarinpal answers -50 and the captured payment is marked FAILED (P1 path).
 - **Impact:** Paid-but-failed during any fee change. The facilities flow already does this right (`facilities-payment.ts:365` uses `payment.amountToman`).
 - **Fix:** `amountToman: payment.amountToman` on line 69.
+- **Status (2026-09-16): Fixed.** The legacy verify uses `payment.amountToman` from the row.
 
 ### U4. Admin multipart routes parse the body before authentication
 
@@ -117,6 +129,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **What an attacker does:** Unauthenticated POSTs of nginx-limit-sized bodies to these two routes; each is fully buffered before the 401.
 - **Impact:** Cheap memory pressure without a login. Bounded by nginx, so Low.
 - **Fix:** Call `requireSession("admin")` (or the permission helper) before `formData()`, as `app/api/uploads/route.ts:14-15` does.
+- **Status (2026-09-16): Fixed.** The admin guard moved to `lib/admin/require-admin.ts` (a plain module) and both routes call it, with the specific permission, before `formData()`; the actions still re-check. Tests in `tests/admin-certificate-route.test.ts` and `tests/admin-status-route.test.ts`.
 
 ### U5. ZIP members are allow-listed by extension only
 
@@ -124,12 +137,14 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - **What an attacker does:** Put an executable or a nested archive inside the ZIP under `scan.pdf`. The nested-archive rule is bypassed by name.
 - **Impact:** Low. clamd scans archive contents by default, so the file is still virus-checked, and members are never extracted on the server. The rule exists to stop admins receiving archives-in-archives, and that intent is not enforced by content.
 - **Fix:** For stored (method 0) members, and for deflated members up to a small size cap, run the existing magic-byte detector on the first bytes of the member and require it to match the extension. Reuse `readZipText`'s bounded `inflateRawSync`.
+- **Status (2026-09-16): Fixed.** Every ZIP member's head (a bounded, truncated inflate for deflated members; nothing is extracted) must carry the magic bytes its extension implies, and `.docx`/`.xlsx` members must open with a known Office part. A renamed archive, executable or wrong image type is rejected as `ZIP_UNSAFE`. Documented residual: a genuine Office container whose later parts hide something else is caught only by clamd. Tests in `tests/facilities-files.test.ts`.
 
 ### P7. Production merchant ID remains in git history
 
 - **Location:** a `git log -S` for the merchant ID (prefix redacted here) returns `859c20f`, `c18ff2b` (2026-05-07) and `54e721c` (the prior audit, which quotes it). The working tree is clean of it.
 - **Impact:** Low. Zarinpal v4 has no secret key; the merchant ID is sent in every payment request and lets a third party create payment requests that credit this merchant, which is a nuisance rather than a loss.
 - **Fix:** Rewrite history only if the repository is or becomes shared outside the team; otherwise record the exposure and rotate the merchant ID at Zarinpal if their panel allows.
+- **Status (2026-09-16): Fixed; GitHub purge pending.** History was rewritten with `git filter-repo --replace-text` and all six branches on `origin` were force-pushed; the value and its search prefix are absent from every commit and every branch tree, and the public branch views confirm it. `tests/no-committed-gateway-credentials.test.ts` guards against recurrence. Pre-rewrite mirror kept at `ioiv-pre-rewrite-2026-09-16.git` outside the tree. Still needed: a GitHub support request to purge cached views of the old commits (they remain reachable by SHA until then), re-clones for anyone with an older clone, then deletion of the mirror. Left untouched locally: branch `claude/practical-swirles-c95178` in another session's worktree and Codex's `refs/codex/*` checkpoint refs still hold the old value; neither is on GitHub.
 
 ## 4. Re-check of the 2026-09-15 audit claims
 
@@ -137,22 +152,22 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 |---|---|---|
 | P0 fake payments blocked | Still holds | Confirmed end-to-end in both flows. |
 | P1 success screens trust URL | Fixed | `app/payment/return/page.tsx:19-31` reads the row; `lib/facilities/payment-notice.ts` derives the banner from DB state. |
-| P2 SMS helpers as server actions | Still open | See P5. |
-| P3 stuck/unrecoverable payments | Facilities fixed, legacy open | Facilities now has two-phase verify, stale re-verify and `paid-unsubmitted` recovery; legacy still fails a captured payment (P1). New edge cases in P2/P3. |
+| P2 SMS helpers as server actions | Closed 2026-09-16 | See P5 status. |
+| P3 stuck/unrecoverable payments | Closed 2026-09-16 | Legacy now has the same verify/persist split (P1); gateway-error classification (P2) and late capture (P3) closed. |
 | P4 no gateway timeout | Fixed | `lib/payments/zarinpal.ts:53` uses `AbortSignal.timeout`. |
-| P5 legacy callback no lock | Still open | See P4. |
+| P5 legacy callback no lock | Closed 2026-09-16 | See P4 status. |
 | P6 `APP_URL` default | Fixed | `lib/app-url.ts` throws when unset. |
-| Merchant ID in `DEPLOYMENT.md` | Fixed in tree, present in history | See P7. |
+| Merchant ID in `DEPLOYMENT.md` | Closed 2026-09-16 | History rewritten; see P7 status. |
 | U1 path traversal | Fixed | `LEGACY_UPLOAD_FIELD_KEY_PATTERN` plus root check at `lib/uploads/storage.ts:130-143`. |
 | U2 ports on all interfaces | Fixed | `docker-compose.yml:24,70` bind `127.0.0.1`. |
-| U3 legacy unscanned / MIME trusted | Partly fixed | Content is verified and scanned, but scanning is fail-open when unconfigured (U2 above). `nosniff` and type allow-list on legacy downloads are in place. |
-| U4 SheetJS CVEs, parse before ownership | Still open | See U1. Version and ordering unchanged. |
-| U5 ZIP members not allow-listed | Fixed by extension | See U5 for the remaining content gap. |
+| U3 legacy unscanned / MIME trusted | Closed 2026-09-16 | Content verified, scanned, and now fail-closed (U2 status). |
+| U4 SheetJS CVEs, parse before ownership | Closed 2026-09-16 | See U1 status. |
+| U5 ZIP members not allow-listed | Closed 2026-09-16 | Extension and content now both checked (U5 status). |
 | U6 certificate 1 MB action limit | Fixed | Route handler at `app/api/admin/submissions/certificate/route.ts`. |
 | U7 no scan concurrency limit | Fixed | Semaphore at `scanner.ts:169-171`. |
 | U8 legacy uploads never deleted | Fixed | `lib/uploads/replace.ts`. |
 | U9 reaper wipes on empty DB | Fixed | Tripwire at `lib/facilities-files/orphans.ts:27-29`. |
-| U10 whole-file reads, buffer copies | Still open | Reads are bounded at 25 MiB; copies contribute to U3. |
+| U10 whole-file reads, buffer copies | Copies closed 2026-09-16 | Redundant copies removed (U3 status); whole-file reads remain, bounded at 25 MiB. |
 | U11 nginx location covers one route | Fixed in example | `nginx-facilities-upload.example.conf:7`; production config not inspected. |
 | U12 raw errors, no per-slot profile allow-list | Partly fixed | Template route returns generic errors; profile-files only pins the identity package to ZIP (`profile-files/route.ts:26-33`). Functional rather than security. |
 
@@ -167,7 +182,7 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 - Legacy path now shares the verifier, validates `fieldKey` against an allow-list, replaces instead of accumulating, and refuses to serve browser-declared types inline.
 - Security headers, loopback-only ports, non-root container user, memory limit, migration credentials separated from runtime credentials.
 
-## 6. Prioritized action list
+## 6. Prioritized action list (all items done on 2026-09-16)
 
 1. **U1** Upgrade SheetJS to 0.20.3 from the vendor registry, read workbooks with `bookSheets: true`, and move the binding/ownership check above the verifier in `application-files/route.ts`.
 2. **U2** Make the legacy scan fail closed (remove the unavailable-scanner early return) and assert scanner availability at startup in production.
@@ -179,4 +194,17 @@ Verdict: not ready until the spreadsheet parser is upgraded and moved behind the
 8. **P5** Move the two SMS helpers out of the `"use server"` module.
 9. **P6, U4, U5, P7** Use `payment.amountToman` in the legacy verify; authenticate before parsing admin multipart bodies; content-check ZIP members; decide on history rewrite for the merchant ID.
 
-**Verdict: NOT READY to accept live payments and uploads, because any self-registered user can hang or crash the only application container through the unpatched SheetJS parser before any ownership check, and the legacy upload path silently skips malware scanning when clamd is absent; the payment flows themselves block fake payments but the legacy callback can still double-charge after a mid-transaction failure.**
+Every item above is implemented in commit `397c55e`, with P7 completed by the history rewrite recorded in `29705da`.
+
+### Remaining follow-ups (operational, not code)
+
+1. Deploy the two commits with the migration profile so `20260916150000_facilities_payment_late_capture` is applied; run `prisma/tests/test-facilities-m6-payment.sh` on staging first.
+2. Confirm `FACILITIES_CLAMAV_HOST`/`PORT` are set in production `.env.runtime`; legacy uploads now return 503 without a scanner instead of storing unscanned files.
+3. Allow the build host to reach `cdn.sheetjs.com` (the `xlsx` dependency is a vendor tarball URL).
+4. Review the four `UPLOAD_MAX_*` limits against real traffic after the first week; they are process-local and reset on restart.
+5. Ask GitHub support to purge cached views of the rewritten commits; have every collaborator re-clone; then delete `ioiv-pre-rewrite-2026-09-16.git`.
+6. When the other sessions finish, delete or rebase the local-only branch `claude/practical-swirles-c95178` and run `git gc --prune=now` to drop the old objects locally.
+
+**Verdict at audit time (commit `0d223b4`): NOT READY to accept live payments and uploads, because any self-registered user can hang or crash the only application container through the unpatched SheetJS parser before any ownership check, and the legacy upload path silently skips malware scanning when clamd is absent; the payment flows themselves block fake payments but the legacy callback can still double-charge after a mid-transaction failure.**
+
+**Verdict after remediation (commit `29705da`, 2026-09-16): READY to accept live payments and uploads once these commits are deployed with the late-capture migration applied and clamd configured, because every High and Medium finding is closed in code with regression tests, the merchant ID is out of git history, and what remains is operational follow-up (GitHub cache purge, re-clones, limit tuning).**

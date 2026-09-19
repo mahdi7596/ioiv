@@ -1,0 +1,95 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo/source[39m
+
+(node:52876) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+{"level":"info","event":"otp_request_started","mode":"user","mobile":"093****5369"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+[90mstdout[2m | tests/otp-request.db.test.ts[2m > [22m[2mR5 restricted PostgreSQL request reservations[2m > [22m[2meight simultaneous requests create and dispatch exactly one code
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"093****5369","next":"otp"}
+
+ [31m❯[39m tests/otp-request.db.test.ts [2m([22m[2m24 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m23 skipped[39m[2m)[22m[33m 946[2mms[22m[39m
+[31m     [31m×[31m eight simultaneous requests create and dispatch exactly one code[39m[33m 942[2mms[22m[39m
+     [2m[90m↓[39m[22m five admissions per rolling hour survive SMS failures and cooldown expiry
+     [2m[90m↓[39m[22m slow provider blocks no transaction and duplicate requests cannot dispatch
+     [2m[90m↓[39m[22m once-claim duplicates and mismatched identity never dispatch another code
+     [2m[90m↓[39m[22m expired delayed hashing cannot replace a newer code
+     [2m[90m↓[39m[22m hash failure spends admission and blocks immediate retry
+     [2m[90m↓[39m[22m inactive admin admission spends address and mobile quota without OTP
+     [2m[90m↓[39m[22m configured shared address cap includes rejected mobile attempts: null
+     [2m[90m↓[39m[22m configured shared address cap includes rejected mobile attempts: 203.0.113.55
+     [2m[90m↓[39m[22m request and verification budgets are independent
+     [2m[90m↓[39m[22m global cap bounds rotating addresses and mobile allocation
+     [2m[90m↓[39m[22m invalid configuration fails closed: 
+     [2m[90m↓[39m[22m invalid configuration fails closed: 0
+     [2m[90m↓[39m[22m invalid configuration fails closed: 3001
+     [2m[90m↓[39m[22m invalid configuration fails closed: garbage
+     [2m[90m↓[39m[22m missing/mixed secrets fail both request and verification namespaces
+     [2m[90m↓[39m[22m failed claim transaction leaves old code valid and spends reservation
+     [2m[90m↓[39m[22m lost claim commit acknowledgement prevents SMS and retry
+     [2m[90m↓[39m[22m required cleanup failure denies admission and recovery prunes first
+     [2m[90m↓[39m[22m intent expiry is checked again after waiting on an unchanged OTP lock
+     [2m[90m↓[39m[22m prunes expired identifying intents but keeps live claims
+     [2m[90m↓[39m[22m runtime cannot delete live intents or change Admin
+     [2m[90m↓[39m[22m current/previous epochs retain cooldown and rolling five without boundary resets
+     [2m[90m↓[39m[22m only qualified X-Real-IP is canonicalized; XFF cannot bypass unknown
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/otp-request.db.test.ts[2m > [22mR5 restricted PostgreSQL request reservations[2m > [22meight simultaneous requests create and dispatch exactly one code
+[31m[1mAssertionError[22m: expected [ { status: 'fulfilled', …(1) }, …(7) ] to have a length of 1 but got 8[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 8[39m
+
+[36m [2m❯[22m tests/otp-request.db.test.ts:[2m25:53[22m[39m
+    [90m 23|[39m  it("eight simultaneous requests create and dispatch exactly one code"…
+    [90m 24|[39m   const results=await Promise.allSettled(Array.from({length:8},request…
+    [90m 25|[39m   [34mexpect[39m(results[33m.[39m[34mfilter[39m(r[33m=>[39mr[33m.[39mstatus[33m===[39m[32m"fulfilled"[39m))[33m.[39m[34mtoHaveLength[39m([34m1[39m)[33m;[39m
+    [90m   |[39m                                                     [31m^[39m
+    [90m 26|[39m   expect(results.filter(r=>r.status==="rejected"&&r.reason.status===42…
+    [90m 27|[39m   expect(sms.send).toHaveBeenCalledOnce();expect(await owner!.otpCode.…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m23 skipped[39m[90m (24)[39m
+[2m   Start at [22m 10:23:16
+[2m   Duration [22m 1.35s[2m (transform 173ms, setup 0ms, import 267ms, tests 946ms, environment 0ms)[22m
+

@@ -1,0 +1,49 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [base 1/3] FROM docker.io/library/node:22-alpine@sha256:b6f26b36c8ff49624cfdac716b8ea1138d606df02586a77d364bb5536a634f85
+#1 resolve docker.io/library/node:22-alpine@sha256:b6f26b36c8ff49624cfdac716b8ea1138d606df02586a77d364bb5536a634f85 done
+#1 sha256:b6f26b36c8ff49624cfdac716b8ea1138d606df02586a77d364bb5536a634f85 6.41kB / 6.41kB done
+#1 sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50 1.72kB / 1.72kB done
+#1 sha256:d8123cc242555fddfbc6735537cc6c78c3e33807fcf82b585c840e8cd36353d9 6.57kB / 6.57kB done
+#1 sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 3.85MB / 3.85MB 8.6s done
+#1 extracting sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5 0.1s done
+#1 sha256:65213f1a3de84db18197276d9be6a34fad98eec70604aeaa6821556d932c2676 444B / 444B 9.0s done
+#1 sha256:ec179e2ee07230312183920d42bf49c2ef18644e3d7186ffa92b02dd2e26a835 1.26MB / 1.26MB 9.8s done
+#1 sha256:1a3a899a8294dd12f21fb3f36579c74b05013aacbcf71d6db947dda5e1c59d06 55.68MB / 55.68MB 316.0s done
+#1 extracting sha256:1a3a899a8294dd12f21fb3f36579c74b05013aacbcf71d6db947dda5e1c59d06 2.1s done
+#1 extracting sha256:ec179e2ee07230312183920d42bf49c2ef18644e3d7186ffa92b02dd2e26a835 0.0s done
+#1 extracting sha256:65213f1a3de84db18197276d9be6a34fad98eec70604aeaa6821556d932c2676 done
+#1 DONE 318.3s
+
+#2 [base 2/3] WORKDIR /app
+#2 DONE 0.6s
+
+#3 [base 3/3] RUN apk add --no-cache libc6-compat openssl
+#3 71.55 (1/4) Installing musl-obstack (1.2.3-r2)
+#3 71.71 (2/4) Installing libucontext (1.5.1-r0)
+#3 71.86 (3/4) Installing gcompat (1.1.0-r4)
+#3 72.17 (4/4) Installing openssl (3.5.8-r0)
+#3 73.89 Executing busybox-1.37.0-r31.trigger
+#3 73.94 OK: 11.8 MiB in 22 packages
+#3 DONE 74.0s
+
+#4 [internal] load build definition from Dockerfile
+#4 transferring dockerfile: 1.95kB done
+#4 DONE 0.0s
+
+#5 [internal] load metadata for docker.io/library/node:22-alpine@sha256:b6f26b36c8ff49624cfdac716b8ea1138d606df02586a77d364bb5536a634f85
+#5 DONE 0.0s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 327B done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 2.87MB 0.1s done
+#7 DONE 0.1s
+
+#8 [deps 1/2] COPY package.json package-lock.json ./
+#8 DONE 0.1s
+
+#9 [deps 2/2] RUN npm ci --registry=https://registry.npmjs.org/
+ERROR: failed to build: failed to solve: Canceled: context canceled

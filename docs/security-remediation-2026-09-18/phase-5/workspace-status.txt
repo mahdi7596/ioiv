@@ -1,0 +1,66 @@
+ M .env.runtime.example
+ M DEPLOYMENT.md
+ M app/admin/login/page.tsx
+ M app/api/auth/request-otp/route.ts
+ M app/api/auth/verify-otp/route.ts
+ M app/api/payment/callback/route.ts
+ M app/dashboard/application/page.tsx
+ M app/payment/return/page.tsx
+ M components/application/ApplicationWizard.tsx
+ M components/application/FinalPaymentStep.tsx
+ M components/auth/AuthFlow.tsx
+ M components/auth/MobileEntryForm.tsx
+ M components/facilities/FacilitiesApplicationWizard.tsx
+ M docs/2026-09-16-payment-upload-security-audit.md
+ M lib/actions/admin.ts
+ M lib/actions/application.ts
+ M lib/actions/auth.ts
+ M lib/actions/facilities-payment.ts
+ M lib/actions/payment.ts
+ M lib/facilities/payment-notice.ts
+ M lib/facilities/submission.ts
+ M lib/payments/legacy-notifications.ts
+ M lib/payments/legacy-settlement.ts
+ M lib/payments/zarinpal-errors.ts
+ M lib/payments/zarinpal.ts
+ M lib/sms/ghasedak.ts
+ M lib/sms/index.ts
+ M package.json
+ M prisma/facilities-runtime-role-grants.sql
+ M prisma/schema.prisma
+ M tests/admin-actions-permissions.test.ts
+ M tests/auth-actions.test.ts
+ M tests/facilities-payment-action.test.ts
+ M tests/ghasedak.test.ts
+ M tests/payment-action.test.ts
+ M tests/payment-callback.test.ts
+ M tests/payment-return-page.test.tsx
+ M tests/sms-index.test.ts
+ M tests/zarinpal.test.ts
+?? docs/2026-09-18-prelaunch-security-review.md
+?? docs/2026-09-18-security-remediation-master-prompt.md
+?? docs/security-remediation-2026-09-18/
+?? docs/security-remediation-progress.md
+?? docs/security-review-2026-09-18/
+?? lib/auth/request.ts
+?? lib/auth/verification.ts
+?? lib/payments/coordination.ts
+?? lib/payments/messages.ts
+?? operations/auth-verification-maintenance.example.cron
+?? prisma/migrations/20260918120000_payment_coordination/
+?? prisma/migrations/20260918121000_payment_audit_status/
+?? prisma/migrations/20260918122000_payment_audit_actions/
+?? prisma/migrations/20260919120000_otp_verification_limits/
+?? prisma/migrations/20260919130000_otp_request_intents/
+?? prisma/tests/otp-request/
+?? prisma/tests/otp-verification/
+?? prisma/tests/payment-coordination/
+?? scripts/prune-auth-verification.ts
+?? tests/otp-request-route.test.ts
+?? tests/otp-request.db.test.ts
+?? tests/otp-verification-route.test.ts
+?? tests/otp-verification.db.test.ts
+?? tests/payment-coordination-mock.ts
+?? tests/payment-coordination.db.test.ts
+?? tests/prune-auth-verification.test.ts
+?? tests/zarinpal-contract.test.ts

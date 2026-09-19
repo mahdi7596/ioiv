@@ -39,6 +39,8 @@ export function FileUploadControl({
           type="file"
           accept=".pdf,.doc,.docx,.zip,.xls,.xlsx,.csv"
           disabled={uploading || readOnly}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
           onChange={(event) => {
             const file = event.target.files?.[0];
 
@@ -67,7 +69,7 @@ export function FileUploadControl({
         </>
       ) : null}
       {value ? <p className="upload-control__success">فایل با موفقیت ثبت شد.</p> : null}
-      {error ? <p className="field__hint">{error}</p> : null}
+      {error ? <p id={`${id}-error`} role="alert" className="field__hint">{error}</p> : null}
       {error && !readOnly ? (
         <label className="button button--ghost" htmlFor={id}>
           تلاش دوباره

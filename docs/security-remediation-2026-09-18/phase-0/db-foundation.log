@@ -1,0 +1,125 @@
+
+> sana-registration-review-platform@0.1.0 test:db:m1-integrity
+> prisma/tests/test-facilities-foundation.sh
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase0", schema "public" at "127.0.0.1:59677"
+
+24 migrations found in prisma/migrations
+
+Applying migration `20260428141416_init`
+Applying migration `20260502073300_add_registration_company_contact_fields`
+Applying migration `20260502085000_drop_company_contact_national_id`
+Applying migration `20260502183000_add_human_resources_to_application`
+Applying migration `20260507120000_replace_final_statuses_with_validation_completed`
+Applying migration `20260520120000_add_entry_viewer_admin_role`
+Applying migration `20260601104000_add_unique_user_company_national_id`
+Applying migration `20260910120000_add_audit_logs`
+Applying migration `20260910173000_add_facilities_foundation`
+Applying migration `20260910190000_add_facilities_private_file_lifecycle`
+Applying migration `20260910200000_add_facilities_company_profile_state`
+Applying migration `20260910210000_add_facilities_application_evidence_bindings`
+Applying migration `20260910210000_add_facilities_configuration_template_lifecycle`
+Applying migration `20260910220000_add_facilities_payment_submission_guards`
+Applying migration `20260911160000_add_facilities_m7_review_corrections`
+Applying migration `20260911161000_restore_facilities_audit_metadata_validation`
+Applying migration `20260911162000_enforce_persian_facilities_correction_notes`
+Applying migration `20260911163000_expand_persian_correction_note_range`
+Applying migration `20260912120000_add_facilities_m8_export_audit_resilience`
+Applying migration `20260913120000_add_facilities_image_upload_types`
+Applying migration `20260916100000_add_otp_attempt_count_and_request_ip`
+Applying migration `20260916110000_add_admin_list_indexes`
+Applying migration `20260916120000_facilities_contact_mobile_shareholder_id`
+Applying migration `20260916150000_facilities_payment_late_capture`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260428141416_init/
+    └─ migration.sql
+  └─ 20260502073300_add_registration_company_contact_fields/
+    └─ migration.sql
+  └─ 20260502085000_drop_company_contact_national_id/
+    └─ migration.sql
+  └─ 20260502183000_add_human_resources_to_application/
+    └─ migration.sql
+  └─ 20260507120000_replace_final_statuses_with_validation_completed/
+    └─ migration.sql
+  └─ 20260520120000_add_entry_viewer_admin_role/
+    └─ migration.sql
+  └─ 20260601104000_add_unique_user_company_national_id/
+    └─ migration.sql
+  └─ 20260910120000_add_audit_logs/
+    └─ migration.sql
+  └─ 20260910173000_add_facilities_foundation/
+    └─ migration.sql
+  └─ 20260910190000_add_facilities_private_file_lifecycle/
+    └─ migration.sql
+  └─ 20260910200000_add_facilities_company_profile_state/
+    └─ migration.sql
+  └─ 20260910210000_add_facilities_application_evidence_bindings/
+    └─ migration.sql
+  └─ 20260910210000_add_facilities_configuration_template_lifecycle/
+    └─ migration.sql
+  └─ 20260910220000_add_facilities_payment_submission_guards/
+    └─ migration.sql
+  └─ 20260911160000_add_facilities_m7_review_corrections/
+    └─ migration.sql
+  └─ 20260911161000_restore_facilities_audit_metadata_validation/
+    └─ migration.sql
+  └─ 20260911162000_enforce_persian_facilities_correction_notes/
+    └─ migration.sql
+  └─ 20260911163000_expand_persian_correction_note_range/
+    └─ migration.sql
+  └─ 20260912120000_add_facilities_m8_export_audit_resilience/
+    └─ migration.sql
+  └─ 20260913120000_add_facilities_image_upload_types/
+    └─ migration.sql
+  └─ 20260916100000_add_otp_attempt_count_and_request_ip/
+    └─ migration.sql
+  └─ 20260916110000_add_admin_list_indexes/
+    └─ migration.sql
+  └─ 20260916120000_facilities_contact_mobile_shareholder_id/
+    └─ migration.sql
+  └─ 20260916150000_facilities_payment_late_capture/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+
+> sana-registration-review-platform@0.1.0 db:seed
+> tsx prisma/seed.ts
+
+(node:1988) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+BEGIN
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+UPDATE 1
+UPDATE 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+DO
+UPDATE 1
+DO
+UPDATE 1
+UPDATE 1
+DO
+UPDATE 1
+INSERT 0 1
+DO
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+DO
+ROLLBACK

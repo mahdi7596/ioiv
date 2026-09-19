@@ -1,0 +1,41 @@
+
+> sana-registration-review-platform@0.1.0 test:db:m7-review
+> sh prisma/tests/test-facilities-m7-review.sh
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase0", schema "public" at "127.0.0.1:59677"
+
+24 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+BEGIN
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+UPDATE 1
+DO
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+DO
+INSERT 0 1
+ROLLBACK

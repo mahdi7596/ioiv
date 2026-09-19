@@ -1,0 +1,16 @@
+
+added 435 packages, and audited 436 packages in 6m
+
+167 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase1", schema "public" at "127.0.0.1:64356"
+
+Error: Schema engine error:
+FATAL: the database system is in recovery mode
+

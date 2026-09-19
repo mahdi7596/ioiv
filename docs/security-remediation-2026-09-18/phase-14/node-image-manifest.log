@@ -1,0 +1,109 @@
+Name:      docker.io/library/node:22-alpine
+MediaType: application/vnd.oci.image.index.v1+json
+Digest:    sha256:b6f26b36c8ff49624cfdac716b8ea1138d606df02586a77d364bb5536a634f85
+           
+Manifests: 
+  Name:        docker.io/library/node:22-alpine@sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/amd64
+  Annotations: 
+    com.docker.official-images.bashbrew.arch: amd64
+    org.opencontainers.image.base.digest:     sha256:d56c381f961d307a21b3ca004cf1e3910f106644aefb1f43e654c8a56c4fd395
+    org.opencontainers.image.base.name:       alpine:3.24
+    org.opencontainers.image.created:         2026-09-17T21:47:22Z
+    org.opencontainers.image.revision:        bc0a422bce0f729dd85790639d9f1918143f1235
+    org.opencontainers.image.source:          https://github.com/nodejs/docker-node.git#bc0a422bce0f729dd85790639d9f1918143f1235:22/alpine3.24
+    org.opencontainers.image.url:             https://hub.docker.com/_/node
+    org.opencontainers.image.version:         22-alpine
+               
+  Name:        docker.io/library/node:22-alpine@sha256:392560769c9e762259a12943b73e2808305b6152d8a123444b080f48cd44abb5
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    com.docker.official-images.bashbrew.arch: amd64
+    vnd.docker.reference.digest:              sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
+    vnd.docker.reference.type:                attestation-manifest
+               
+  Name:        docker.io/library/node:22-alpine@sha256:16b35241821e3e249ab8a8e2099fff58feed7ee2c3d74f43f9d9b3236808d44b
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/arm/v6
+  Annotations: 
+    org.opencontainers.image.created:         2026-09-17T21:54:47Z
+    org.opencontainers.image.revision:        bc0a422bce0f729dd85790639d9f1918143f1235
+    org.opencontainers.image.source:          https://github.com/nodejs/docker-node.git#bc0a422bce0f729dd85790639d9f1918143f1235:22/alpine3.24
+    org.opencontainers.image.url:             https://hub.docker.com/_/node
+    org.opencontainers.image.version:         22-alpine
+    com.docker.official-images.bashbrew.arch: arm32v6
+    org.opencontainers.image.base.digest:     sha256:d3c3fda3e4d3f0fcfc86cf469c6dfbe65017143dde23feb4b11df37c373cdc76
+    org.opencontainers.image.base.name:       alpine:3.24
+               
+  Name:        docker.io/library/node:22-alpine@sha256:22ceae60cd7b7c9fa9cc9d4bfe0331d2ff409f9821015e1cc1b208a5154c8b20
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    com.docker.official-images.bashbrew.arch: arm32v6
+    vnd.docker.reference.digest:              sha256:16b35241821e3e249ab8a8e2099fff58feed7ee2c3d74f43f9d9b3236808d44b
+    vnd.docker.reference.type:                attestation-manifest
+               
+  Name:        docker.io/library/node:22-alpine@sha256:2187e2784540a35686a8a4bb150bd035277720d27603cfcc9ff66ab0853f05b7
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/arm/v7
+  Annotations: 
+    org.opencontainers.image.source:          https://github.com/nodejs/docker-node.git#bc0a422bce0f729dd85790639d9f1918143f1235:22/alpine3.24
+    org.opencontainers.image.url:             https://hub.docker.com/_/node
+    org.opencontainers.image.version:         22-alpine
+    com.docker.official-images.bashbrew.arch: arm32v7
+    org.opencontainers.image.base.digest:     sha256:0a13654ecd9b19a728f0bee49d7245ffcd9b9f31ed8d69fe8753e39a8432bda2
+    org.opencontainers.image.base.name:       alpine:3.24
+    org.opencontainers.image.created:         2026-09-17T21:55:49Z
+    org.opencontainers.image.revision:        bc0a422bce0f729dd85790639d9f1918143f1235
+               
+  Name:        docker.io/library/node:22-alpine@sha256:dd4e614ebe0185f821c9150366a85b3c321715abb069bb0ce2891d2498a1e41d
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    com.docker.official-images.bashbrew.arch: arm32v7
+    vnd.docker.reference.digest:              sha256:2187e2784540a35686a8a4bb150bd035277720d27603cfcc9ff66ab0853f05b7
+    vnd.docker.reference.type:                attestation-manifest
+               
+  Name:        docker.io/library/node:22-alpine@sha256:451d2ebc48dd4484ae9c3b865e2ed1a5ce2dd7be03d4344b506e41ed948e105d
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/arm64/v8
+  Annotations: 
+    org.opencontainers.image.base.digest:     sha256:260479a1cfaf304c4c20da7f8405d3ce313513dcd534bb743257bdd2fe0f3e2d
+    org.opencontainers.image.base.name:       alpine:3.24
+    org.opencontainers.image.created:         2026-09-17T21:48:20Z
+    org.opencontainers.image.revision:        bc0a422bce0f729dd85790639d9f1918143f1235
+    org.opencontainers.image.source:          https://github.com/nodejs/docker-node.git#bc0a422bce0f729dd85790639d9f1918143f1235:22/alpine3.24
+    org.opencontainers.image.url:             https://hub.docker.com/_/node
+    org.opencontainers.image.version:         22-alpine
+    com.docker.official-images.bashbrew.arch: arm64v8
+               
+  Name:        docker.io/library/node:22-alpine@sha256:87d9ec43cce825317130b26b004988e342a631d58ee6741d2f87285565c1a0ea
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    com.docker.official-images.bashbrew.arch: arm64v8
+    vnd.docker.reference.digest:              sha256:451d2ebc48dd4484ae9c3b865e2ed1a5ce2dd7be03d4344b506e41ed948e105d
+    vnd.docker.reference.type:                attestation-manifest
+               
+  Name:        docker.io/library/node:22-alpine@sha256:a13e916dbc76816ee5ce5cbcc87843bc95a6950c53a91d2efdc18a28e7f34bb1
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/s390x
+  Annotations: 
+    org.opencontainers.image.url:             https://hub.docker.com/_/node
+    org.opencontainers.image.version:         22-alpine
+    com.docker.official-images.bashbrew.arch: s390x
+    org.opencontainers.image.base.digest:     sha256:ce2789264b55ef57693ad3aebc95d4ee9e46288f769f43ab5f37554853502289
+    org.opencontainers.image.base.name:       alpine:3.24
+    org.opencontainers.image.created:         2026-09-18T00:13:21Z
+    org.opencontainers.image.revision:        bc0a422bce0f729dd85790639d9f1918143f1235
+    org.opencontainers.image.source:          https://github.com/nodejs/docker-node.git#bc0a422bce0f729dd85790639d9f1918143f1235:22/alpine3.24
+               
+  Name:        docker.io/library/node:22-alpine@sha256:dce75336ebc849dd75c01b42674548aad88478eca30de7089ca7e72df3ee4f10
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    com.docker.official-images.bashbrew.arch: s390x
+    vnd.docker.reference.digest:              sha256:a13e916dbc76816ee5ce5cbcc87843bc95a6950c53a91d2efdc18a28e7f34bb1
+    vnd.docker.reference.type:                attestation-manifest

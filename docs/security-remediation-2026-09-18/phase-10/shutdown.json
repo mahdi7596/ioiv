@@ -1,0 +1,56 @@
+{
+  "containers": [
+    {
+      "id": "c4972d0d78b1d76761e6c9cec2f3e36f6baaa5672f42d87b9cc61d4a428f042c",
+      "name": "sana-phase10-6b28xnlh",
+      "label": "sana.task=sana-phase10-6b28xnlh",
+      "image": "sha256:f961d097a9cedd37779baef1aab3fe87ef1c63b3b34d361f90a98ea5c9b77e56",
+      "formerPort": "55887"
+    }
+  ],
+  "recordedPids": {
+    "5075": "absent",
+    "7587": "absent",
+    "7611": "absent",
+    "7622": "absent",
+    "7639": "absent",
+    "7651": "absent",
+    "9700": "absent",
+    "10610": "absent",
+    "10624": "absent",
+    "10635": "absent",
+    "10637": "absent",
+    "10649": "absent",
+    "91462": "absent",
+    "91476": "absent",
+    "91488": "absent",
+    "91489": "absent",
+    "91501": "absent",
+    "96238": "absent",
+    "97147": "absent",
+    "98459": "absent",
+    "98723": "absent",
+    "98735": "absent",
+    "98747": "absent",
+    "98748": "absent",
+    "98760": "absent"
+  },
+  "ports": {
+    "55887": "closed",
+    "60116": "closed",
+    "60117": "closed",
+    "60363": "closed",
+    "60364": "closed",
+    "60707": "closed",
+    "60708": "closed",
+    "61963": "closed",
+    "61964": "closed",
+    "62861": "closed",
+    "62862": "closed"
+  },
+  "phaseWorkersRemaining": [],
+  "sourceScratchAndSyntheticBytesRetained": [
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh"
+  ],
+  "otherResourcesTouched": false
+}

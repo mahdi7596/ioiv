@@ -19,8 +19,8 @@ END $$;
 DO $$
 BEGIN
   IF position(
-    'NEW."lifecycleStatus" IN (''PENDING'', ''FAILED'')'
-    IN pg_get_functiondef('enforce_facilities_file_upload_integrity'::regproc)
+    'NEW."lifecycleStatus"IN(''PENDING'',''FAILED'')'
+    IN regexp_replace(pg_get_functiondef('enforce_facilities_file_upload_integrity'::regproc), '\s', '', 'g')
   ) = 0 THEN
     RAISE EXCEPTION 'M8 unavailable upload expiry transition is missing';
   END IF;

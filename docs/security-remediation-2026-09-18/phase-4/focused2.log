@@ -1,0 +1,90 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source[39m
+
+(node:2823) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mcookie failure spends the code and retry cannot create another session
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mcleanup failure denies before bcrypt and recovers after capability restoration
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mreservation DB failure denies before compare; commit failure cannot authorize a cookie
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mmissing or inconsistent secrets deny without resetting budgets
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mmissing or inconsistent secrets deny without resetting budgets
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+ [32m✓[39m tests/otp-verification.db.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 8917[2mms[22m[39m
+     [33m[2m✓[22m[39m twelve concurrent wrong requests compare the real code at most five times [33m 866[2mms[22m[39m
+     [33m[2m✓[22m[39m twelve concurrent correct requests issue exactly one session [33m 978[2mms[22m[39m
+     [33m[2m✓[22m[39m reserve rechecks expiry after an unchanged row-lock wait [33m 2539[2mms[22m[39m
+     [33m[2m✓[22m[39m consume rechecks expiry after an unchanged row-lock wait [33m 2537[2mms[22m[39m
+     [33m[2m✓[22m[39m unknown address is shared across mobiles and purposes [33m 1219[2mms[22m[39m
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2minvalidates older unused OTPs before creating a replacement
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2minvalidates older unused OTPs before creating a replacement
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects OTP requests made too soon for the same mobile and purpose
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects OTP requests after five requests in an hour for the same mobile and purpose
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for mobiles outside the active admin list
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for mobiles outside the active admin list
+[22m[39m{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for inactive admin mobiles
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for inactive admin mobiles
+[22m[39m{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mallows active entry viewer admins to request an admin OTP
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"093****6801"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mallows active entry viewer admins to request an admin OTP
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"093****6801","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not reveal whether a user mobile is already registered when requesting an OTP
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not reveal whether a user mobile is already registered when requesting an OTP
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****0001"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"warn","event":"otp_ip_limit_hit","clientIp":"203.0.113.5","purpose":"USER_LOGIN","count":30}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mapplies rate limits before revealing whether an admin mobile exists
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mfails closed before comparison on database failure
+[22m[39m{"level":"warn","event":"otp_verify_unavailable","reason":"verification_failed"}
+
+ [32m✓[39m tests/auth-actions.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m32 passed[39m[22m[90m (32)[39m
+[2m   Start at [22m 09:48:31
+[2m   Duration [22m 9.52s[2m (transform 108ms, setup 0ms, import 309ms, tests 8.93s, environment 0ms)[22m
+

@@ -107,6 +107,7 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
       <ValidationCertificatePanel
         applicationId={submission.id}
         currentStatus={submission.status}
+          draftVersion={submission.draftVersion}
         certificate={validationCertificate}
         canDownload={permissions.downloadSubmissionFiles}
         canReplace={permissions.manageValidationCertificates}
@@ -121,6 +122,7 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
         <StatusChangeForm
           applicationId={submission.id}
           currentStatus={submission.status}
+          draftVersion={submission.draftVersion}
         />
       ) : null}
       </div>

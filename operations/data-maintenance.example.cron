@@ -1,0 +1,9 @@
+# Install only as part of authorized rollout with operator-owned logs and alerts.
+# Exit 0 = completed observed scope; 1 = failed; 2 = skipped/incomplete/partial coverage.
+# Exit 2 requires monitoring of reason/counts and bounded retry, never a success signal.
+# Large legacy resweeps (>100 retained candidates) normally report partial coverage;
+# assess cursor progress and failures separately. No claim of permanent byte absence.
+# Replace the deployment directory and provision the actual scheduler/log rotation.
+10 * * * * cd /data/apps/sana && docker compose exec -T app npm run auth:prune-otp >> /var/log/sana-otp-maintenance.log 2>&1
+*/5 * * * * cd /data/apps/sana && docker compose exec -T app npm run legacy:reconcile-files >> /var/log/sana-legacy-maintenance.log 2>&1
+*/5 * * * * cd /data/apps/sana && docker compose exec -T app npm run facilities:reconcile-files >> /var/log/sana-facilities-maintenance.log 2>&1

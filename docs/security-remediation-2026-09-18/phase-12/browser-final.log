@@ -1,0 +1,7 @@
+(node:63041) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":63063,"port":59259,"scannerPort":59258}
+PASS 390px legacy stale conflict, certificate commit/refresh, expired401; facilities production serialized409/401 and one preserved decision
+PASS 1440px legacy stale conflict, certificate commit/refresh, expired401; facilities production serialized409/401 and one preserved decision
+PASS controlled INSTREAM scans 4; external fetch blocked
+Owned Next/browser/scanner stopped

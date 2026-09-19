@@ -1,0 +1,20 @@
+(node:57744) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"providerPort":54540}
+{"serverPid":57747,"port":54541,"proxy":false}
+{"serverPid":57748,"port":54542,"proxy":false}
+PASS eight HTTP requests/two production Next processes: one dispatch during slow provider
+PASS failure: uncertain warning, quota retained, no retry
+PASS malformed: uncertain warning, quota retained, no retry
+PASS timeout: uncertain warning, quota retained, no retry
+PASS unqualified/spoofed headers share unknown quota
+{"serverPid":57810,"port":54564,"proxy":true}
+PASS explicitly qualified X-Real-IP quota; XFF ignored (fixture only)
+PASS 390px user: loading, uncertain OTP entry, actual cookie,429/refresh no redispatch, accessible RTL
+PASS 390px admin: loading, uncertain OTP entry, actual cookie,429/refresh no redispatch, accessible RTL
+PASS 1440px user: loading, uncertain OTP entry, actual cookie,429/refresh no redispatch, accessible RTL
+PASS 1440px admin: loading, uncertain OTP entry, actual cookie,429/refresh no redispatch, accessible RTL
+{"serverPid":58151,"port":54811,"proxy":false}
+PASS actual unavailable DB503/no provider dispatch
+PASS captured server logs exclude every fixture OTP
+Owned browser, Next servers and provider stopped

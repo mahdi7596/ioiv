@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v/source",
+  "container": "sana-phase6-zpeape_v",
+  "containerId": "83ae5ee308146f9ffe9d1f9d1ebeef83c3379dd94dd4cd06a320592edeccb827",
+  "label": "sana.task=sana-phase6-zpeape_v",
+  "port": "57367",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

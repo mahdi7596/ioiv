@@ -1,0 +1,17 @@
+{
+  "priorMigrations": 34,
+  "newMigrations": [
+    {
+      "migration": "20260919180000_admin_review_coordination",
+      "precommitRollback": true,
+      "historicalRowsUnchanged": true
+    },
+    {
+      "migration": "20260919181000_correction_sms_uncertainty",
+      "precommitRollback": true,
+      "historicalRowsUnchanged": true
+    }
+  ],
+  "backfillVersion": 0,
+  "productionAccess": false
+}

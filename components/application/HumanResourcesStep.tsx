@@ -6,7 +6,7 @@ import type { StepProps } from "./types";
 
 export function HumanResourcesStep({
   draft,
-  uploadingKey,
+  uploadingKeys,
   uploadProgress,
   uploadErrors,
   readOnly,
@@ -52,18 +52,10 @@ export function HumanResourcesStep({
         required
         value={draft.humanResources.insuranceList}
         readOnly={readOnly}
-        uploading={uploadingKey === fieldKey}
+        uploading={Boolean(uploadingKeys?.[fieldKey])}
         progress={uploadProgress[fieldKey]}
         error={uploadErrors[fieldKey]}
-        onUpload={async (file) => {
-          const uploaded = await onUpload(fieldKey, file);
-          if (uploaded) {
-            onDraftChange({
-              ...draft,
-              humanResources: { ...draft.humanResources, insuranceList: uploaded },
-            });
-          }
-        }}
+        onUpload={async (file) => { await onUpload(fieldKey, file); }}
       />
     </div>
   );

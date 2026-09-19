@@ -3,7 +3,7 @@ export type FacilitiesPaymentNotice = "success" | "failed" | "pending" | "paid-u
 const OPEN_PAYMENT_STATES = new Set(["INITIATED", "REDIRECT_READY", "PENDING", "TIMED_OUT"]);
 const SUBMITTED_OR_LATER = new Set(["SUBMITTED", "UNDER_REVIEW", "NEEDS_EDIT", "VALIDATION_COMPLETED"]);
 
-type NoticeApplication = { status: string; payments: Array<{ status: string }> } | null | undefined;
+type NoticeApplication = { paymentObligation?: { state: string } | null; status: string; payments: Array<{ status: string }> } | null | undefined;
 
 /**
  * Turns the `?payment=` hint from the gateway callback into a banner that is
@@ -18,6 +18,7 @@ export function deriveFacilitiesPaymentNotice(param: string | undefined, applica
   const hasVerified = statuses.includes("VERIFIED");
   const submittedOrLater = SUBMITTED_OR_LATER.has(application.status);
 
+  if (!hasVerified && application.paymentObligation && !["READY", "SETTLED", "PAYABLE"].includes(application.paymentObligation.state)) return "pending";
   if (hasVerified && !submittedOrLater) return "paid-unsubmitted";
   if (param === "failed") return "failed";
   if (param === "success") return hasVerified && submittedOrLater ? "success" : undefined;

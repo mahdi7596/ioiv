@@ -1,0 +1,40 @@
+2026-09-19 11:38:55.266 UTC [5972] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-09-19 11:38:55.267 UTC [5972] LOG:  redo starts at 0/191F110
+2026-09-19 11:38:55.268 UTC [5972] LOG:  invalid record length at 0/1960460: expected at least 24, got 0
+2026-09-19 11:38:55.268 UTC [5972] LOG:  redo done at 0/1960428 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-19 11:38:55.270 UTC [5973] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-09-19 11:38:55.270 UTC [5973] PANIC:  could not write to file "pg_logical/replorigin_checkpoint.tmp": No space left on device
+2026-09-19 11:38:55.270 UTC [1] LOG:  checkpointer process (PID 5973) was terminated by signal 6: Aborted
+2026-09-19 11:38:55.271 UTC [1] LOG:  terminating any other active server processes
+2026-09-19 11:38:55.271 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-09-19 11:38:55.275 UTC [5975] LOG:  database system shutdown was interrupted; last known up at 2026-09-19 11:38:55 UTC
+2026-09-19 11:38:55.367 UTC [5975] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-09-19 11:38:55.370 UTC [5975] LOG:  redo starts at 0/191F110
+2026-09-19 11:38:55.371 UTC [5975] LOG:  invalid record length at 0/1960460: expected at least 24, got 0
+2026-09-19 11:38:55.371 UTC [5975] LOG:  redo done at 0/1960428 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-19 11:38:55.379 UTC [5976] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-09-19 11:38:55.379 UTC [5976] PANIC:  could not write to file "pg_logical/replorigin_checkpoint.tmp": No space left on device
+2026-09-19 11:38:55.380 UTC [1] LOG:  checkpointer process (PID 5976) was terminated by signal 6: Aborted
+2026-09-19 11:38:55.380 UTC [1] LOG:  terminating any other active server processes
+2026-09-19 11:38:55.380 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-09-19 11:38:55.386 UTC [5978] LOG:  database system shutdown was interrupted; last known up at 2026-09-19 11:38:55 UTC
+2026-09-19 11:38:55.485 UTC [5978] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-09-19 11:38:55.486 UTC [5978] LOG:  redo starts at 0/191F110
+2026-09-19 11:38:55.488 UTC [5978] LOG:  invalid record length at 0/1960460: expected at least 24, got 0
+2026-09-19 11:38:55.488 UTC [5978] LOG:  redo done at 0/1960428 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-19 11:38:55.490 UTC [5979] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-09-19 11:38:55.491 UTC [5979] PANIC:  could not write to file "pg_logical/replorigin_checkpoint.tmp": No space left on device
+2026-09-19 11:38:55.491 UTC [1] LOG:  checkpointer process (PID 5979) was terminated by signal 6: Aborted
+2026-09-19 11:38:55.491 UTC [1] LOG:  terminating any other active server processes
+2026-09-19 11:38:55.491 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-09-19 11:38:55.497 UTC [5981] LOG:  database system shutdown was interrupted; last known up at 2026-09-19 11:38:55 UTC
+2026-09-19 11:38:55.731 UTC [5981] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-09-19 11:38:55.733 UTC [5981] LOG:  redo starts at 0/191F110
+2026-09-19 11:38:55.738 UTC [5981] LOG:  invalid record length at 0/1960460: expected at least 24, got 0
+2026-09-19 11:38:55.738 UTC [5981] LOG:  redo done at 0/1960428 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-19 11:38:55.748 UTC [5982] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-09-19 11:38:55.748 UTC [5982] PANIC:  could not write to file "pg_logical/replorigin_checkpoint.tmp": No space left on device
+2026-09-19 11:38:55.749 UTC [1] LOG:  checkpointer process (PID 5982) was terminated by signal 6: Aborted
+2026-09-19 11:38:55.749 UTC [1] LOG:  terminating any other active server processes
+2026-09-19 11:38:55.750 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-09-19 11:38:55.759 UTC [5984] LOG:  database system shutdown was interrupted; last known up at 2026-09-19 11:38:55 UTC

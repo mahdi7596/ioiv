@@ -1,0 +1,373 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source[39m
+
+(node:62872) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 legacy request and verification use the stored obligation amount
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4cb0001siiuuavjg2x9","paymentId":"cmu8ad4ef0005siiuopcsvbhi","amountToman":765432}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 legacy request and verification use the stored obligation amount
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4cb0001siiuuavjg2x9","paymentId":"cmu8ad4ef0005siiuopcsvbhi"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 legacy request and verification use the stored obligation amount
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad4ef0005siiuopcsvbhi","applicationId":"cmu8ad4cb0001siiuuavjg2x9","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 0 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4gr000bsiiu9imdbsyk","paymentId":"cmu8ad4h6000fsiiu53g0zys9","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 0 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4gr000bsiiu9imdbsyk","paymentId":"cmu8ad4h6000fsiiu53g0zys9"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 1 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4jg000jsiiuql5vo627","paymentId":"cmu8ad4jt000nsiiu4aeytwsf","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 1 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4jg000jsiiuql5vo627","paymentId":"cmu8ad4jt000nsiiu4aeytwsf"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 2 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4ls000rsiiuuhqhuv7n","paymentId":"cmu8ad4m8000vsiiuiototrwv","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 2 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4ls000rsiiuuhqhuv7n","paymentId":"cmu8ad4m8000vsiiuiototrwv"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 3 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4nz000zsiiu2livaimx","paymentId":"cmu8ad4oe0013siiu5rzbngfu","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed verify 3 blocks forged success, new charge and remote replay
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4nz000zsiiu2livaimx","paymentId":"cmu8ad4oe0013siiu5rzbngfu"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed request cannot create a payable URL or another attempt
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4rl0017siiuwhjcubmr","paymentId":"cmu8ad4s4001bsiiuybdv0we5","amountToman":3000000}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 malformed request cannot create a payable URL or another attempt
+[22m[39m{"level":"error","event":"payment_start_failed","applicationId":"cmu8ad4rl0017siiuwhjcubmr","paymentId":"cmu8ad4s4001bsiiuybdv0we5","error":{"name":"ZarinpalUnavailableError","message":"Zarinpal unavailable: MALFORMED_RESPONSE","stack":"ZarinpalUnavailableError: Zarinpal unavailable: MALFORMED_RESPONSE\n    at requestZarinpalPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/zarinpal.ts:112:11)\n    at Module.startPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/payment.ts:139:16)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:131:12\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 forged browser authority cannot reach the provider
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4sw001esiiuhrnry45v","paymentId":"cmu8ad4ta001isiiu105qn045","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 forged browser authority cannot reach the provider
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4sw001esiiuhrnry45v","paymentId":"cmu8ad4ta001isiiu105qn045"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 forged browser authority cannot reach the provider
+[22m[39m{"level":"warn","event":"payment_callback_rejected","paymentId":"cmu8ad4ta001isiiu105qn045","reason":"payment_not_found_or_authority_mismatch"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 explicit rejection then 101 recovers only original authority and settles once
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad4tu001lsiiukbcnakkd","paymentId":"cmu8ad4u6001psiiu8tutu0h4","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 explicit rejection then 101 recovers only original authority and settles once
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad4tu001lsiiukbcnakkd","paymentId":"cmu8ad4u6001psiiu8tutu0h4"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR12 explicit rejection then 101 recovers only original authority and settles once
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad4u6001psiiu8tutu0h4","applicationId":"cmu8ad4tu001lsiiukbcnakkd","referenceId":"202"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad50p002asiiuwmq1tz6b","paymentId":"cmu8ad514002esiiu36stm8bi","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad50p002asiiuwmq1tz6b","paymentId":"cmu8ad514002esiiu36stm8bi"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad514002esiiu36stm8bi","applicationId":"cmu8ad50p002asiiuwmq1tz6b","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad50p002asiiuwmq1tz6b","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad50p002asiiuwmq1tz6b"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves SUBMITTED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad53k002ksiiuvy582yxw","paymentId":"cmu8ad543002osiiundp3uqa3","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves SUBMITTED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad53k002ksiiuvy582yxw","paymentId":"cmu8ad543002osiiundp3uqa3"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves SUBMITTED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad543002osiiundp3uqa3","applicationId":"cmu8ad53k002ksiiuvy582yxw","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad55f002ssiiurjx5kku6","paymentId":"cmu8ad55v002wsiiu72nhaxwr","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad55f002ssiiurjx5kku6","paymentId":"cmu8ad55v002wsiiu72nhaxwr"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad55v002wsiiu72nhaxwr","applicationId":"cmu8ad55f002ssiiurjx5kku6","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad57q0030siiuxmleu71e","paymentId":"cmu8ad5890034siiud8e58849","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad57q0030siiuxmleu71e","paymentId":"cmu8ad5890034siiud8e58849"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5890034siiud8e58849","applicationId":"cmu8ad57q0030siiuxmleu71e","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5a40038siiu8b9b84p2","paymentId":"cmu8ad5al003csiiugji508s3","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5a40038siiu8b9b84p2","paymentId":"cmu8ad5al003csiiugji508s3"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5al003csiiugji508s3","applicationId":"cmu8ad5a40038siiu8b9b84p2","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late request completion cannot reset a later review status
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5cx003gsiiurqqn3qce","paymentId":"cmu8ad5di003ksiiupmy96b8h","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late request completion cannot reset a later review status
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5cx003gsiiurqqn3qce","paymentId":"cmu8ad5di003ksiiupmy96b8h"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5el003nsiiu4l32vyjl","paymentId":"cmu8ad5f5003rsiiu5gflw5w4","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5el003nsiiu4l32vyjl","paymentId":"cmu8ad5f5003rsiiu5gflw5w4"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5f5003rsiiu5gflw5w4","applicationId":"cmu8ad5el003nsiiu4l32vyjl","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad5el003nsiiu4l32vyjl","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad5el003nsiiu4l32vyjl"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5ho003xsiiumkf5f8w4","paymentId":"cmu8ad5i40041siiute84pax2","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5ho003xsiiumkf5f8w4","paymentId":"cmu8ad5i40041siiute84pax2"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5i40041siiute84pax2","applicationId":"cmu8ad5ho003xsiiumkf5f8w4","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad5ho003xsiiumkf5f8w4","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad5ho003xsiiumkf5f8w4"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 cancellation and retry cannot overlap a success verification
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5l30049siiu923abym3","paymentId":"cmu8ad5lv004dsiiucpbv3op5","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 cancellation and retry cannot overlap a success verification
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5l30049siiu923abym3","paymentId":"cmu8ad5lv004dsiiucpbv3op5"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 cancellation and retry cannot overlap a success verification
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5lv004dsiiucpbv3op5","applicationId":"cmu8ad5l30049siiu923abym3","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed admin decision loses to resubmission with no stale history or SMS
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5o2004jsiiuygp04dng","paymentId":"cmu8ad5oq004nsiiug4na1z1r","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed admin decision loses to resubmission with no stale history or SMS
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5o2004jsiiuygp04dng","paymentId":"cmu8ad5oq004nsiiug4na1z1r"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed admin decision loses to resubmission with no stale history or SMS
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5oq004nsiiug4na1z1r","applicationId":"cmu8ad5o2004jsiiuygp04dng","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed admin decision loses to resubmission with no stale history or SMS
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad5o2004jsiiuygp04dng","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed admin decision loses to resubmission with no stale history or SMS
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad5o2004jsiiuygp04dng"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 admin decision winning before resubmit preserves actual review history
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5r3004vsiiunn8fu7qv","paymentId":"cmu8ad5rs004zsiiuzaloclpo","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 admin decision winning before resubmit preserves actual review history
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5r3004vsiiunn8fu7qv","paymentId":"cmu8ad5rs004zsiiuzaloclpo"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 admin decision winning before resubmit preserves actual review history
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5rs004zsiiuzaloclpo","applicationId":"cmu8ad5r3004vsiiunn8fu7qv","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 admin decision winning before resubmit preserves actual review history
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad5r3004vsiiunn8fu7qv","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 admin decision winning before resubmit preserves actual review history
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad5r3004vsiiunn8fu7qv"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 admin decision winning before resubmit preserves actual review history
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad5r3004vsiiunn8fu7qv","previousStatus":"NEEDS_EDIT","newStatus":"UNDER_REVIEW","adminId":"admin-44696aa3-fc90-4872-a836-0273568e1ec5","mobile":"fix****7396","hasNote":false,"hasCertificate":false}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 failed resubmission history rolls back state and preserves verified evidence for retry
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad5uz0057siiua45h0zea","paymentId":"cmu8ad5vj005bsiiu7vaoxgs6","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 failed resubmission history rolls back state and preserves verified evidence for retry
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad5uz0057siiua45h0zea","paymentId":"cmu8ad5vj005bsiiu7vaoxgs6"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 failed resubmission history rolls back state and preserves verified evidence for retry
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad5vj005bsiiu7vaoxgs6","applicationId":"cmu8ad5uz0057siiua45h0zea","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 failed resubmission history rolls back state and preserves verified evidence for retry
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad5uz0057siiua45h0zea","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 failed resubmission history rolls back state and preserves verified evidence for retry
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad5uz0057siiua45h0zea"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 conflicting completion retains candidate for journalled cleanup and preserves existing certificate
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad64j0065siiu41ff90ap","paymentId":"cmu8ad64z0069siiu2jv9j926","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 conflicting completion retains candidate for journalled cleanup and preserves existing certificate
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad64j0065siiu41ff90ap","paymentId":"cmu8ad64z0069siiu2jv9j926"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 conflicting completion retains candidate for journalled cleanup and preserves existing certificate
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad64z0069siiu2jv9j926","applicationId":"cmu8ad64j0065siiu41ff90ap","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 conflicting completion retains candidate for journalled cleanup and preserves existing certificate
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad64j0065siiu41ff90ap","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 conflicting completion retains candidate for journalled cleanup and preserves existing certificate
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu8ad64j0065siiu41ff90ap"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 conflicting completion retains candidate for journalled cleanup and preserves existing certificate
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad64j0065siiu41ff90ap","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"admin-44696aa3-fc90-4872-a836-0273568e1ec5","mobile":"fix****c573","hasNote":false,"hasCertificate":false}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mconcurrent starts cross a provider barrier only once, and replay the same URL
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad68k006jsiiui5jszeak","paymentId":"cmu8ad699006nsiiuu61lrqtx","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mconcurrent starts cross a provider barrier only once, and replay the same URL
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad68k006jsiiui5jszeak","paymentId":"cmu8ad699006nsiiuu61lrqtx"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6ck006qsiiut9v37bg6","paymentId":"cmu8ad6cz006usiiuq0ce2ygw","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6ck006qsiiut9v37bg6","paymentId":"cmu8ad6cz006usiiuq0ce2ygw"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad6cz006usiiuq0ce2ygw","applicationId":"cmu8ad6ck006qsiiut9v37bg6","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6ey0070siiujw9amzkz","paymentId":"cmu8ad6fb0074siiurxedoeoe","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6ey0070siiujw9amzkz","paymentId":"cmu8ad6fb0074siiurxedoeoe"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad6fb0074siiurxedoeoe","applicationId":"cmu8ad6ey0070siiujw9amzkz","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2munknown request timeout and expired lease never create another remote call
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6h9007msiiuh79f6co6","paymentId":"cmu8ad6hl007qsiiuh2tpkxvb","amountToman":3000000}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2munknown request timeout and expired lease never create another remote call
+[22m[39m{"level":"error","event":"payment_start_failed","applicationId":"cmu8ad6h9007msiiuh79f6co6","paymentId":"cmu8ad6hl007qsiiuh2tpkxvb","error":{"name":"TimeoutError","message":"timeout","stack":"TimeoutError: timeout\n    at new DOMException (node:internal/per_context/domexception:79:18)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:366:49\n    at Mock (file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/spy/dist/index.js:332:34)\n    at postZarinpal (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/zarinpal.ts:37:26)\n    at requestZarinpalPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/zarinpal.ts:100:22)\n    at Module.startPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/payment.ts:139:22)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:367:13\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mverification timeout never retries remotely or creates another authority
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6ib007tsiiunzond72u","paymentId":"cmu8ad6iy007xsiiuexlia42u","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mverification timeout never retries remotely or creates another authority
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6ib007tsiiunzond72u","paymentId":"cmu8ad6iy007xsiiuexlia42u"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6lb0088siiunjrbvkcz","paymentId":"cmu8ad6lu008csiiubvkwwe1r","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6lb0088siiunjrbvkcz","paymentId":"cmu8ad6lu008csiiubvkwwe1r"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"error","event":"legacy_paid_submission_retry_required","applicationId":"cmu8ad6lb0088siiunjrbvkcz","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `tx.statusHistory.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/legacy-settlement.ts:109:30\n\n  106   return;\n  107 }\n  108 await tx.application.update({ where: { id: applicationId }, data: { status: ApplicationStatus.SUBMITTED, submittedAt: new Date() } });\n→ 109 await tx.statusHistory.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table StatusHistory\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `tx.statusHistory.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/legacy-settlement.ts:109:30\n\n  106   return;\n  107 }\n  108 await tx.application.update({ where: { id: applicationId }, data: { status: ApplicationStatus.SUBMITTED, submittedAt: new Date() } });\n→ 109 await tx.statusHistory.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table StatusHistory\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/legacy-settlement.ts:109:7\n    at Proxy._transactionWithCallback (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:130:8120)\n    at completeVerifiedLegacySubmission (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/legacy-settlement.ts:93:5)\n    at Module.settleLegacyPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/legacy-settlement.ts:79:3)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:402:14\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad6lu008csiiubvkwwe1r","applicationId":"cmu8ad6lb0088siiunjrbvkcz","referenceId":"durable-capture"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mrestricted role rejects cross-application selection, amount mutation and result deletion
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6np008ksiiu6qlc0b81","paymentId":"cmu8ad6o4008osiiuy5742fyn","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mrestricted role rejects cross-application selection, amount mutation and result deletion
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6np008ksiiu6qlc0b81","paymentId":"cmu8ad6o4008osiiuy5742fyn"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6p6008vsiiu7ydpgqoa","paymentId":"cmu8ad6pl008zsiiu1pauzb9r","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6p6008vsiiu7ydpgqoa","paymentId":"cmu8ad6pl008zsiiu1pauzb9r"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad6pl008zsiiu1pauzb9r","applicationId":"cmu8ad6p6008vsiiu7ydpgqoa","referenceId":"201"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu8ad6p6008vsiiu7ydpgqoa","reason":"missing_admin_alert_mobile"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mnotification failure preserves settlement and consumes one durable intent
+[22m[39m{"level":"error","event":"payment_notification_failed","applicationId":"cmu8ad6p6008vsiiu7ydpgqoa","error":{"name":"Error","message":"isolated SMS failure","stack":"Error: isolated SMS failure\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:425:58\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2ma late original worker may persist capture after expiry without enabling takeover
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6se0095siiufvjgdr15","paymentId":"cmu8ad6td0099siiuioyl5l10","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2ma late original worker may persist capture after expiry without enabling takeover
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6se0095siiufvjgdr15","paymentId":"cmu8ad6td0099siiuioyl5l10"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2ma late original worker may persist capture after expiry without enabling takeover
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad6td0099siiuioyl5l10","applicationId":"cmu8ad6se0095siiufvjgdr15","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcompleted rejection evidence recovers despite crash and unrelated callback evidence
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6vp009fsiiu5uaahlra","paymentId":"cmu8ad6w0009jsiiuidirj1ay","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcompleted rejection evidence recovers despite crash and unrelated callback evidence
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6vp009fsiiu5uaahlra","paymentId":"cmu8ad6w0009jsiiuidirj1ay"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcompleted rejection evidence recovers despite crash and unrelated callback evidence
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu8ad6w0009jsiiuidirj1ay","applicationId":"cmu8ad6vp009fsiiu5uaahlra","referenceId":"201"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mprovider capture with failed evidence persistence remains blocked after DB recovery
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu8ad6xv009tsiiu1m7in3ju","paymentId":"cmu8ad6yc009xsiiuhfel7pw3","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mprovider capture with failed evidence persistence remains blocked after DB recovery
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu8ad6xv009tsiiu1m7in3ju","paymentId":"cmu8ad6yc009xsiiuhfel7pw3"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mprovider capture with failed evidence persistence remains blocked after DB recovery
+[22m[39m{"level":"error","event":"payment_capture_evidence_persist_failed","paymentId":"cmu8ad6yc009xsiiuhfel7pw3","applicationId":"cmu8ad6xv009tsiiu1m7in3ju","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `db.paymentOperationResult.createMany()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/coordination.ts:46:35\n\n  43 export async function savePaymentResult(claim: PaymentClaim, outcome: \"AUTHORITY\" | \"CAPTURED\" | \"REJECTED\" | \"UNKNOWN\", details: { authority?: string; referenceId?: string } = {}) {\n  44   // Independent commit: a later business transaction may fail. A late owner is\n  45   // allowed to preserve its result, never to authorize another external operation.\n→ 46   await db.paymentOperationResult.createMany(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table PaymentOperationResult\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `db.paymentOperationResult.createMany()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/coordination.ts:46:35\n\n  43 export async function savePaymentResult(claim: PaymentClaim, outcome: \"AUTHORITY\" | \"CAPTURED\" | \"REJECTED\" | \"UNKNOWN\", details: { authority?: string; referenceId?: string } = {}) {\n  44   // Independent commit: a later business transaction may fail. A late owner is\n  45   // allowed to preserve its result, never to authorize another external operation.\n→ 46   await db.paymentOperationResult.createMany(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table PaymentOperationResult\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at savePaymentResult (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/coordination.ts:46:3)\n    at Module.settleLegacyPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/legacy-settlement.ts:47:7)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:458:18\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mfacilities request timeout and restart preserve its only attempt
+[22m[39m{"level":"error","event":"facilities_payment_request_persist_or_transport_failed","applicationId":"fe880b1415bb64f848042f3b7c6f9d165-application","error":{"name":"TypeError","message":"fetch failed","stack":"TypeError: fetch failed\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:486:79\n    at Mock (file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/spy/dist/index.js:332:34)\n    at postZarinpal (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/zarinpal.ts:37:26)\n    at requestZarinpalPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/payments/zarinpal.ts:100:22)\n    at Module.startFacilitiesPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/facilities-payment.ts:257:27)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:487:12\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mfacilities request timeout and restart preserve its only attempt
+[22m[39m{"level":"warn","event":"facilities_payment_start_unresolved","applicationId":"fe880b1415bb64f848042f3b7c6f9d165-application"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mfacilities saved capture completes after a failed DB transaction without contacting provider again
+[22m[39m{"level":"error","event":"facilities_payment_verification_record_failed","paymentAttemptId":"cmu8ad7bg00b3siiub8x8hpz3","applicationId":"fe8f2fd7d780844099997da478fb00739-application","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `tx.facilitiesAuditLog.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/facilities-payment.ts:361:35\n\n  358 const late = !LOCKED_PAYMENT_STATES.includes(current.status);\n  359 const metadata = late ? { status: FacilitiesPaymentStatus.VERIFIED, reasonCode: \"LATE_CAPTURE\" } : { status: FacilitiesPaymentStatus.VERIFIED };\n  360 await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: FacilitiesPaymentStatus.VERIFIED, referenceId: verified.referenceId, safeMetadata: metadata } });\n→ 361 await tx.facilitiesAuditLog.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table FacilitiesAuditLog\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `tx.facilitiesAuditLog.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/facilities-payment.ts:361:35\n\n  358 const late = !LOCKED_PAYMENT_STATES.includes(current.status);\n  359 const metadata = late ? { status: FacilitiesPaymentStatus.VERIFIED, reasonCode: \"LATE_CAPTURE\" } : { status: FacilitiesPaymentStatus.VERIFIED };\n  360 await tx.facilitiesPaymentAttempt.update({ where: { id: current.id }, data: { status: FacilitiesPaymentStatus.VERIFIED, referenceId: verified.referenceId, safeMetadata: metadata } });\n→ 361 await tx.facilitiesAuditLog.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table FacilitiesAuditLog\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/facilities-payment.ts:361:7\n    at Proxy._transactionWithCallback (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@prisma/client/runtime/library.js:130:8120)\n    at Module.verifyFacilitiesPaymentCallback (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/lib/actions/facilities-payment.ts:352:5)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/payment-coordination.db.test.ts:502:18\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+ [32m✓[39m tests/payment-coordination.db.test.ts [2m([22m[2m39 tests[22m[2m)[22m[33m 4107[2mms[22m[39m
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcompeting completion/correction preserves one note/history/certificate and notification
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad7ox0003siknsytyidh9","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"cmu8ad7os0000sikn2lqes5h8","mobile":"06d****245b","hasNote":true,"hasCertificate":false}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcompletion winner preserves exact certificate and stale correction gets409
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad7rh0009sikns9px737p","previousStatus":"SUBMITTED","newStatus":"VALIDATION_COMPLETED","adminId":"cmu8ad7re0006sikns4a9cwu2","mobile":"ba7****72d5","hasNote":true,"hasCertificate":true}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mmissing token and stale browser note cannot silently overwrite
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad7u0000jsiknnpyhmw6h","previousStatus":"SUBMITTED","newStatus":"UNDER_REVIEW","adminId":"cmu8ad7tv000gsiknvy4hn17i","mobile":"200****3ba1","hasNote":true,"hasCertificate":false}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mcertificate stale token maps to HTTP409 and preserves current bytes
+[22m[39m{"level":"info","event":"validation_certificate_replaced","applicationId":"cmu8ad7xk0012siknyubpkz8l","adminId":"cmu8ad7xh000zsikn2sihh0rw","mobile":"676****94f6"}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mSMS failure cannot undo transition or authorize duplicate retry
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad7yr001asiknisb0rc9w","previousStatus":"SUBMITTED","newStatus":"NEEDS_EDIT","adminId":"cmu8ad7yo0017siknno67q7x9","mobile":"19d****c3c7","hasNote":true,"hasCertificate":false}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mSMS failure cannot undo transition or authorize duplicate retry
+[22m[39m{"level":"error","event":"submission_status_sms_failed","applicationId":"cmu8ad7yr001asiknisb0rc9w","newStatus":"NEEDS_EDIT","mobile":"19d****c3c7","error":{"name":"Error","message":"synthetic outage","stack":"Error: synthetic outage\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/tests/admin-review.db.test.ts:68:147\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase12-ixzihxm_/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mapplicant resubmission and admin restart produce one legal winner without recharge
+[22m[39m{"level":"info","event":"submission_status_changed","applicationId":"cmu8ad7ze001gsiknd5m9ixbk","previousStatus":"NEEDS_EDIT","newStatus":"UNDER_REVIEW","adminId":"cmu8ad7zb001dsikndrlog5pv","mobile":"1e3****a37a","hasNote":true,"hasCertificate":false}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2msuccessful SMS plus lost commit acknowledgement never becomes retryable
+[22m[39m{"level":"error","event":"facilities_correction_sms_persistence_unconfirmed","applicationId":"r114e9b9945691342a9ae6265dd4366ae9c-application","correctionRequestId":"cmu8ad8a00031sikn845av07n","reasonCode":"PERSISTENCE_UNCONFIRMED","error":{"message":"undefined"}}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2muncertain SMS consumes claim and cannot dispatch another send
+[22m[39m{"level":"error","event":"facilities_correction_sms_unconfirmed","applicationId":"r11077c5c3f1a7c49fc9157665a5e21aa66-application","correctionRequestId":"cmu8ad8bs003asiknntwd3snt","mobile":"use****aa66","reasonCode":"DELIVERY_UNCONFIRMED","error":{"message":"undefined"}}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2mpostcommit claim failure reports committed correction with uncertain delivery
+[22m[39m{"level":"error","event":"facilities_correction_sms_claim_unconfirmed","correctionRequestId":"cmu8ad8fn003rsiknx50bavzs","reasonCode":"CLAIM_UNCONFIRMED","error":{"message":"undefined"}}
+
+[90mstderr[2m | tests/admin-review.db.test.ts[2m > [22m[2mR11 restricted concurrent review[2m > [22m[2msuccessful SMS plus rolled-back persistence leaves spent uncertainty and no retry
+[22m[39m{"level":"error","event":"facilities_correction_sms_persistence_unconfirmed","applicationId":"r119b0382b527534787a9743c0374946699-application","correctionRequestId":"cmu8ad8ks0043siknc3qqkvup","reasonCode":"PERSISTENCE_UNCONFIRMED","error":{"message":"undefined"}}
+
+ [32m✓[39m tests/admin-review.db.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 1206[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m60 passed[39m[22m[90m (60)[39m
+[2m   Start at [22m 14:40:17
+[2m   Duration [22m 6.06s[2m (transform 270ms, setup 0ms, import 517ms, tests 5.31s, environment 0ms)[22m
+

@@ -1,0 +1,22 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source[39m
+
+(node:90194) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m tests/facilities-document-qualification.db.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 7241[2mms[22m[39m
+     [33m[2m✓[22m[39m qualifies application and officer/profile evidence, starts valid payment [33m 2015[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks missing insurance bytes without new payment [33m 840[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks missing profile-articles-of-association bytes without new payment [33m 878[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks missing officer bytes without new payment [33m 851[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects changed hash and foreign caller ownership [33m 799[2mms[22m[39m
+     [33m[2m✓[22m[39m free submission also checks actual bytes [33m 839[2mms[22m[39m
+     [33m[2m✓[22m[39m capture survives missing profile file and repaired paid draft submits without another charge [33m 1005[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 13:35:27
+[2m   Duration [22m 7.69s[2m (transform 148ms, setup 0ms, import 306ms, tests 7.24s, environment 0ms)[22m
+

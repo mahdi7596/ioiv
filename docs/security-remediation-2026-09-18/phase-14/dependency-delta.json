@@ -1,0 +1,218 @@
+{
+  "node_modules/@babel/code-frame": {
+    "old": "7.29.0",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/compat-data": {
+    "old": "7.29.0",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/core": {
+    "old": "7.29.0",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/generator": {
+    "old": "7.29.1",
+    "new": "7.29.8"
+  },
+  "node_modules/@babel/helper-compilation-targets": {
+    "old": "7.28.6",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helper-globals": {
+    "old": "7.28.0",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helper-module-imports": {
+    "old": "7.28.6",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helper-module-transforms": {
+    "old": "7.28.6",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helper-string-parser": {
+    "old": "7.27.1",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helper-validator-identifier": {
+    "old": "7.28.5",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helper-validator-option": {
+    "old": "7.27.1",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/helpers": {
+    "old": "7.29.2",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/parser": {
+    "old": "7.29.2",
+    "new": "7.29.9"
+  },
+  "node_modules/@babel/template": {
+    "old": "7.28.6",
+    "new": "7.29.7"
+  },
+  "node_modules/@babel/traverse": {
+    "old": "7.29.0",
+    "new": "7.29.8"
+  },
+  "node_modules/@babel/types": {
+    "old": "7.29.0",
+    "new": "7.29.8"
+  },
+  "node_modules/@esbuild/aix-ppc64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/android-arm": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/android-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/android-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/darwin-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/darwin-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/freebsd-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/freebsd-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-arm": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-ia32": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-loong64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-mips64el": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-ppc64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-riscv64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-s390x": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/linux-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/netbsd-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/netbsd-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/openbsd-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/openbsd-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/openharmony-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/sunos-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/win32-arm64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/win32-ia32": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@esbuild/win32-x64": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion": {
+    "old": "5.0.5",
+    "new": "5.0.12"
+  },
+  "node_modules/baseline-browser-mapping": {
+    "old": "2.10.23",
+    "new": "2.11.25"
+  },
+  "node_modules/brace-expansion": {
+    "old": "1.1.14",
+    "new": "1.1.21"
+  },
+  "node_modules/browserslist": {
+    "old": "4.28.2",
+    "new": "4.29.0"
+  },
+  "node_modules/caniuse-lite": {
+    "old": "1.0.30001791",
+    "new": "1.0.30001810"
+  },
+  "node_modules/deepmerge-ts": {
+    "old": "7.1.5",
+    "new": "8.0.0"
+  },
+  "node_modules/electron-to-chromium": {
+    "old": "1.5.344",
+    "new": "1.5.433"
+  },
+  "node_modules/esbuild": {
+    "old": "0.27.7",
+    "new": "0.28.2"
+  },
+  "node_modules/js-yaml": {
+    "old": "4.1.1",
+    "new": "4.3.2"
+  },
+  "node_modules/node-releases": {
+    "old": "2.0.38",
+    "new": "2.0.56"
+  },
+  "node_modules/tsx": {
+    "old": "4.21.0",
+    "new": "4.23.13"
+  },
+  "node_modules/update-browserslist-db": {
+    "old": "1.2.3",
+    "new": "1.3.3"
+  }
+}

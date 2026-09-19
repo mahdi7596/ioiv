@@ -13,8 +13,6 @@ export async function sendSms(message: SmsMessage) {
     logger.info("sms_dev_message", {
       to: maskMobile(message.to),
       template: message.template,
-      text: message.text,
-      params: message.params,
     });
     return { ok: true };
   }
@@ -32,11 +30,11 @@ export async function sendSms(message: SmsMessage) {
       template: message.template,
     });
     return result;
-  } catch (error) {
-    logger.error("sms_send_failed", error, {
+  } catch {
+    logger.warn("sms_send_failed", {
       to: maskMobile(message.to),
       template: message.template,
     });
-    throw error;
+    throw new Error("SMS delivery was not confirmed");
   }
 }

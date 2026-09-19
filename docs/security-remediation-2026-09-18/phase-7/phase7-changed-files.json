@@ -1,0 +1,15 @@
+[
+  "DEPLOYMENT.md",
+  "app/admin/login/page.tsx",
+  "lib/actions/auth.ts",
+  "lib/auth/admin-response.ts",
+  "lib/sms/ghasedak.ts",
+  "lib/sms/timeout.ts",
+  "prisma/tests/admin-enumeration/browser.ts",
+  "prisma/tests/otp-request/browser.ts",
+  "tests/admin-enumeration.db.test.ts",
+  "tests/admin-response.test.ts",
+  "tests/auth-actions.test.ts",
+  "tests/otp-request.db.test.ts",
+  "vitest.config.ts"
+]

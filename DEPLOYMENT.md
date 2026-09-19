@@ -4,6 +4,24 @@ Production domain: `https://sana.ioiv.ir`
 
 This document records the current production deployment state and the operational steps learned during the first server deployment.
 
+
+## Current release qualification — 2026-09-18
+
+**NO-GO for opening the reviewed candidate to users.** The historical deployment and
+hardening entries below are dated records, not current security acceptance. In particular,
+the historical claims of concurrent payment idempotency and effective OTP limits are
+superseded by the reproduced findings in
+[the current pre-launch review](docs/2026-09-18-prelaunch-security-review.md).
+
+Security remediation Phase 0 performed local baseline/design work only; no application,
+schema, runtime grants, configuration or production change occurred. The proposed
+[data/rollback design](docs/security-remediation-2026-09-18/phase-0/design.md) is not an
+executable migration recipe. [The restart checkpoint](docs/security-remediation-progress.md)
+records isolated verification, outstanding decisions and the pause before implementation.
+Keep facilities disabled. Existing owner backup/upload/redeploy handoffs and matched
+DB/uploads/config backup requirements remain prerequisites for any later authorized
+production work. Local synthetic schema restore does not satisfy those prerequisites.
+
 ## Code and Production Backup Baseline
 
 On September 10, 2026, the current application state was preserved before implementing
@@ -430,9 +448,8 @@ ADMIN_ALERT_MOBILE=...
 SEED_ADMIN_MOBILES=...
 SEED_DEMO_DATA=false
 
-# Optional. OTP requests per client address per hour (default 30). Only lower
-# this after confirming X-Real-IP carries end-user addresses (see the hardening
-# phase 2 notes).
+# OTP admissions per address/hour, including shared unknown (default30, range1–3000).
+# Qualified X-Real-IP requires OTP_VERIFY_TRUST_PROXY=true; never trust XFF.
 OTP_MAX_REQUESTS_PER_IP_PER_WINDOW=30
 ```
 
@@ -522,12 +539,12 @@ Deployment/build access:
 
 - `docker.arvancloud.ir:443` for Docker image pulls when Docker Hub is unreliable or blocked.
 - `registry.npmjs.org:443` for npm install during image builds if cache is cold.
-- `mirror.arvancloud.ir:443` for Alpine packages.
+- The pinned Alpine image’s official APK repositories for packages.
 
 Optional/fallback:
 
 - `gateway.ghasedak.me:443` if the SMS adapter is switched back to Ghasedak gateway.
-- `binaries.prisma.sh:443` only if the Prisma pre-generated engine export workaround is removed.
+- `binaries.prisma.sh:443` in the qualified build environment for locked Prisma engines.
 
 Current production SMS endpoint:
 
@@ -537,125 +554,36 @@ GHASEDAK_BASE_URL=https://api.smsapp.ir/v2
 
 This was chosen because the HTTPS certificate for `api.smsapp.ir` was expired on May 1, 2026, while the HTTP endpoint works when outbound access is allowed.
 
-## Prisma Engine Export
+## Prisma generation and immutable image delivery
 
-The production Dockerfile intentionally does not run `npx prisma generate` during the app build. It copies pre-generated Prisma client and Linux musl engines from:
+Phase14 replaces the historical exported-engine workaround. Build runner and maintenance
+images in a qualified environment with access to registry.npmjs.org, binaries.prisma.sh,
+Docker Hub and the pinned Alpine image's official APK repositories. Generate Prisma from
+package-lock.json and the current schema inside both images, before USER node. Never
+copy an old prisma-engine-export tree into either image; .dockerignore excludes it.
 
-```text
-prisma-engine-export/.prisma
-prisma-engine-export/@prisma
-```
+The Dockerfile pins the Node22 Alpine manifest digest and uses that image's matching
+repositories. Update the digest only with fresh OS/package scans and the verification
+below. Build linux/amd64 for the existing intended server architecture; an ARM host's
+native test is not proof of AMD64 engine compatibility.
 
-This is needed because the server cannot reliably download Prisma binaries from `binaries.prisma.sh`.
+If production cannot reach build dependencies, build and scan the complete images in
+an authorized connected environment, record image IDs/digests and source/lock/schema
+hashes, then transfer the exact image archives via the separately approved deployment
+procedure. Do not repair a failed build by reintroducing stale generated clients.
+No image transfer or production deployment is authorized by local qualification alone.
 
-The build step in `Dockerfile` must use the checked-in offline export:
+For each candidate, verify runner and maintenance independently: non-root UID, Node/
+OpenSSL/Alpine versions, Prisma client/engine alignment, actual restricted database
+query, maintenance migrate deploy/status and exact image vulnerability scan. Runner
+must lack the Prisma CLI, config package, dangling CLI link and obsolete exported tree.
+Maintenance keeps the CLI, generates its own native client and uses migration-owner
+credentials only for explicit migrations. Runtime starts without schema mutation.
 
-```dockerfile
-RUN rm -rf node_modules/.prisma node_modules/@prisma \
-  && cp -R prisma-engine-export/.prisma node_modules/.prisma \
-  && cp -R prisma-engine-export/@prisma node_modules/@prisma \
-  && npm run build
-```
-
-If a server build tries to run `npx prisma generate`, the server may fail while contacting
-`binaries.prisma.sh`. Update the local `Dockerfile` before uploading, otherwise rsync can overwrite
-the server-side offline-build fix.
-
-The export must contain Linux musl OpenSSL 3 files:
-
-```text
-schema-engine-linux-musl-openssl-3.0.x
-libquery_engine-linux-musl-openssl-3.0.x.so.node
-```
-
-Check the export:
-
-```bash
-find prisma-engine-export -type f | grep -E 'schema-engine|libquery_engine' | head -n 20
-```
-
-Expected examples:
-
-```text
-prisma-engine-export/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
-prisma-engine-export/@prisma/engines/schema-engine-linux-musl-openssl-3.0.x
-prisma-engine-export/@prisma/engines/libquery_engine-linux-musl-openssl-3.0.x.so.node
-```
-
-### Create the Export Locally
-
-On Apple Silicon, first make sure an AMD64 Node Alpine base image is available:
-
-```bash
-docker pull --platform linux/amd64 docker.arvancloud.ir/library/node:22-alpine
-docker tag docker.arvancloud.ir/library/node:22-alpine node:22-alpine-amd64
-docker image inspect node:22-alpine-amd64 --format '{{.Os}}/{{.Architecture}}'
-```
-
-Build the export image:
-
-```bash
-cd /Users/mahdi/Documents/work/ioiv
-
-docker build \
-  --platform linux/amd64 \
-  -f Dockerfile.prisma-export \
-  -t sana-prisma-export:latest \
-  .
-```
-
-Extract the generated Prisma files:
-
-```bash
-rm -rf prisma-engine-export prisma-engine-export.tar.gz
-
-docker create --name sana-prisma-extract sana-prisma-export:latest
-mkdir -p prisma-engine-export
-docker cp sana-prisma-extract:/app/node_modules/.prisma prisma-engine-export/.prisma
-docker cp sana-prisma-extract:/app/node_modules/@prisma prisma-engine-export/@prisma
-docker rm sana-prisma-extract
-
-tar -czf prisma-engine-export.tar.gz prisma-engine-export
-
-find prisma-engine-export -type f | grep -E 'schema-engine|libquery_engine' | head -n 20
-ls -lh prisma-engine-export.tar.gz
-```
-
-The archive is expected to be roughly 50-55 MB.
-
-On Apple Silicon, `docker create` can warn that the requested image platform is `linux/amd64`
-while the host is `linux/arm64/v8`. That warning is expected for this export workflow because the
-server is AMD64. The important check is that the extracted files include the Linux musl OpenSSL 3
-`schema-engine` and `libquery_engine` files.
-
-Upload it to the server:
-
-```bash
-rsync -az --progress \
-  prisma-engine-export.tar.gz \
-  administrator@192.168.50.109:/data/apps/sana/
-```
-
-On the server:
-
-```bash
-cd /data/apps/sana
-rm -rf prisma-engine-export
-tar -xzf prisma-engine-export.tar.gz
-find prisma-engine-export -type f | grep -E 'schema-engine|libquery_engine' | head -n 20
-```
-
-The `LIBARCHIVE.xattr.com.apple.provenance` tar warnings are from macOS extended attributes and can be ignored.
-
-Before rebuilding after schema changes, compare the schema and export timestamps:
-
-```bash
-stat -c '%y %n' prisma/schema.prisma prisma-engine-export.tar.gz
-```
-
-If `prisma/schema.prisma` is newer than `prisma-engine-export.tar.gz`, regenerate and upload the
-Prisma export before running `docker compose build app`. A stale export can cause build-time type
-errors, missing Prisma enum exports, or runtime client/schema mismatches.
+The scoped @prisma/config deepmerge-ts8 override addresses one advisory chain represented
+by three npm entries. Its config semantics must be covered by real CLI generation and
+migration checks. No blind Prisma downgrade. Rollback uses a previously qualified image
+compatible with current additive schema; preserve all earlier data/backup requirements.
 
 ## Deploy Code Changes
 
@@ -1050,12 +978,12 @@ docker compose logs --tail=120 app
 
 Useful log events:
 
-- `otp_request_started`
+- `otp_request_unavailable`
 - `sms_send_started`
 - `sms_send_succeeded`
 - `sms_send_failed`
-- `otp_request_completed`
-- `otp_verify_completed`
+- `otp_sms_unconfirmed`
+- `otp_verify_unavailable`
 
 ## Health Checks
 
@@ -1474,15 +1402,9 @@ Deploy steps:
    curl -I https://sana.ioiv.ir
    ```
 
-3. Confirm the client address reaches the app. With nginx directly in front,
-   `X-Real-IP` is the end-user address. If a CDN or another proxy terminates TLS,
-   `X-Real-IP` is the proxy's address and the per-address OTP cap is shared by all
-   users: leave the default at 30 or higher and configure nginx `real_ip` before
-   lowering it. Watch for `otp_ip_limit_hit` in the app logs after deploy:
-
-   ```bash
-   docker compose logs app --since 1h | grep otp_ip_limit_hit
-   ```
+3. Historical request-count attribution is superseded by the Phase5 rollout below.
+   Default is bounded shared unknown; qualify ingress before enabling
+   OTP_VERIFY_TRUST_PROXY. Never rely on the former otp_ip_limit_hit/raw-IP event.
 
 4. Manual check: request an OTP, enter five wrong codes, then the right one; it
    must be rejected. Request a new code; it must work.
@@ -1697,3 +1619,516 @@ Deploy steps:
 
 4. Manual check: with more than 50 company-registration applications, the submissions
    page shows a "صفحه بعد" link and the second page continues without repeats.
+
+## 2026-09-18 Phase 1 payment coordinator — deployment remains blocked
+
+R2 introduces additive `PaymentObligation`, append-only `PaymentOperationResult`, and
+`PaymentNotificationIntent` tables, plus two narrow facilities payment-audit repairs.
+See [Phase 1 evidence](docs/security-remediation-2026-09-18/phase-1/README.md) and
+[provider limits](docs/security-remediation-2026-09-18/phase-1/provider-evidence.md).
+No production migration or deployment was performed. Facilities must remain disabled.
+
+Before any later authorized release:
+
+1. Owner creates the dated Git backup and verified matched production DB, uploads and
+   configuration backups. The local synthetic migration rehearsal is not this backup.
+2. Pause payment starts/callback mutation at the proxy and drain old application workers;
+   retain callback request identifiers in protected operational intake without treating
+   browser fields as payment proof. Never run old payment writers beside new ones.
+3. Inventory all legacy/facilities attempts, including failed/cancelled/no-authority and
+   duplicate verified rows. Apply all three new migrations with the migration owner;
+   apply the canonical runtime grants. Do not edit previously applied migrations.
+4. Inspect the backfilled obligations. Existing verified evidence blocks new payment.
+   Multiple unresolved attempts, unknown starts and failed attempts remain UNCERTAIN;
+   no rows/history/capture evidence are deleted. Duplicate historical captures remain
+   preserved, with `HISTORICAL_MULTIPLE_CAPTURES` for manual investigation.
+5. Deploy every compatible writer; verify restricted-role start/callback, duplicate and
+   recovery behavior before reopening payment endpoints. Unknown provider outcomes are
+   not a reason to create a new attempt. Other open phases still block launch.
+
+Migration failure: the coordinator DDL/backfill is transactional; on failure inspect the
+cause, confirm rollback, use Prisma's failed-migration resolution procedure only after
+verifying actual schema state, then rerun. Enum additions are additive and rerunnable.
+Never drop evidence or mark an uncertain attempt failed to make a migration pass.
+
+Rollback: pause payment mutations, retain expanded schema/results and use compatible
+recovery code. Returning to old payment writers is unsafe. A destructive restore needs
+separate authorization and reconciliation of all external activity since the backup.
+
+Recovery: saved AUTHORITY/CAPTURED results replay local persistence on the next applicable
+start/callback. A request/verification whose result was lost stays blocked even after its
+lease expires; no overlapping remote retry is assumed safe. The owner investigates when
+the client reports the case through gateway dashboard/support. Record the selected attempt,
+operation generation and gateway-confirmed authority/amount/reference in a protected case;
+reconcile the original attempt, never erase it or automatically refund it. A future guarded
+operator reconciliation procedure must be qualified with the provider before writing external
+facts back into payment state. No new admin panel, scheduled review or response SLA exists.
+
+Notification intent: legacy settlement writes one durable logical intent in its transaction.
+It is claimed once before existing SMS calls. SENT/UNKNOWN/CLAIMED are not automatically
+resent; a crash after claim may leave delivery unknown. This is not exactly-once SMS delivery.
+Facilities gains no new submission SMS category. Operation metadata follows payment evidence
+retention; no new deletion schedule or personal-data collection was introduced.
+
+## 2026-09-19 Phase 2 payment state protection — deployment remains blocked
+
+R1 now routes legacy cancellation returns through server verification. Browser NOK does
+not prove nonpayment and cannot release another charge. Captured evidence is preserved;
+settlement only submits DRAFT/PENDING_PAYMENT and never resets later review state/time.
+Corrections use the application lock and one history transition without repayment. Admin
+status writes use status/updatedAt compare-and-swap; stale actions return Persian 409 with
+no history/SMS. On that confirmed rollback only, a freshly staged certificate is removed;
+cleanup failure logs `validation_certificate_conflict_cleanup_failed` with application ID
+and requires operator investigation of unreferenced candidate storage. Do not delete the
+existing certificate or files after an ambiguous transaction result.
+
+No new migration, grant, config, retention or existing-data repair is required by Phase2.
+Phase1's 27 migrations, write pause/drain, compatible writers and backup prerequisites still
+apply. Deploy callback, start/resubmission, settlement and admin writers together; no mixed
+old writers. Preserve all captured payment/operation/history evidence during rollback and
+use a compatible guarded version, never restore the stale cancellation handler. Current
+uncertain cases retain the existing client-report/manual-owner reconciliation policy.
+
+Verify using the [Phase2 replay guide](docs/security-remediation-2026-09-18/phase-2/README.md):
+restricted-role concurrency, known-rollback certificate bytes, full suite/build/types/lint,
+production browser cancellation/refresh/correction and one-authority process regressions.
+Local verification does not qualify real provider behavior, full admin/file workflows or
+release infrastructure. R11 remains Phase12; Phase3/R12 and all later release gates remain
+open. Facilities stays disabled. No production operation was performed or authorized.
+
+## 2026-09-19 Phase 3 gateway validation — deployment remains blocked
+
+R12 now validates new Zarinpal response envelopes, request100/verify100-or101 codes,
+positive safe integer references, and production A/sandbox S authorities. Contradictory
+responses remain UNKNOWN. Only complete documented negative errors permit a sequential
+check of the original authority; uncertainty never authorizes a second payment or unsafe
+remote replay. Provider prose is excluded from diagnostics. Legacy request amount now
+comes from its stored payment obligation rather than rereading the global fee constant.
+
+No new migration/grant/config/retention/data repair. Phase1/2 prerequisites remain: all27
+migrations, drain/pause payment writers, matched verified backups, compatible rollback,
+and preservation of payment evidence. Never roll back to permissive gateway validation.
+Historical CAPTURED records remain recoverable; this change does not certify old responses.
+
+[Phase3 evidence/replay](docs/security-remediation-2026-09-18/phase-3/README.md) records
+413 tests,39 restricted-role DB cases, five process-crash checks, production browser at
+390/1440px, build/types/lint and independent review. These use controlled providers, not
+actual sandbox qualification. Verify actual IRT amount behavior, accepted identifiers,
+101 recovery/finality and timeout handling with authorized sandbox evidence in Phase19.
+No real charge, live SMS, refund, production migration/deployment or facilities activation.
+Overall launch NO-GO; Phase4 and remaining release gates require further authorized work.
+
+
+## 2026-09-19 Phase4 OTP verification rollout (local qualification only)
+
+R3 originally changed verification only; Phase5 below extends request/SMS accounting. Facilities
+stays disabled; overall launch remains NO-GO. This is a future authorized rollout
+procedure, not permission to deploy or migrate production. Preserve owner handoff,
+new dated Git backup and verified matched DB/uploads/config backups before rollout.
+
+D3 owner approved temporary protected identifiers and normal deletion within24 hours.
+New AuthVerifyBucket holds HMAC mobile+purpose/address keys, bounded rolling-hour
+timestamps, touched time, and a global secret fingerprint; no raw mobile/IP/OTP/session
+is added there. Existing OtpCode retention and backups are unchanged. Cleanup deletes
+inactive keys at2 hours; hourly maintenance gives headroom inside24 hours when healthy.
+Mobile/address HMAC keys rotate hourly using database time; both current and previous
+hour keys count toward the same rolling limit. Therefore continuously active identifiers
+also become inactive and are pruned within about4 hours with hourly maintenance (about3 hours with ongoing admission cleanup). Global/unknown keys are not
+personal identifiers; their event arrays discard older timestamps on admission. Backups/WAL and DB downtime do not
+have a new24-hour physical-erasure guarantee. On recovery, overdue cleanup must succeed
+before verification resumes; do not bypass it after an outage.
+
+Verification caps: five reserved real-code guesses per code (correct guesses count),
+30 attempts/mobile+purpose/hour,120/trusted address/hour,300/shared unknown address/hour
+and3000 global/hour, all exact rolling windows shared across processes. These limits
+bound missing/expired/exhausted-code work as well. Global/address spending commits even
+when the mobile is denied. At most about6001 bucket keys can be created per hour;
+expired keys and timestamp arrays are pruned, no permanent per-person bucket history.
+Global/unknown limits can temporarily deny legitimate users during an attack; this is
+the bounded fail-closed fallback until trusted proxy attribution is qualified.
+
+Required sequence:
+
+1. Pause auth mutations at the proxy and drain all old verification writers. Additive
+   DDL alone does not fix old application instances. Payment callback handling follows
+   the previous phase's continuity requirements; no payment writer behavior changes.
+2. Apply new migration20260919120000_otp_verification_limits with migration owner, then
+   canonical runtime grants. It adds one table/index and two fixed-purpose functions.
+   Runtime receives SELECT/INSERT/UPDATE for accounting and EXECUTE on cleanup and
+   active-admin lock/read, no DELETE/TRUNCATE and no Admin UPDATE. PUBLIC cannot execute
+   either security-definer helper. Ownership must remain the trusted migration owner,
+   never runtime; runtime must not CREATE in public schema or inherit owner privileges.
+3. Set OTP_VERIFY_LIMIT_SECRET to a dedicated cryptographically random secret (at least
+   32 characters) shared identically by every worker, including maintenance. Do not reuse
+   SESSION_SECRET or commit/log it. Missing/mismatched config fails verification503.
+   Existing global-row fingerprint rejects mixed secrets. For intentional rotation,
+   pause all auth mutations and drain dispatch workers, wait more than2 hours since the last limiter admission,
+   prune inactive rows, deploy the same new secret to every worker, test, then reopen.
+   Never truncate live accounting or rotate a single worker to reset budgets.
+4. OTP_VERIFY_TRUST_PROXY defaults false: all traffic uses the bounded unknown-address
+   budget. Set true only after proving the sole ingress replaces X-Real-IP with a
+   trustworthy canonical client address and direct access is blocked. X-Forwarded-For
+   is never used by either OTP route. Qualify CDN topology separately; unqualified headers
+   are not proof of identity. Phase5 requests use the same attribution policy.
+5. Generate Prisma client/engine export from current schema for the target runtime
+   before image build; do not deploy an older prisma-engine-export. Actual Node22 images
+   remain unqualified by local Node26 tests. Install the hourly command
+   `docker compose exec -T app npm run auth:prune-verification` even with zero login
+   traffic (example: operations/auth-verification-maintenance.example.cron). Run it once
+   and verify deletion with restricted role before reopening.
+6. The cron example alone is not monitoring: qualify operator alert delivery for command
+   nonzero exits and absence of successful hourly completion (maximum2 hours). The
+   command emits only aggregate count after commit, reason-only failure and nonzero exit.
+   Admission also prunes under the same short global lock and fails closed when pruning
+   or DB/config access fails. Repair maintenance/DB, run cleanup and prove healthy
+   restricted verification before restoring normal service. No new operator SLA implied.
+7. Verify caps under concurrency, expired/replayed denial, single cookie, applicant/admin
+   retry/mobile RTL, restricted privileges, cleanup and secret consistency before reopening.
+
+The migration is transactional. A failed transaction leaves no partial table/helpers;
+inspect rollback and Prisma migration status, correct the cause and retry per standard
+failed-migration recovery. Existing OTP rows/attempt counts are not rewritten, including
+historical counts above5 (they remain unusable). No user/payment/file backfill. Do not
+change already-applied migrations. Local rollback/failure rehearsal is synthetic.
+
+Rollback: keep expanded schema/functions and data; pause auth and use a compatible
+verification build. Do not restore old count-after-bcrypt writers or delete live budgets.
+A process crash spends its guess; a code consumed before a lost response/cookie must
+be replaced through normal request flow, never unconsumed. No automatic replay after
+ambiguous commits. Database lock waits are bounded and return actionable Persian503;
+expired/code errors remain generic400 and shared limits429. A session already issued
+is governed by the unchanged session lifecycle, not OTP expiry.
+
+
+## 2026-09-19 Phase5 OTP request/SMS rollout (local qualification only)
+
+R5 uses PostgreSQL atomic admission before hashing or SMS. Mobile+purpose retains the
+existing90-second cooldown and five admissions per exact rolling hour (an active admin
+can use both distinct login purposes). Address admissions across all mobiles/purposes
+use OTP_MAX_REQUESTS_PER_IP_PER_WINDOW, default30; invalid, zero or >3000 values fail
+closed503. Unknown addresses share that same configured quota; there is no bypass.
+Request global3000/hour bounds allocation. Verification quotas remain separate.
+Rejected mobile/admin probes spend address/global capacity; unsuccessful work never
+refunds quota. Default shared unknown can deny legitimate users during abuse; qualify
+proxy attribution and capacity before launch, do not silently increase/bypass limits.
+
+Before authorized rollout, take required dated Git and verified matched DB/uploads/config
+backups, pause both OTP mutations and drain every old request/verification worker and
+in-flight SMS call. Apply additive migration20260919130000_otp_request_intents, canonical
+runtime grants and regenerate Prisma client. Deploy all compatible app and maintenance
+workers together; old count-before-insert request writers cannot overlap. No production
+operation is authorized by this document. Keep facilities disabled and launch NO-GO.
+
+AuthRequestIntent stores only UUID, rotating protected mobile+purpose key, admission time
+and nullable one-use claim time. No raw mobile/IP/message/code/hash is stored in intents;
+new OtpCode rows no longer store raw requestIp (existing rows/retention unchanged).
+Claim and OTP replacement commit together, and only an acknowledged winning commit may
+call SMS. Claims expire90 seconds after admission, rechecked after OTP row locks.
+After claim, no automatic provider retry, replay queue or quota refund exists. A crash
+or uncertain commit may spend quota without sending. Delayed provider delivery may arrive
+out of order; latest code remains authoritative. Exactly-once remote delivery is not claimed.
+
+SMS is awaited within its bounded provider timeout (default10s, maximum30s). Provider
+failure/timeout/malformed result returns code entry with a Persian uncertainty warning;
+a possibly delivered code remains usable. User may explicitly request a new code after
+cooldown if quota remains. Browser network uncertainty also exposes entry. No delivery
+receipt is promised. Both SMS layers omit provider prose/message/OTP from diagnostics,
+including development mode; no console OTP fallback. Other notification categories remain
+unchanged except shared safe error logging and conservative success-response validation.
+Actual provider response/delivery semantics still require Phase19 qualification.
+
+Reuse OTP_VERIFY_LIMIT_SECRET and OTP_VERIFY_TRUST_PROXY for both routes. Separate
+request-prefixed and verification buckets never borrow quota; fingerprints check both
+global rows to block mixed-secret reset. Intent cleanup uses narrowly scoped
+prune_auth_request_intents(), no runtime DELETE/TRUNCATE. PUBLIC execution is revoked.
+The existing hourly auth:prune-verification command now prunes both buckets and intents
+in one transaction, logging success only after commit; retain the hourly scheduler and
+missed/nonzero-run alerts described above. Request admission/claim fails closed if required
+cleanup is unavailable. Repair, prune and verify before resuming. Intents older2hours
+are removed; hourly maintenance yields about3hours healthy retention. Rotating buckets
+retain the Phase4 about4hour bound inside approved24hours. No account/application deletion,
+backup/WAL retention change or erasure guarantee during DB downtime.
+
+Rehearse transactional migration failure/rollback/rerun and PUBLIC denial; run canonical
+restricted-role regression and real request/verification DB suites. Before reopening,
+verify eight concurrent requests admit/send one, worker-crash behavior, trusted/unknown
+address limits, slow/failed/uncertain SMS, mobile/admin accessible recovery and cleanup.
+Evidence/replay: docs/security-remediation-2026-09-18/phase-5/. Local Node26 and controlled
+loopback provider do not qualify Node22 release images, actual proxy/SMS or monitoring.
+Rollback retains expanded schema/intents/budgets, pauses auth, and uses a compatible build;
+never truncate reservations or fall back to vulnerable writers. No historical backfill.
+
+### Phase6 authentication origin boundary (local verification; not deployed)
+
+Both OTP POST endpoints require the browser's exact serialized `Origin` to equal the
+canonical origin of runtime `APP_URL`, and `Content-Type: application/json` (optionally
+UTF-8 charset). Foreign, missing, null, malformed or multiple origins return403 before
+body parsing or auth/SMS/database effects; unsupported media returns415, malformed JSON400.
+No nonbrowser exemption is supported. Missing/invalid configuration fails closed503.
+APP_URL must have HTTP(S), no credentials/query/fragment/non-root path; HTTP is permitted
+only on localhost/127.0.0.1/[::1] for isolated development, HTTPS is required otherwise.
+Use `APP_URL=https://sana.ioiv.ir` on every deployed instance. A different public alias
+must redirect to the canonical site before the login page; do not broaden the allow-list.
+
+The existing nginx example listens on80 and proxies to internal HTTP; actual HTTPS
+ingress still requires qualification. Preserve the
+browser Origin header unchanged through the actual TLS proxy. Host, Forwarded and
+X-Forwarded-* never authorize login; internal HTTP does not override configured HTTPS.
+Qualify actual TLS termination and canonical redirects before launch: normal applicant/
+admin JSON request+verify succeeds with Secure/HttpOnly/Lax cookie; a foreign top-level
+text/plain form and null/missing Origin cannot set a cookie. Local self-signed TLS proxy
+checks do not qualify the production proxy, DNS, certificate or network exposure.
+
+No Phase6 schema/grant/retention change. Drain old auth writers for a consistent cutover;
+rollback must retain the origin/media guard and prior quota/verification protections,
+never restore vulnerable endpoints. Diagnose503 by checking canonical APP_URL on each
+instance; do not bypass checks or derive trust from Host headers. Existing logout and
+session-reset workflows remain for their separately scoped phase.
+
+### Phase7 admin request privacy (local verification; not deployed)
+
+After shared admission, admin OTP requests return the same200 conditional code-entry
+message for active, inactive and unknown numbers, including uncertain SMS or claim outcomes.
+Unknown/inactive numbers do not create OTPs/accounts/roles or send SMS. Admission still
+spends mobile/address/global capacity first;429 and admission/config/DB503 do not query
+admin existence. Verification still requires a live active admin and one consumed code.
+
+Admin responses wait at least SMS_REQUEST_TIMEOUT_MS (same1–30s clamp/default10s as the
+provider) plus12s after admission, covering normal bounded lookup/hash/claim/dispatch work.
+Default minimum22s; maximum42s plus admission. The admin browser timeout is60s and fields
+remain locked while pending; an uncertain network result still permits code entry.
+This deliberate latency mitigates healthy timing disclosure. It is not constant-time
+certification under event-loop stalls, DB network faults, or infrastructure overload.
+Qualify actual proxy timeouts/capacity before launch; keep the same timeout on all workers.
+Do not remove the wait, return account-specific errors, detach/replay SMS, or bypass quotas.
+Sanitized admin_otp_unconfirmed diagnostics identify an operational failure only.
+
+No new schema/grants/retention/backfill. Existing Phase4/5 migration, secret, maintenance,
+proxy qualification and drain/cutover rules remain. Deploy uniform writers together;
+rollback preserves Phase4–7 auth protections. Facilities remains disabled; launch NO-GO.
+Local evidence/replay lives in docs/security-remediation-2026-09-18/phase-7/.
+
+### Phase8 facilities file replacement (local verification; not deployed)
+
+Migration `20260919140000_facilities_committed_file_lineage` separates immutable attempted
+revision/base identity from successful committed predecessor/sequence. Failed attempts no
+longer occupy the next successful replacement. The migration locks relevant tables,
+preflights successful history/current pointers, aborts atomically on ambiguity, and records
+append-only repair evidence. Deleted successful history remains part of lineage. Do not
+silently rewrite an ambiguous history; preserve a backup and investigate it before retrying.
+The runtime has SELECT only on `FacilitiesFileLineageRepair`; reapply canonical grants.
+
+This is **not a mixed-writer rolling deployment**. Before any authorized production change,
+follow the dated Git/database/private-upload/configuration backup and restore requirements.
+Pause admission and drain all uploads, scanner retries and reconciliation workers before
+applying the migration. Deploy the matching generated Prisma client and compatible writers
+on every instance, then resume only after migration, role and replacement checks pass.
+Old retries lack ownership tokens; old compensating deletion is unsafe. Rollback retains
+expanded schema, attempt/repair evidence and bytes and uses a compatible guarded build.
+Never drop lineage fields, truncate attempts, or restore the vulnerable upload worker.
+
+All writers lock application/company before binding. Successful scan, current pointer,
+lineage, audit and predecessor tombstone commit atomically; the database rejects detached
+successful revisions. Binding advancement rechecks editability and the150MiB logical quota.
+Quota counts current bytes plus pending reservations with one bounded predecessor credit;
+obsolete retained physical bytes still consume storage capacity and need cleanup monitoring.
+Direct maintenance SQL must follow the same locking protocol; a deadlock must roll back and
+be retried only after checking durable state, never compensated by deleting current bytes.
+
+UNAVAILABLE quarantine retains its original24h deadline. Exclusive token ownership allows
+one acknowledged retry; stale/noneditable work is retained until expiry. Crashed PENDING
+uploads also expire at their original deadline. Never restart retention on retry or claim
+another worker's in-flight scan. Same-key replay returns the durable original outcome;
+new-key replacements remain possible after rejection. Network uncertainty in the UI shows
+last-known content and asks for refresh instead of claiming a particular commit outcome.
+
+Deletion requires a durable tombstone and rechecks current/template/direct-reference
+protection. Reference writers lock stored metadata and reject tombstoned content, including
+when cleanup I/O outlives a transaction timeout. Failed unlink/metadata cleanup remains
+retryable; never delete potentially referenced ready bytes as failure compensation.
+Orphan cleanup freezes candidate names before its exclusive advisory transaction, checks
+for PENDING writers, and obtains fresh metadata references. Admission uses the shared lock.
+Any pending upload can defer orphan cleanup globally until completion/original24h expiry;
+alert on backlog/capacity. Completed tombstones and stale/noneditable retries do not consume
+maintenance batches. Existing job qualification/grant issues remain Phase11 scope.
+
+Evidence: `docs/security-remediation-2026-09-18/phase-8/`. Local controlled INSTREAM tests do
+not certify real antivirus, production topology, volume capacity or backup restoration.
+Facilities remains disabled outside isolated fixtures; no production deployment authorized
+by this evidence and launch remains NO-GO.
+
+### Phase9 legacy file replacement (local verification; not deployed)
+
+Migration `20260919150000_legacy_file_bindings` adds current slot bindings/generations,
+application draft versions, nullable verification metadata, an allocation journal, exact
+predecessor deletion intents, and immutable historical repair inventory. Backfill uses
+only unambiguous owned saved JSON references with exact original array slots. It never
+selects the newest-created upload as truth. Historical scan metadata remains UNKNOWN;
+missing/foreign/duplicate references and unbound certificates remain preserved for D4.
+All unjournaled historical predecessor bytes are retained after replacement for review.
+
+This requires a **drained writer cutover**, not a mixed old/new rolling deployment.
+Before any authorized production migration, take and verify dated Git, database, private
+upload and configuration backups. Pause applicant uploads/draft saves/payment starts,
+admin certificate writers and file maintenance; drain existing requests. Apply the
+migration, generate Prisma, reapply canonical runtime grants and deploy compatible
+writers on every instance. Resume only after current-reference and restricted-role
+checks. Rollback keeps expanded schema/journals/repair evidence and uses a compatible
+writer. Never restore the old list-everything-except-my-upload cleanup algorithm.
+
+The application row is locked before bindings; current pointer, saved JSON, version and
+exact predecessor intent commit together. Payment draft saves and paid corrections use
+the existing application-first payment lock. Active/uncertain payment obligations fence
+applicant changes during provider I/O, including the interval where status is still DRAFT.
+The browser queues its saves/uploads and uses generation/version conflicts for other tabs.
+Known scan/type failures keep retry available; unknown acknowledgement requires refresh.
+Admin detail/export and bound certificate readers use authoritative current pointers.
+
+Legacy files retain the existing 20MiB/file limit; there is no new aggregate quota.
+New objects use canonical private paths, exclusive writes and a pre-write allocation
+journal. Verification retains detected MIME, hash, PASSED and time; scanner identity and
+signature version are not available from the current protocol and remain null. This is
+not real scanner certification and does not decide Phase10's historical submission policy.
+
+Cleanup commits irreversible authorization before unlink and protects current/saved/shared
+objects. Only journaled new predecessors are eligible for automatic removal; historical
+paths are retained. ApplicationFile metadata has no runtime UPDATE/DELETE grant. Unlink
+failure is retryable, ENOENT is success and authorized/deleted objects cannot reattach.
+An uncommitted candidate expires only after24h; COMMITTED candidates never expire. After
+ABANDONED is durable, a suspended old writer cannot become READY/commit. **Repeated sweeps
+must include ABANDONED rows even when deletedAt is set**, since a pre-write process can
+resume late and recreate an unattachable object after a prior cleanup. Do not use an
+uncoordinated age-only filesystem purge. Phase11 qualifies/schedules maintenance; no
+production job or grant expansion is enabled by this phase. Monitor retained bytes and
+retry backlog; metadata/intents remain until an explicit retention policy is approved.
+
+Local evidence: `docs/security-remediation-2026-09-18/phase-9/`. Facilities remains disabled
+outside synthetic fixtures, production is unchanged and the overall launch verdict is NO-GO.
+
+### Phase 10 required-document qualification and historical verification
+
+New payments and submissions now require current, owned, correctly slotted, verified
+private files whose bounded bytes match recorded type, size and SHA-256. Historical
+legacy files without verification evidence remain UNKNOWN. Established downloads and
+reviewed/completed cases keep their existing access; this gate does not quarantine or
+remove historical files. The owner approved D4; production inventory/backfill is still a
+separate operation requiring the agreed backups and rollout authorization.
+
+Deploy the additive `20260919160000_legacy_file_verification` and
+`20260919161000_facilities_editable_snapshot_refresh` migrations and reapply runtime
+grants. Verification evidence is append-only. Snapshot refresh uses two narrowly scoped
+functions limited to DRAFT/NEEDS_EDIT, instead of granting table DELETE. Retain these
+schema objects and evidence on application rollback; reverting qualification reopens R10.
+
+Use `tsx scripts/verify-legacy-files.ts --inventory [afterId]` for a bounded metadata-only
+page (up to 100 rows, ordered by file ID). It changes nothing and omits paths. After
+reviewing inventory and obtaining production authorization, an explicit
+`--verify-file <fileId>` scans a current, unambiguous bound reference. Scanning happens
+outside the application lock, then identity and actual bytes are rechecked under lock.
+Concurrent replacement/content changes reject the record. Repeated identical outcomes
+are deduplicated; UNAVAILABLE is an observation and does not replace prior conclusive
+verification. UNKNOWN plus outage remains unqualified. Scanner protocol currently does
+not report engine/signature versions; provenance fields remain null rather than invented.
+A confirmed malicious historical file requires an explicit containment decision before
+altering its established access. Never bulk-adopt newest-created files or certificates.
+
+Confirmed payments persist before submission qualification. If files are unavailable,
+a pending application returns to an editable paid draft. The applicant repairs documents
+and submits without another fee. A browser retry also recovers a crash between capture
+and submission; provider uncertainty still blocks unsafe remote replay. Operators must
+retain payment evidence and must not reset an obligation to READY to work around a file
+problem. Private storage must remain immutable outside authorized upload/cleanup paths.
+
+### Phase 11 maintenance (local remediation; rollout remains gated)
+
+Apply `20260919170000_bounded_otp_maintenance` as migration owner and reapply the
+runtime grants before starting the new jobs. The fixed-search-path definer deletes
+at most 5,000 OTP rows created over 24 hours ago whose expiry has passed, using database
+time. Runtime receives EXECUTE only; direct OTP DELETE/TRUNCATE and retained legacy
+file/evidence deletion remain denied. `MaintenanceCursor` holds scheduling progress,
+not authorization or file identity; runtime may SELECT/INSERT/UPDATE it only.
+
+Run `auth:prune-otp`, `legacy:reconcile-files`, and `facilities:reconcile-files` with
+the restricted application role and the same private storage mounts as the app.
+The optional schedule is `operations/data-maintenance.example.cron`; installation,
+log retention, operator ownership and alert delivery require deployment qualification.
+Existing `auth:prune-verification` continues independently. OTP uses advisory key
+730180805, legacy files 730180806, facilities files 730180800; orphan exclusion retains
+730180801. Concurrent jobs skip with exit 2. Never install overlapping old scripts.
+
+Exit 0 means the observed job scope completed, exit 1 means dependency/worker failure,
+and exit 2 means skipped, guarded, backlog, or partial coverage. Inspect structured
+reason/counts and retry on the next bounded scheduled run. Legacy `resweepNotVisited`
+is intentionally nonzero when this run did not revisit every eligible candidate;
+large retained candidate sets can consistently return 2 while making progress. Alert
+on failures, non-progress and increasing backlog rather than labeling this as a full
+successful sweep. A late writer can recreate abandoned bytes after a prior unlink:
+repeat sweeps retain identity metadata and never prove permanent absence. Historical
+files are not automatically deleted. Facilities guard reasons (invalid TTL, empty
+known-file inventory, orphan tripwire, active upload) are incomplete outcomes; investigate
+instead of relaxing safety guards. Deferred deletion retries also remain visible.
+
+File jobs reserve per-category time and durably rotate queue priority before I/O;
+row cursors advance before work so process death cannot pin retries to one item.
+A parent holds coordination while an IPC child works for a bounded interval. Parent
+death disconnects the child; connection failure or the 80-second watchdog kills and
+awaits it before reporting failure. Per-object lifecycle/reference fences remain the
+safety authority during the connection-loss detection window; filesystem and database
+changes are not atomic. Completion logs/audit occur only after coordinator transaction
+acknowledgement. Terminating either process is safe to retry; never launch the private
+worker flag directly.
+
+Rollback: stop/drain these schedulers first; retain the additive schema, cursors, OTP
+helper and immutable file metadata. Roll back only to compatible guarded writers.
+Do not grant broad DELETE or restore the old false-success jobs to make cleanup run.
+Verify the migration/grants, execute a controlled restricted-role fixture, and qualify
+scheduler exit-code alerts before production rollout. No production cleanup or schedule
+installation was performed by the local remediation.
+
+### Phase 12 review concurrency and uncertain correction messages
+
+Apply both `20260919180000_admin_review_coordination` and
+`20260919181000_correction_sms_uncertainty`, then reapply runtime grants before starting
+new review writers. Drain existing review/SMS writers during rollout. Runtime retains
+SELECT-only Admin access; `lock_review_admin(text)` is fixed-search-path SECURITY DEFINER,
+PUBLIC execution revoked, scoped to locking the specified admin row. Review mutations
+lock application first and admin second, then check live session/role/version/state.
+Concurrent revocation and a committed decision therefore have a defined database order.
+
+Legacy admin forms carry draftVersion/status; each status decision increments version,
+and certificate replacement already does so. Facilities adds reviewVersion=0 for existing
+rows, advanced by a database trigger on every update, including resubmission, so stale
+forms and state cycles cannot silently overwrite newer decisions. Old pages without
+required tokens receive Persian409 and must refresh. Expired admin requests return
+Persian401; facilities Server Actions serialize safe expected errors explicitly.
+
+Correction SMS admission requires an open correction on NEEDS_EDIT and spends one durable
+claim before dispatch. Provider transport exceptions do not prove non-delivery. Keep
+spent PENDING with DELIVERY_UNCONFIRMED; successful dispatch whose database persistence
+is uncertain stays SENT or spent PENDING/PERSISTENCE_UNCONFIRMED, never retryable FAILED.
+The check constraint permits only those two uncertainty codes on spent/time-stamped
+PENDING rows. A retry requires explicit PROVIDER_REJECTED plus FAILED and an active open
+correction; the current adapter cannot supply that proof, so historical generic failures
+are not offered as safe retries. Investigate delivery with the provider; no automatic
+re-send or unsupported provider idempotency claim. Provider qualification remains Phase19.
+A post-commit SMS claim failure reports the saved correction with unconfirmed delivery.
+
+Rollback: drain new/old review and SMS writers; retain both additive migrations, version
+and uncertainty evidence. Do not restore prior retry semantics or writers that ignore
+review tokens/role locking. Known losing uploads remain journalled cleanup candidates;
+Phase11 reaps them after retention. Ambiguous commits never authorize request-path unlink.
+Local fixtures qualify code behavior only, not rollout, real SMS delivery or launch.
+
+### Phase 13 session recovery and logout qualification
+
+Keep APP_URL set to the canonical public origin; proxy Host headers never authorize
+logout or determine its redirect. Normal same-origin HTML POST logout forms work;
+missing/foreign/null Origin requests fail403 and malformed APP_URL fails503 without
+clearing a cookie. GET logout remains405. Session-reset GET checks the signed token
+and live subject, preserving active sessions; absent cookies produce no deletion.
+Only invalid/expired tokens or missing/inactive subjects are cleared. Secret or database
+unavailability returns actionable503 and preserves the cookie. Both redirects are
+canonical and no-store. Session cookies retain30minute expiry, HttpOnly, SameSite=Lax,
+Secure in production and root scope. No schema or retention changes. Do not roll back
+to the unconditional GET reset or unguarded logout routes. Actual production proxy and
+HTTPS qualification remain separate release gates; this phase uses local isolation.

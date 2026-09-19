@@ -1,0 +1,5 @@
+BEGIN
+INSERT 0 1
+INSERT 0 1
+psql:prisma/tests/facilities-m6-payment.integration.sql:6: ERROR:  duplicate key value violates unique constraint "FacilitySupplier_name_key"
+DETAIL:  Key (name)=(M6 payment test supplier) already exists.

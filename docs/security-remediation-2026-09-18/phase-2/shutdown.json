@@ -1,0 +1,15 @@
+{
+  "serverPid": 43942,
+  "serverStopped": true,
+  "containerId": "f89983e70988ff9869fc4464df4c8dd5b2e09c262398eba34550f19400d7bd59",
+  "containerRemoved": true,
+  "ownershipVerified": true,
+  "preShutdownDatabaseChecks": [
+    "27",
+    "0",
+    "phase1_runtime|f|f|f|f"
+  ],
+  "browserAndProcessHarnesses": "completed, browser closed in finally and workers exited",
+  "unrelatedResources": "untouched",
+  "scratchSource": "disposable; recreate fresh fixture for restart"
+}

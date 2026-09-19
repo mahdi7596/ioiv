@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, FileCheck2, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { showToast } from "@/components/ui/toast";
 import type { ValidationCertificateFile } from "@/lib/application/certificate";
@@ -18,16 +19,19 @@ function formatFileSize(size: number) {
 export function ValidationCertificatePanel({
   applicationId,
   currentStatus,
+  draftVersion,
   certificate,
   canDownload = true,
   canReplace = true,
 }: {
   applicationId: string;
   currentStatus: string;
+  draftVersion: number;
   certificate?: ValidationCertificateFile;
   canDownload?: boolean;
   canReplace?: boolean;
 }) {
+  const router = useRouter();
   const [message, setMessage] = useState<string>();
   const [isPending, startTransition] = useTransition();
   const canReplaceCertificate = canReplace && currentStatus === "VALIDATION_COMPLETED";
@@ -85,8 +89,10 @@ export function ValidationCertificatePanel({
                 const response = await fetch("/api/admin/submissions/certificate", { method: "POST", body: formData });
                 if (!response.ok) {
                   const data = (await response.json().catch(() => null)) as { error?: string } | null;
+                        if (response.status === 409) router.refresh();
                   throw new Error(data?.error || "بارگذاری گواهی ناموفق بود");
                 }
+                router.refresh();
                 setMessage("گواهی با موفقیت ذخیره شد");
                 showToast({ type: "success", message: "گواهی با موفقیت ذخیره شد" });
               } catch (error) {
@@ -98,6 +104,8 @@ export function ValidationCertificatePanel({
           }}
         >
           <input type="hidden" name="applicationId" value={applicationId} />
+      <input type="hidden" name="expectedStatus" value={currentStatus} />
+      <input type="hidden" name="expectedVersion" value={draftVersion} />
           <div className="field">
             <label htmlFor="replacement-validation-certificate">تعویض فایل PDF گواهی</label>
             <input
@@ -112,7 +120,7 @@ export function ValidationCertificatePanel({
             <Upload aria-hidden="true" size={18} strokeWidth={2} />
             بارگذاری گواهی
           </button>
-          {message ? <p className="text-sm text-stone-700">{message}</p> : null}
+          {message ? <p role="status" aria-live="polite" className="text-sm text-stone-700">{message}</p> : null}
         </form>
       ) : null}
     </section>

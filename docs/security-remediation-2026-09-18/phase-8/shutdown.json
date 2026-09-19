@@ -1,0 +1,77 @@
+{
+  "containers": [
+    {
+      "id": "3526dada9d045fc53ff61ec95eb7d7bf8cb5d3260ca947dab25ce5d14f65175e",
+      "name": "sana-phase8-7ax2qqj2",
+      "label": "sana.task=sana-phase8-7ax2qqj2",
+      "image": "sha256:f961d097a9cedd37779baef1aab3fe87ef1c63b3b34d361f90a98ea5c9b77e56",
+      "formerPort": "64625"
+    },
+    {
+      "id": "4bb3544dbc7450766805d382cae7a1eedeba9897d06ca2543142f8b506e556d4",
+      "name": "sana-phase8-exs906lv",
+      "label": "sana.task=sana-phase8-exs906lv",
+      "image": "sha256:f961d097a9cedd37779baef1aab3fe87ef1c63b3b34d361f90a98ea5c9b77e56",
+      "formerPort": "54689"
+    },
+    {
+      "id": "51ed91ef901b75e36bd440b9a48635856d09d29cdc954f61fa88b25a0780dd23",
+      "name": "sana-phase8-final-4dcf5f36b1",
+      "label": "sana.task=sana-phase8-final-4dcf5f36b1",
+      "image": "sha256:f961d097a9cedd37779baef1aab3fe87ef1c63b3b34d361f90a98ea5c9b77e56",
+      "formerPort": "55723"
+    }
+  ],
+  "recordedPids": {
+    "64874": {
+      "status": "absent"
+    },
+    "86638": {
+      "status": "absent"
+    },
+    "86873": {
+      "status": "absent"
+    },
+    "86945": {
+      "status": "absent"
+    },
+    "86957": {
+      "status": "absent"
+    },
+    "86970": {
+      "status": "absent"
+    },
+    "86982": {
+      "status": "absent"
+    }
+  },
+  "ports": {
+    "52551": "closed",
+    "52552": "closed",
+    "54689": "closed",
+    "55723": "closed",
+    "56708": "closed",
+    "56709": "closed",
+    "64625": "closed"
+  },
+  "removedSyntheticTestRoots": [
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-X7M1fl",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-WKwyaU",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-uu5w29",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-Wdu3BU",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-OqhNRB",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-4AmsVg",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-Fn2Wb0",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-33RhnD",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-oKbxv9",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-pXB28x",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-OBkLEu",
+    "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-files-xxDJnA"
+  ],
+  "sourceScratchRetained": [
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2",
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-exs906lv",
+    "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-exs906lv"
+  ],
+  "otherResourcesTouched": false
+}

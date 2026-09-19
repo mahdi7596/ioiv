@@ -10,6 +10,8 @@ function officerTx(overrides: {
   existingSnapshotOfficers?: Array<{ id: string; sourceCompanyOfficerId: string | null; fullName: string; position: string; isChiefExecutive: boolean }>;
 } = {}) {
   const tx = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    $executeRaw: vi.fn().mockResolvedValue(0),
     facilitiesApplication: {
       findUnique: vi.fn().mockResolvedValue({ companyId: "company_1", status: overrides.status ?? "DRAFT" }),
     },
@@ -84,8 +86,7 @@ describe("refreshFacilitiesEditableSnapshot", () => {
   it("preserves credit-report-referenced officers when pruning stale snapshot rows", async () => {
     const tx = officerTx();
     await refreshFacilitiesEditableSnapshot(tx as never, "app_1");
-    expect(tx.facilitiesApplicationOfficer.deleteMany).toHaveBeenCalledWith({
-      where: { applicationId: "app_1", id: { notIn: ["snap_ceo"] }, creditReports: { none: {} } },
-    });
+    expect(tx.$executeRaw).toHaveBeenCalledWith(expect.arrayContaining([expect.stringContaining("prune_editable_facilities_officers")]), "app_1", ["snap_ceo"]);
+    expect(tx.facilitiesApplicationOfficer.deleteMany).not.toHaveBeenCalled();
   });
 });

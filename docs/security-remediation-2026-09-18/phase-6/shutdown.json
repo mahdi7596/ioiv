@@ -1,0 +1,104 @@
+{
+  "containerId": "83ae5ee308146f9ffe9d1f9d1ebeef83c3379dd94dd4cd06a320592edeccb827",
+  "label": "sana.task=sana-phase6-zpeape_v",
+  "identityVerifiedBeforeRemoval": true,
+  "containerRemoved": true,
+  "formerDatabasePort": "57367",
+  "recordedServers": [
+    {
+      "pid": 88353,
+      "port": 58624,
+      "pidAbsent": true
+    },
+    {
+      "pid": 88365,
+      "port": 58625,
+      "pidAbsent": true
+    },
+    {
+      "pid": 88494,
+      "port": 58792,
+      "pidAbsent": true
+    },
+    {
+      "pid": 88525,
+      "port": 58795,
+      "pidAbsent": true
+    },
+    {
+      "pid": 86332,
+      "port": 58324,
+      "pidAbsent": true
+    },
+    {
+      "pid": 86345,
+      "port": 58325,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 89068,
+      "port": 59128,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 89085,
+      "port": 59129,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 89151,
+      "port": 59152,
+      "proxy": true,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 89519,
+      "port": 59373,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 93625,
+      "port": 59681,
+      "source": "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v/source",
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 93637,
+      "port": 59682,
+      "source": "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v/source",
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 94763,
+      "port": 60014,
+      "source": "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v/source",
+      "pidAbsent": true
+    }
+  ],
+  "recordedPortsClosed": [
+    58324,
+    58325,
+    58624,
+    58625,
+    58792,
+    58795,
+    59127,
+    59128,
+    59129,
+    59152,
+    59373,
+    59681,
+    59682,
+    60014,
+    60068
+  ],
+  "unrecordedEphemeralTlsAndHostilePorts": "browser harness awaited close callbacks and deleted generated certificate directory; numerical ports not emitted in initial harness",
+  "workers": "all13 scenarios completed; harnesses exited0",
+  "reviewers": "both completed with local approval",
+  "otherResources": "untouched",
+  "scratchDirectory": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase6-zpeape_v",
+  "note": "Recreate fresh resources; never reconnect to former endpoints"
+}

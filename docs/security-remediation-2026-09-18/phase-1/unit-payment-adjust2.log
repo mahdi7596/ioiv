@@ -1,0 +1,93 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:74548) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source[39m
+
+ [32m✓[39m tests/zarinpal.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/payment-callback.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mstarts payment only after server-side final validation passes
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mstarts payment only after server-side final validation passes
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"app_1","paymentId":"pay_1"}
+
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mpreserves uncertain request instead of marking it failed
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"app_1","paymentId":"pay_1","amountToman":3000000}
+
+[90mstderr[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mpreserves uncertain request instead of marking it failed
+[22m[39m{"level":"error","event":"payment_start_failed","applicationId":"app_1","paymentId":"pay_1","error":{"name":"Error","message":"provider down","stack":"Error: provider down\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-action.test.ts:144:52\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64"}}
+
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2msubmits corrections without repayment when a needs-edit application already has verified payment
+[22m[39m{"level":"info","event":"application_resubmitted_without_payment","applicationId":"app_1"}
+
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mcompletes the submission without a new charge when the open attempt was already paid at the gateway
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"old_pay","applicationId":"app_1","referenceId":"ref_old"}
+
+[90mstderr[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mcompletes the submission without a new charge when the open attempt was already paid at the gateway
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"app_1","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2mcompletes the submission without a new charge when the open attempt was already paid at the gateway
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"app_1"}
+
+ [32m✓[39m tests/payment-action.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 118[2mms[22m[39m
+[90mstderr[2m | tests/facilities-payment-action.test.ts[2m > [22m[2mfacilities payment and submission actions[2m > [22m[2mrecords the verified payment even when the submission step fails, and reports success
+[22m[39m{"level":"error","event":"facilities_post_verify_submission_failed","paymentAttemptId":"pay_1","applicationId":"app_1","error":{"name":"Error","message":"همه اطلاعات و مدارک الزامی باید کامل و بررسی‌شده باشند.","stack":"Error: همه اطلاعات و مدارک الزامی باید کامل و بررسی‌شده باشند.\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/facilities-payment.ts:278:35\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"}}
+
+[90mstderr[2m | tests/facilities-payment-action.test.ts[2m > [22m[2mfacilities payment and submission actions[2m > [22m[2mrecords a late capture when the gateway confirms an attempt that was already closed, and submits
+[22m[39m{"level":"warn","event":"facilities_payment_late_capture_recorded","paymentAttemptId":"pay_1","applicationId":"app_1","previousStatus":"FAILED"}
+
+ [31m❯[39m tests/facilities-payment-action.test.ts [2m([22m[2m21 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 154[2mms[22m[39m
+     [32m✓[39m uses the pinned server amount and creates only one payment handoff[32m 133[2mms[22m[39m
+     [32m✓[39m requires the confirmation checkbox before an enabled payment[32m 1[2mms[22m[39m
+     [32m✓[39m submits directly without a checkbox when payment is disabled[32m 1[2mms[22m[39m
+     [32m✓[39m blocks uncertain historical attempts: reuses an existing redirect instead of creating a duplicate payment[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects forged callback authorities before contacting the gateway[39m[32m 5[2mms[22m[39m
+     [32m✓[39m does not verify an already verified callback twice[32m 1[2mms[22m[39m
+     [32m✓[39m records the verified payment even when the submission step fails, and reports success[32m 2[2mms[22m[39m
+     [32m✓[39m keeps transport uncertainty and nonfinal rejection blocked[32m 1[2mms[22m[39m
+     [32m✓[39m does not ask the gateway about a closed attempt when the callback itself is not OK[32m 0[2mms[22m[39m
+     [32m✓[39m records a late capture when the gateway confirms an attempt that was already closed, and submits[32m 1[2mms[22m[39m
+     [32m✓[39m leaves a closed attempt closed when the gateway rejects it, and flags it when the gateway is unreachable[32m 0[2mms[22m[39m
+     [32m✓[39m never verifies a second capture when the application already holds a verified payment[32m 0[2mms[22m[39m
+     [32m✓[39m blocks uncertain historical attempts: fails a stale attempt that never reached the gateway and returns the application to draft[32m 0[2mms[22m[39m
+     [32m✓[39m re-verifies a stale attempt that reached the gateway and submits when the gateway confirms it[32m 1[2mms[22m[39m
+     [32m✓[39m keeps a stale attempt pending when the gateway cannot be reached during re-verification[32m 0[2mms[22m[39m
+     [32m✓[39m blocks uncertain historical attempts: starts a fresh attempt when the application awaits payment with no open attempt[32m 0[2mms[22m[39m
+     [32m✓[39m verifies the gateway amount from the payment row and submits atomically[32m 1[2mms[22m[39m
+     [32m✓[39m accepts a delayed successful callback after a timeout without starting another payment[32m 1[2mms[22m[39m
+     [32m✓[39m resubmits an open correction with the verified payment and preserves submittedAt[32m 1[2mms[22m[39m
+     [32m✓[39m rejects a correction resubmit when nothing was uploaded since the correction was opened[32m 1[2mms[22m[39m
+     [32m✓[39m resubmits a correction once a company-profile document was replaced, even with no application-file change[32m 2[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mrejects forged callback authorities before contacting the gateway
+[31m[1mAssertionError[22m: expected { state: 'failed' } to deeply equal { state: 'pending' }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "state": "pending",[39m
+[31m+   "state": "failed",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m119:126[22m[39m
+    [90m117|[39m     mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue({ i…
+    [90m118|[39m     const { verifyFacilitiesPaymentCallback } = await import("@/lib/ac…
+    [90m119|[39m     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1",…
+    [90m   |[39m                                                                                                                              [31m^[39m
+    [90m120|[39m     [34mexpect[39m(mocks[33m.[39mverifyZarinpalPayment)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m121|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m54 passed[39m[22m[90m (55)[39m
+[2m   Start at [22m 20:12:28
+[2m   Duration [22m 397ms[2m (transform 459ms, setup 0ms, import 439ms, tests 363ms, environment 0ms)[22m
+

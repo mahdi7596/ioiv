@@ -4,18 +4,17 @@ import { FileUploadControl } from "./FileUploadControl";
 import { YearSelect } from "./YearSelect";
 import type { StepProps, YearFileRow } from "./types";
 
-const defaultRows: YearFileRow[] = [{}, {}, {}];
-
 export function TaxDeclarationStep({
   draft,
-  uploadingKey,
+  uploadingKeys,
   uploadProgress,
   uploadErrors,
   readOnly,
   onDraftChange,
   onUpload,
 }: StepProps) {
-  const rows = draft.taxDeclarations.length >= 3 ? draft.taxDeclarations : defaultRows;
+  const rows: YearFileRow[] = [...draft.taxDeclarations];
+  while (rows.length < 3) rows.push({});
 
   function updateRow(index: number, row: YearFileRow) {
     const nextRows = rows.map((current, currentIndex) => (currentIndex === index ? row : current));
@@ -43,13 +42,10 @@ export function TaxDeclarationStep({
               required={isRequiredRow}
               value={row.file}
               readOnly={readOnly}
-              uploading={uploadingKey === fieldKey}
+              uploading={Boolean(uploadingKeys?.[fieldKey])}
               progress={uploadProgress[fieldKey]}
               error={uploadErrors[fieldKey]}
-              onUpload={async (file) => {
-                const uploaded = await onUpload(fieldKey, file);
-                if (uploaded) updateRow(index, { ...row, file: uploaded });
-              }}
+              onUpload={async (file) => { await onUpload(fieldKey, file); }}
             />
           </div>
         );

@@ -1,0 +1,6 @@
+(node:4646) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS four processes/twelve wrong requests: 5 real comparisons, 0 session authorizations
+PASS four processes/twelve correct requests: 1 real comparisons, 1 session authorizations
+PASS SIGKILL after reserved: durable spent reservation; safe restart behavior
+PASS SIGKILL after consumed: durable spent reservation; safe restart behavior

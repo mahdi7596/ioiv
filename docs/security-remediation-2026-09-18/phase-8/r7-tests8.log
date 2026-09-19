@@ -1,0 +1,70 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-7ax2qqj2/source[39m
+
+(node:57143) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [31m❯[39m tests/facilities-replacement.db.test.ts [2m([22m[2m15 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 7088[2mms[22m[39m
+     [32m✓[39m orphan purge defers during a held scan and preserves the committed bytes[32m 151[2mms[22m[39m
+     [33m[2m✓[22m[39m orphan listing may pause beyond transaction timeout without deleting a recovered current [33m 5271[2mms[22m[39m
+     [32m✓[39m orphan purge removes only aged unreferenced objects after upload completion[32m 69[2mms[22m[39m
+     [32m✓[39m new-key retry after FAILED preserves old good bytes and commits successful lineage[32m 293[2mms[22m[39m
+     [32m✓[39m new-key retry after UNAVAILABLE preserves old good bytes and commits successful lineage[32m 164[2mms[22m[39m
+     [32m✓[39m new-key retry after storage preserves old good bytes and commits successful lineage[32m 182[2mms[22m[39m
+     [32m✓[39m same-key replay cannot scan or allocate again, including rejected content[32m 84[2mms[22m[39m
+     [32m✓[39m concurrent successful candidates cannot replace a newer winner[32m 160[2mms[22m[39m
+     [32m✓[39m A→B→C supports delayed deletion and cannot rebind old current[32m 126[2mms[22m[39m
+     [32m✓[39m unavailable recovery has one acknowledged scan owner and one successful successor[32m 138[2mms[22m[39m
+[31m     [31m×[31m expired unavailable and abandoned pending claims cannot publish or reset retention[39m[32m 61[2mms[22m[39m
+[31m     [31m×[31m expiry during a retry scan cannot overwrite current or delete it[39m[32m 94[2mms[22m[39m
+     [32m✓[39m stale unavailable retains original quarantine rather than replacing a newer winner[32m 98[2mms[22m[39m
+     [32m✓[39m lost acknowledgement after successful commit preserves current bytes[32m 60[2mms[22m[39m
+     [32m✓[39m deletion outage keeps durable intent and a later retry removes only obsolete bytes[32m 70[2mms[22m[39m
+ [32m✓[39m tests/facilities-reconciliation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mexpired unavailable and abandoned pending claims cannot publish or reset retention
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `55006`. Message: `ERROR: cannot ALTER TABLE "FacilitiesFileUpload" because it has pending trigger events`[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m27:276[22m[39m
+
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m oldEnough tests/facilities-replacement.db.test.ts:[2m27:2[22m[39m
+[90m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m82:70[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-replacement.db.test.ts[2m > [22mR7 restricted PostgreSQL replacement and actual storage[2m > [22mexpiry during a retry scan cannot overwrite current or delete it
+[31m[1mPrismaClientKnownRequestError[22m: 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `55006`. Message: `ERROR: cannot ALTER TABLE "FacilitiesFileUpload" because it has pending trigger events`[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m228:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m27:276[22m[39m
+
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m oldEnough tests/facilities-replacement.db.test.ts:[2m27:2[22m[39m
+[90m [2m❯[22m tests/facilities-replacement.db.test.ts:[2m86:188[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m19 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 11:43:29
+[2m   Duration [22m 7.75s[2m (transform 116ms, setup 0ms, import 432ms, tests 7.09s, environment 0ms)[22m
+

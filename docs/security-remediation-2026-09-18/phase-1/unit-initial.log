@@ -1,0 +1,845 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:69500) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source[39m
+
+ [31m❯[39m tests/zarinpal.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 107[2mms[22m[39m
+     [32m✓[39m requests payment through sandbox v4 endpoint with callback metadata[32m 90[2mms[22m[39m
+[31m     [31m×[31m retries a transient fetch failure before returning the payment authority[39m[32m 9[2mms[22m[39m
+[31m     [31m×[31m bounds each gateway call with a timeout and retries a timeout only once[39m[32m 2[2mms[22m[39m
+     [32m✓[39m verifies production payments and returns the reference id[32m 1[2mms[22m[39m
+     [32m✓[39m requires a merchant id before calling Zarinpal[32m 1[2mms[22m[39m
+     [32m✓[39m requires the merchant id to be a UUID before calling Zarinpal[32m 0[2mms[22m[39m
+     [32m✓[39m allows the Zarinpal sandbox merchant UUID[32m 0[2mms[22m[39m
+     [32m✓[39m reports provider failures without leaking merchant credentials[32m 0[2mms[22m[39m
+     [32m✓[39m classifies an explicit gateway rejection with its code[32m 1[2mms[22m[39m
+     [32m✓[39m never reports a 5xx, malformed, or field-less answer as a rejection[32m 1[2mms[22m[39m
+     [32m✓[39m accepts an already-verified answer (code 101) as a confirmed capture[32m 0[2mms[22m[39m
+     [32m✓[39m treats successful HTTP responses with an errors object as provider failures[32m 0[2mms[22m[39m
+ [32m✓[39m tests/no-committed-gateway-credentials.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 210[2mms[22m[39m
+ [32m✓[39m tests/facilities-draft-details-action.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 239[2mms[22m[39m
+ [32m✓[39m tests/admin-actions-permissions.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 259[2mms[22m[39m
+ [31m❯[39m tests/facilities-payment-action.test.ts [2m([22m[2m21 tests[22m[2m | [22m[31m15 failed[39m[2m)[22m[32m 274[2mms[22m[39m
+[31m     [31m×[31m uses the pinned server amount and creates only one payment handoff[39m[32m 257[2mms[22m[39m
+     [32m✓[39m requires the confirmation checkbox before an enabled payment[32m 1[2mms[22m[39m
+     [32m✓[39m submits directly without a checkbox when payment is disabled[32m 3[2mms[22m[39m
+[31m     [31m×[31m reuses an existing redirect instead of creating a duplicate payment[39m[32m 1[2mms[22m[39m
+     [32m✓[39m rejects forged callback authorities before contacting the gateway[32m 1[2mms[22m[39m
+     [32m✓[39m does not verify an already verified callback twice[32m 1[2mms[22m[39m
+[31m     [31m×[31m records the verified payment even when the submission step fails, and reports success[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m keeps the attempt open when the gateway answers a verify with 5xx, but closes it on an explicit rejection[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m does not ask the gateway about a closed attempt when the callback itself is not OK[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m records a late capture when the gateway confirms an attempt that was already closed, and submits[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m leaves a closed attempt closed when the gateway rejects it, and flags it when the gateway is unreachable[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m never verifies a second capture when the application already holds a verified payment[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails a stale attempt that never reached the gateway and returns the application to draft[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m re-verifies a stale attempt that reached the gateway and submits when the gateway confirms it[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m keeps a stale attempt pending when the gateway cannot be reached during re-verification[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m starts a fresh attempt when the application awaits payment with no open attempt[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m verifies the gateway amount from the payment row and submits atomically[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m accepts a delayed successful callback after a timeout without starting another payment[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m resubmits an open correction with the verified payment and preserves submittedAt[39m[32m 2[2mms[22m[39m
+     [32m✓[39m rejects a correction resubmit when nothing was uploaded since the correction was opened[32m 0[2mms[22m[39m
+     [32m✓[39m resubmits a correction once a company-profile document was replaced, even with no application-file change[32m 1[2mms[22m[39m
+ [32m✓[39m tests/facilities-review-actions.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 361[2mms[22m[39m
+     [33m[2m✓[22m[39m commits a correction before sending its one referenced SMS [33m 357[2mms[22m[39m
+ [32m✓[39m tests/admin-certificate-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mconcurrent starts cross a provider barrier only once, and replay the same URL
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76ob1k0001sin616ey62ho","paymentId":"cmu76ob3i0005sin6fcx0as49","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-action.test.ts[2m > [22m[2mpayment action[2m > [22m[2msubmits corrections without repayment when a needs-edit application already has verified payment
+[22m[39m{"level":"info","event":"application_resubmitted_without_payment","applicationId":"app_1"}
+
+ [31m❯[39m tests/payment-action.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m7 failed[39m[2m)[22m[32m 128[2mms[22m[39m
+[31m     [31m×[31m starts payment only after server-side final validation passes[39m[32m 113[2mms[22m[39m
+     [32m✓[39m does not create a payment request when final validation fails[32m 4[2mms[22m[39m
+[31m     [31m×[31m marks the initiated payment failed when Zarinpal request fails without changing application status[39m[32m 1[2mms[22m[39m
+     [32m✓[39m submits corrections without repayment when a needs-edit application already has verified payment[32m 2[2mms[22m[39m
+[31m     [31m×[31m retries a pending payment by failing previous initiated attempts and creating a fresh request[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m completes the submission without a new charge when the open attempt was already paid at the gateway[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m refuses to start a second charge while the open attempt cannot be verified[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m closes an open attempt the gateway rejects and then starts a fresh request[39m[32m 0[2mms[22m[39m
+     [32m✓[39m does not create another payment when a verified payment already exists[32m 0[2mms[22m[39m
+[31m     [31m×[31m returns a pending-payment retry to draft when the fresh gateway request fails[39m[32m 0[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mconcurrent starts cross a provider barrier only once, and replay the same URL
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu76ob1k0001sin616ey62ho","paymentId":"cmu76ob3i0005sin6fcx0as49"}
+
+ [32m✓[39m tests/facilities-private-file-route.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76obj50008sin6g6f6vwgi","paymentId":"cmu76obkm000csin6miew3d7b","amountToman":3000000}
+
+ [32m✓[39m tests/admin-status-route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 184[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu76obj50008sin6g6f6vwgi","paymentId":"cmu76obkm000csin6miew3d7b"}
+
+ [32m✓[39m tests/facilities-files.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 266[2mms[22m[39m
+ [32m✓[39m tests/facilities-export.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 204[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mserializes duplicate callbacks and creates one settlement/history/notification intent
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu76obkm000csin6miew3d7b","applicationId":"cmu76obj50008sin6g6f6vwgi","referenceId":"reference-cmu76obj50008sin6g6f6vwgi"}
+
+ [32m✓[39m tests/admin-readonly-ui.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76obvz000isin6ra194rbi","paymentId":"cmu76obx1000msin6mf9dqlf8","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu76obvz000isin6ra194rbi","paymentId":"cmu76obx1000msin6mf9dqlf8"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mold authorities before and after settlement never reach provider and retain separate evidence
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu76obx1000msin6mf9dqlf8","applicationId":"cmu76obvz000isin6ra194rbi","referenceId":"reference-cmu76obvz000isin6ra194rbi"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2munknown request timeout and expired lease never create another remote call
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76oca30014sin6hyytnqjf","paymentId":"cmu76ocbi0018sin6ub2ra0uv","amountToman":3000000}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2munknown request timeout and expired lease never create another remote call
+[22m[39m{"level":"error","event":"payment_start_failed","applicationId":"cmu76oca30014sin6hyytnqjf","paymentId":"cmu76ocbi0018sin6ub2ra0uv","error":{"name":"TimeoutError","message":"timeout","stack":"TimeoutError: timeout\n    at new DOMException (node:internal/per_context/domexception:79:18)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:82:49\n    at Mock (file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/spy/dist/index.js:332:34)\n    at postZarinpal (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/zarinpal.ts:37:26)\n    at requestZarinpalPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/zarinpal.ts:115:22)\n    at Module.startPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/actions/payment.ts:133:22)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:83:13\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+[90mstdout[2m | tests/sms-index.test.ts[2m > [22m[2msendSms[2m > [22m[2mcan send through the provider outside production when explicitly enabled
+[22m[39m{"level":"info","event":"sms_send_started","to":"091****6789","template":"sanaotp"}
+
+[90mstdout[2m | tests/sms-index.test.ts[2m > [22m[2msendSms[2m > [22m[2mcan send through the provider outside production when explicitly enabled
+[22m[39m{"level":"info","event":"sms_send_succeeded","to":"091****6789","template":"sanaotp"}
+
+ [31m❯[39m tests/payment-callback.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m8 failed[39m[2m)[22m[32m 197[2mms[22m[39m
+[31m     [31m×[31m verifies matching callbacks and redirects to the success return page[39m[32m 125[2mms[22m[39m
+[31m     [31m×[31m does not downgrade a verified payment when notification delivery fails[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m treats already verified callbacks as successful without duplicate verification or history[39m[32m 9[2mms[22m[39m
+[31m     [31m×[31m marks the attempt failed only when Zarinpal explicitly rejects the authority[39m[32m 4[2mms[22m[39m
+[31m     [31m×[31m keeps the attempt open and reports pending when the gateway gives no trustworthy answer[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m never marks a gateway-confirmed payment failed when persisting it fails[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m lets only one of two concurrent deliveries write history and notify[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m does not verify a second capture when the application already has a verified payment[39m[32m 1[2mms[22m[39m
+     [32m✓[39m marks cancelled active payments failed and returns the application to draft[32m 2[2mms[22m[39m
+     [32m✓[39m does not downgrade stale failed callbacks after review has started[32m 1[2mms[22m[39m
+     [32m✓[39m does not return the application to draft for an old failed callback after a retry started[32m 1[2mms[22m[39m
+     [32m✓[39m does not return the application to draft for an old failed callback after another payment was verified[32m 47[2mms[22m[39m
+ [32m✓[39m tests/sms-index.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m tests/facilities-payment-callback-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mverification timeout never retries remotely or creates another authority
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76ocej001bsin64rvg8qtm","paymentId":"cmu76ocfv001fsin64rhhl9b1","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mverification timeout never retries remotely or creates another authority
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu76ocej001bsin64rvg8qtm","paymentId":"cmu76ocfv001fsin64rhhl9b1"}
+
+ [32m✓[39m tests/admin-export-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 144[2mms[22m[39m
+ [32m✓[39m tests/payment-return-page.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m tests/status-history-timeline.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m tests/client-ip.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76ocu3001qsin6a15z6sb5","paymentId":"cmu76ocv9001usin6p4b2rftn","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu76ocu3001qsin6a15z6sb5","paymentId":"cmu76ocv9001usin6p4b2rftn"}
+
+ [32m✓[39m tests/facilities-application-files-route.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"error","event":"payment_verification_persist_failed","paymentId":"cmu76ocv9001usin6p4b2rftn","applicationId":"cmu76ocu3001qsin6a15z6sb5","referenceId":"durable-capture","error":{"name":"PrismaClientUnknownRequestError","message":"\nInvalid `tx.statusHistory.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:74:30\n\n  71     submittedAt: new Date(),\n  72   },\n  73 });\n→ 74 await tx.statusHistory.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table StatusHistory\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })","stack":"PrismaClientUnknownRequestError: \nInvalid `tx.statusHistory.create()` invocation in\n/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:74:30\n\n  71     submittedAt: new Date(),\n  72   },\n  73 });\n→ 74 await tx.statusHistory.create(\nError occurred during query execution:\nConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: \"42501\", message: \"permission denied for table StatusHistory\", severity: \"ERROR\", detail: None, column: None, hint: None }), transient: false })\n    at ei.handleRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:7458)\n    at ei.handleAndLogRequestError (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6593)\n    at ei.request (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:121:6300)\n    at a (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:9551)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:74:7\n    at Proxy._transactionWithCallback (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@prisma/client/runtime/library.js:130:8120)\n    at Module.settleLegacyPayment (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/lib/payments/legacy-settlement.ts:49:15)\n    at /private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/tests/payment-coordination.db.test.ts:117:12\n    at file:///private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase1-wav4dncb/source/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"}}
+
+ [32m✓[39m tests/facilities-review-ui.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+ [32m✓[39m tests/upload-route.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mcapture evidence survives failed submission commit and retries without provider
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu76ocv9001usin6p4b2rftn","applicationId":"cmu76ocu3001qsin6a15z6sb5","referenceId":"durable-capture"}
+
+ [32m✓[39m tests/protected-file-route.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mrestricted role rejects cross-application selection, amount mutation and result deletion
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu76od390022sin6v83dhlhr","paymentId":"cmu76od4g0026sin6lmw1tvlc","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mrestricted role rejects cross-application selection, amount mutation and result deletion
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu76od390022sin6v83dhlhr","paymentId":"cmu76od4g0026sin6lmw1tvlc"}
+
+[90mstderr[2m | tests/upload-validation.test.ts[2m > [22m[2mlegacy upload scanning[2m > [22m[2mrejects files the configured scanner flags or cannot scan, writing nothing
+[22m[39m{"level":"warn","event":"legacy_upload_scan_rejected","status":"FAILED","reason":"MALWARE_DETECTED","fileType":"PDF","size":60}
+
+[90mstderr[2m | tests/upload-validation.test.ts[2m > [22m[2mlegacy upload scanning[2m > [22m[2mrejects files the configured scanner flags or cannot scan, writing nothing
+[22m[39m{"level":"warn","event":"legacy_upload_scan_rejected","status":"UNAVAILABLE","reason":"SCANNER_UNAVAILABLE","fileType":"PDF","size":60}
+
+[90mstderr[2m | tests/upload-validation.test.ts[2m > [22m[2mlegacy upload scanning[2m > [22m[2mfails closed when no scanner is configured at all, and scans when one is
+[22m[39m{"level":"error","event":"legacy_upload_scanner_not_configured","fileType":"PDF","size":60,"error":{"message":"undefined"}}
+
+ [32m✓[39m tests/upload-validation.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32m✓[39m tests/payment-coordination.db.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 2904[2mms[22m[39m
+     [33m[2m✓[22m[39m concurrent starts cross a provider barrier only once, and replay the same URL [33m 645[2mms[22m[39m
+     [33m[2m✓[22m[39m serializes duplicate callbacks and creates one settlement/history/notification intent [33m 465[2mms[22m[39m
+     [33m[2m✓[22m[39m old authorities before and after settlement never reach provider and retain separate evidence [33m 511[2mms[22m[39m
+     [33m[2m✓[22m[39m verification timeout never retries remotely or creates another authority [33m 408[2mms[22m[39m
+     [33m[2m✓[22m[39m capture evidence survives failed submission commit and retries without provider [33m 329[2mms[22m[39m
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2minvalidates older unused OTPs before creating a replacement
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2minvalidates older unused OTPs before creating a replacement
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects OTP requests made too soon for the same mobile and purpose
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects OTP requests after five requests in an hour for the same mobile and purpose
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for mobiles outside the active admin list
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for mobiles outside the active admin list
+[22m[39m{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for inactive admin mobiles
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrejects admin OTP requests for inactive admin mobiles
+[22m[39m{"level":"warn","event":"otp_request_rejected_inactive_admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mallows active entry viewer admins to request an admin OTP
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"093****6801"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mallows active entry viewer admins to request an admin OTP
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"admin","mobile":"093****6801","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not reveal whether a user mobile is already registered when requesting an OTP
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not reveal whether a user mobile is already registered when requesting an OTP
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mcreates a bare user with just their mobile number on first OTP verification
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mcreates a bare user with just their mobile number on first OTP verification
+[22m[39m{"level":"info","event":"otp_verify_completed","mode":"user","mobile":"091****6789","userId":"user-1","createdUser":true}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mlogs an existing user in without creating a new record
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mlogs an existing user in without creating a new record
+[22m[39m{"level":"info","event":"otp_verify_completed","mode":"user","mobile":"091****6789","userId":"user-1","createdUser":false}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_completed","mode":"user","mobile":"091****6789","next":"otp"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"info","event":"otp_request_started","mode":"user","mobile":"091****0001"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mrecords the requesting address and rejects an address over the hourly cap
+[22m[39m{"level":"warn","event":"otp_ip_limit_hit","clientIp":"203.0.113.5","purpose":"USER_LOGIN","count":30}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mapplies rate limits before revealing whether an admin mobile exists
+[22m[39m{"level":"info","event":"otp_request_started","mode":"admin","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2monly selects codes that still have verification attempts left
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****6789"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2monly selects codes that still have verification attempts left
+[22m[39m{"level":"info","event":"otp_verify_completed","mode":"user","mobile":"091****6789","userId":"user-1","createdUser":true}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mcounts a wrong code against the OTP and does not create a session
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mcounts a wrong code against the OTP and does not create a session
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****6789","reason":"invalid_code","attempt":3}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not mint a session when the code was consumed concurrently
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mdoes not mint a session when the code was consumed concurrently
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****6789","reason":"already_consumed"}
+
+[90mstdout[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mruns a dummy hash comparison when no usable code exists
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****6789"}
+
+[90mstderr[2m | tests/auth-actions.test.ts[2m > [22m[2mauth actions[2m > [22m[2mruns a dummy hash comparison when no usable code exists
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****6789","reason":"invalid_or_expired"}
+
+ [32m✓[39m tests/auth-actions.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/facilities-m9-release.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/upload-request-guards.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/health-route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m tests/facilities-application-wizard.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m tests/admin-human-resources.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/facilities-admin-file-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m tests/facilities-export-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m tests/facilities-editable-snapshot.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/export-submissions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/status-history-timeline-item.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/validation-certificate-download.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m tests/validation-certificate-panel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/facilities-audit-loader.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/logger.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/final-payment-step.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/dashboard-evaluation-notice.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/export-submissions-cap.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/validation/application.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/facilities-reconciliation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/facilities-review-status.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/facilities-submission-validation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m tests/facilities-profile-lock.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/facilities-scan-semaphore.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/facilities-retention.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/status-history-note.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/payment-status-relationship.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/facilities-config-validation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstderr[2m | tests/ghasedak.test.ts[2m > [22m[2mGhasedak SMS adapter[2m > [22m[2mrefuses a plain-http base URL in production unless explicitly overridden
+[22m[39m{"level":"warn","event":"sms_insecure_transport","reason":"GHASEDAK_ALLOW_INSECURE_HTTP"}
+
+ [32m✓[39m tests/ghasedak.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m tests/pagination.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/sms-messages.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/facilities-payment-notice.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/upload-rate-limit.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/status-labels.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/application-access.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/status-transitions.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/validation/auth.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/admin-permissions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/facilities-export-loading.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/status-history-format.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/security-headers.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/facilities-payment-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/facilities-audit.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 32 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22muses the pinned server amount and creates only one payment handoff
+[31m[1mAssertionError[22m: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m82:86[22m[39m
+
+
+[31m[1mCaused by: TypeError[22m: Cannot read properties of undefined (reading 'findUnique')[39m
+[36m [2m❯[22m paymentObligation lib/payments/coordination.ts:[2m17:47[22m[39m
+[90m [2m❯[22m lib/actions/facilities-payment.ts:[2m187:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mreuses an existing redirect instead of creating a duplicate payment
+[31m[1mAssertionError[22m: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m105:86[22m[39m
+
+
+[31m[1mCaused by: TypeError[22m: Cannot read properties of undefined (reading 'findUnique')[39m
+[36m [2m❯[22m paymentObligation lib/payments/coordination.ts:[2m17:47[22m[39m
+[90m [2m❯[22m lib/actions/facilities-payment.ts:[2m187:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mrecords the verified payment even when the submission step fails, and reports success
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m131:116[22m[39m
+
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mkeeps the attempt open when the gateway answers a verify with 5xx, but closes it on an explicit rejection
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m144:116[22m[39m
+    [90m142|[39m     mocks.db.facilitiesPaymentAttempt.findUnique.mockResolvedValue(ope…
+    [90m143|[39m     mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalUnavaila…
+    [90m144|[39m     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1",…
+    [90m   |[39m                                                                                                                    [31m^[39m
+    [90m145|[39m     expect(mocks.db.facilitiesPaymentAttempt.update).not.toHaveBeenCal…
+    [90m146|[39m     expect(mocks.db.facilitiesApplication.update.mock.calls.some((call…
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mdoes not ask the gateway about a closed attempt when the callback itself is not OK
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m164:117[22m[39m
+
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mrecords a late capture when the gateway confirms an attempt that was already closed, and submits
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m176:116[22m[39m
+    [90m174|[39m     const { verifyFacilitiesPaymentCallback } = await import("@/lib/ac…
+    [90m175|[39m
+    [90m176|[39m     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1",…
+    [90m   |[39m                                                                                                                    [31m^[39m
+    [90m177|[39m
+    [90m178|[39m     expect(mocks.verifyZarinpalPayment).toHaveBeenCalledWith({ amountT…
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mleaves a closed attempt closed when the gateway rejects it, and flags it when the gateway is unreachable
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m191:116[22m[39m
+    [90m189|[39m
+    [90m190|[39m     mocks.verifyZarinpalPayment.mockRejectedValue(new ZarinpalRejected…
+    [90m191|[39m     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1",…
+    [90m   |[39m                                                                                                                    [31m^[39m
+    [90m192|[39m     expect(mocks.db.facilitiesPaymentAttempt.update).not.toHaveBeenCal…
+    [90m193|[39m
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mnever verifies a second capture when the application already holds a verified payment
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m205:116[22m[39m
+    [90m203|[39m     const { verifyFacilitiesPaymentCallback } = await import("@/lib/ac…
+    [90m204|[39m
+    [90m205|[39m     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_b",…
+    [90m   |[39m                                                                                                                    [31m^[39m
+    [90m206|[39m
+    [90m207|[39m     [34mexpect[39m(mocks[33m.[39mverifyZarinpalPayment)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mfails a stale attempt that never reached the gateway and returns the application to draft
+[31m[1mAssertionError[22m: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m217:86[22m[39m
+
+
+[31m[1mCaused by: TypeError[22m: Cannot read properties of undefined (reading 'findUnique')[39m
+[36m [2m❯[22m paymentObligation lib/payments/coordination.ts:[2m17:47[22m[39m
+[90m [2m❯[22m lib/actions/facilities-payment.ts:[2m187:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mre-verifies a stale attempt that reached the gateway and submits when the gateway confirms it
+[31m[1mAssertionError[22m: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m230:86[22m[39m
+    [90m228|[39m     mocks.verifyZarinpalPayment.mockResolvedValue({ referenceId: "ref_…
+    [90m229|[39m     const { startFacilitiesPayment } = await import("@/lib/actions/fac…
+    [90m230|[39m     await expect(startFacilitiesPayment({ applicationId: "app_1", conf…
+    [90m   |[39m                                                                                      [31m^[39m
+    [90m231|[39m     expect(mocks.verifyZarinpalPayment).toHaveBeenCalledWith({ amountT…
+    [90m232|[39m     [34mexpect[39m(mocks[33m.[39mrequestZarinpalPayment)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[1mCaused by: TypeError[22m: Cannot read properties of undefined (reading 'findUnique')[39m
+[36m [2m❯[22m paymentObligation lib/payments/coordination.ts:[2m17:47[22m[39m
+[90m [2m❯[22m lib/actions/facilities-payment.ts:[2m187:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mkeeps a stale attempt pending when the gateway cannot be reached during re-verification
+[31m[1mAssertionError[22m: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m243:86[22m[39m
+    [90m241|[39m     mocks.verifyZarinpalPayment.mockRejectedValue(new TypeError("fetch…
+    [90m242|[39m     const { startFacilitiesPayment } = await import("@/lib/actions/fac…
+    [90m243|[39m     await expect(startFacilitiesPayment({ applicationId: "app_1", conf…
+    [90m   |[39m                                                                                      [31m^[39m
+    [90m244|[39m     expect(mocks.db.facilitiesPaymentAttempt.update.mock.calls.some((c…
+    [90m245|[39m   })[33m;[39m
+
+[31m[1mCaused by: TypeError[22m: Cannot read properties of undefined (reading 'findUnique')[39m
+[36m [2m❯[22m paymentObligation lib/payments/coordination.ts:[2m17:47[22m[39m
+[90m [2m❯[22m lib/actions/facilities-payment.ts:[2m187:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mstarts a fresh attempt when the application awaits payment with no open attempt
+[31m[1mAssertionError[22m: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m255:86[22m[39m
+    [90m253|[39m       .mockResolvedValue(application({ status: "DRAFT", payments: clos…
+    [90m254|[39m     const { startFacilitiesPayment } = await import("@/lib/actions/fac…
+    [90m255|[39m     await expect(startFacilitiesPayment({ applicationId: "app_1", conf…
+    [90m   |[39m                                                                                      [31m^[39m
+    [90m256|[39m     expect(mocks.db.facilitiesApplication.update).toHaveBeenCalledWith…
+    [90m257|[39m     expect(mocks.db.facilitiesPaymentAttempt.create).toHaveBeenCalledO…
+
+[31m[1mCaused by: TypeError[22m: Cannot read properties of undefined (reading 'findUnique')[39m
+[36m [2m❯[22m paymentObligation lib/payments/coordination.ts:[2m17:47[22m[39m
+[90m [2m❯[22m lib/actions/facilities-payment.ts:[2m187:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mverifies the gateway amount from the payment row and submits atomically
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m265:116[22m[39m
+
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22maccepts a delayed successful callback after a timeout without starting another payment
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m276:116[22m[39m
+    [90m274|[39m     mocks.verifyZarinpalPayment.mockResolvedValue({ referenceId: "ref_…
+    [90m275|[39m     const { verifyFacilitiesPaymentCallback } = await import("@/lib/ac…
+    [90m276|[39m     await expect(verifyFacilitiesPaymentCallback({ paymentId: "pay_1",…
+    [90m   |[39m                                                                                                                    [31m^[39m
+    [90m277|[39m     [34mexpect[39m(mocks[33m.[39mverifyZarinpalPayment)[33m.[39m[34mtoHaveBeenCalledOnce[39m()[33m;[39m
+    [90m278|[39m     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCal…
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m12:26[22m[39m
+[90m [2m❯[22m lib/payments/coordination.ts:[2m55:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/facilities-payment-action.test.ts:[2m63:101[22m[39m
+[90m [2m❯[22m beginPaymentVerification lib/payments/coordination.ts:[2m54:13[22m[39m
+[90m [2m❯[22m verifyFacilitiesPaymentCallback lib/actions/facilities-payment.ts:[2m298:29[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-payment-action.test.ts[2m > [22mfacilities payment and submission actions[2m > [22mresubmits an open correction with the verified payment and preserves submittedAt
+[31m[1mAssertionError[22m: promise rejected "Error: ابتدا پرداخت را انجام دهید { status: … }" instead of resolving[39m
+[36m [2m❯[22m tests/facilities-payment-action.test.ts:[2m286:74[22m[39m
+    [90m284|[39m     mocks.db.facilitiesCorrectionRequest.findFirst.mockResolvedValue({…
+    [90m285|[39m     const { submitFacilitiesApplication } = await import("@/lib/action…
+    [90m286|[39m     await expect(submitFacilitiesApplication({ applicationId: "app_1" …
+    [90m   |[39m                                                                          [31m^[39m
+    [90m287|[39m     expect(mocks.db.facilitiesPaymentAttempt.create).not.toHaveBeenCal…
+    [90m288|[39m     expect(mocks.db.facilitiesCorrectionRequest.update).toHaveBeenCall…
+
+[31m[1mCaused by: Error[22m: ابتدا پرداخت را انجام دهید[39m
+[36m [2m❯[22m lib/actions/facilities-payment.ts:[2m149:106[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ status: 409 }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mstarts payment only after server-side final validation passes
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m86:54[22m[39m
+    [90m 84|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m 85|[39m
+    [90m 86|[39m     await expect(startPayment(completeApplication())).resolves.toEqual…
+    [90m   |[39m                                                      [31m^[39m
+    [90m 87|[39m       ok[33m:[39m [35mtrue[39m[33m,[39m
+    [90m 88|[39m       redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_…
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m86:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mmarks the initiated payment failed when Zarinpal request fails without changing application status
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m144:54[22m[39m
+    [90m142|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m143|[39m
+    [90m144|[39m     await expect(startPayment(completeApplication())).resolves.toEqual…
+    [90m   |[39m                                                      [31m^[39m
+    [90m145|[39m       ok[33m:[39m [35mfalse[39m[33m,[39m
+    [90m146|[39m       message[33m:[39m [32m"شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید."[39m[33m,[39m
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m144:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mretries a pending payment by failing previous initiated attempts and creating a fresh request
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m193:54[22m[39m
+    [90m191|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m192|[39m
+    [90m193|[39m     await expect(startPayment(completeApplication())).resolves.toEqual…
+    [90m   |[39m                                                      [31m^[39m
+    [90m194|[39m       ok[33m:[39m [35mtrue[39m[33m,[39m
+    [90m195|[39m       redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_…
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m193:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mcompletes the submission without a new charge when the open attempt was already paid at the gateway
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m227:54[22m[39m
+    [90m225|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m226|[39m
+    [90m227|[39m     await expect(startPayment(completeApplication())).resolves.toEqual…
+    [90m   |[39m                                                      [31m^[39m
+    [90m228|[39m       ok[33m:[39m [35mtrue[39m[33m,[39m
+    [90m229|[39m       redirectTo[33m:[39m [32m"/payment/return?status=success&paymentId=old_pay"[39m[33m,[39m
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m227:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mrefuses to start a second charge while the open attempt cannot be verified
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m255:54[22m[39m
+    [90m253|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m254|[39m
+    [90m255|[39m     await expect(startPayment(completeApplication())).resolves.toMatch…
+    [90m   |[39m                                                      [31m^[39m
+    [90m256|[39m
+    [90m257|[39m     [34mexpect[39m(mocks[33m.[39mdb[33m.[39mpayment[33m.[39mupdateMany)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m255:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mcloses an open attempt the gateway rejects and then starts a fresh request
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m272:54[22m[39m
+    [90m270|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m271|[39m
+    [90m272|[39m     await expect(startPayment(completeApplication())).resolves.toEqual…
+    [90m   |[39m                                                      [31m^[39m
+    [90m273|[39m       ok[33m:[39m [35mtrue[39m[33m,[39m
+    [90m274|[39m       redirectTo: "https://sandbox.zarinpal.com/pg/StartPay/authority_…
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m272:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-action.test.ts[2m > [22mpayment action[2m > [22mreturns a pending-payment retry to draft when the fresh gateway request fails
+[31m[1mAssertionError[22m: promise rejected "TypeError: tx.$queryRaw is not a function" instead of resolving[39m
+[36m [2m❯[22m tests/payment-action.test.ts:[2m313:54[22m[39m
+    [90m311|[39m     [35mconst[39m { startPayment } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/lib/actions/payment"[39m)[33m;[39m
+    [90m312|[39m
+    [90m313|[39m     await expect(startPayment(completeApplication())).resolves.toEqual…
+    [90m   |[39m                                                      [31m^[39m
+    [90m314|[39m       ok[33m:[39m [35mfalse[39m[33m,[39m
+    [90m315|[39m       message[33m:[39m [32m"شروع پرداخت ناموفق بود. کمی بعد دوباره تلاش کنید."[39m[33m,[39m
+
+[31m[1mCaused by: TypeError[22m: tx.$queryRaw is not a function[39m
+[36m [2m❯[22m lockPaymentApplication lib/payments/coordination.ts:[2m11:49[22m[39m
+[90m [2m❯[22m lib/actions/payment.ts:[2m95:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> tests/payment-action.test.ts:[2m74:101[22m[39m
+[90m [2m❯[22m startPayment lib/actions/payment.ts:[2m94:32[22m[39m
+[90m [2m❯[22m tests/payment-action.test.ts:[2m313:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mverifies matching callbacks and redirects to the success return page
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'tx.$queryRaw is not a function'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=success&paymentId=pay_1"[39m
+Received: [31m"tx.$queryRaw is not a function"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m93:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mdoes not downgrade a verified payment when notification delivery fails
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'tx.$queryRaw is not a function'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=success&paymentId=pay_1"[39m
+Received: [31m"tx.$queryRaw is not a function"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m123:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mtreats already verified callbacks as successful without duplicate verification or history
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got '[vitest] No "dispatchSubmissionIntent…'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- NEXT_REDIRECT:/payment/return?status=success&paymentId=pay_1[39m
+[31m+ [vitest] No "dispatchSubmissionIntent" export is defined on the "@/lib/payments/legacy-notifications" mock. Did you forget to return it from "vi.mock"?[39m
+[31m+ If you need to partially mock a module, you can use "importOriginal" helper inside:[39m
+[31m+[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m158:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mmarks the attempt failed only when Zarinpal explicitly rejects the authority
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'tx.$queryRaw is not a function'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=failed&paymentId=pay_1"[39m
+Received: [31m"tx.$queryRaw is not a function"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m171:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mkeeps the attempt open and reports pending when the gateway gives no trustworthy answer
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'tx.$queryRaw is not a function'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=pending&paymentId=pay_1"[39m
+Received: [31m"tx.$queryRaw is not a function"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m189:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mnever marks a gateway-confirmed payment failed when persisting it fails
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'connection reset'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=pending&paymentId=pay_1"[39m
+Received: [31m"connection reset"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m205:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mlets only one of two concurrent deliveries write history and notify
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'tx.$queryRaw is not a function'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=success&paymentId=pay_1"[39m
+Received: [31m"tx.$queryRaw is not a function"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m230:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-callback.test.ts[2m > [22mpayment callback route[2m > [22mdoes not verify a second capture when the application already has a verified payment
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'NEXT_REDIRECT:/payment/return?status=…' but got 'tx.$queryRaw is not a function'[39m
+
+Expected: [32m"NEXT_REDIRECT:/payment/return?status=success&paymentId=pay_1"[39m
+Received: [31m"tx.$queryRaw is not a function"[39m
+
+[36m [2m❯[22m expectRedirect tests/payment-callback.test.ts:[2m75:38[22m[39m
+    [90m 73|[39m   [35mconst[39m { [33mGET[39m } [33m=[39m [35mawait[39m [35mimport[39m([32m"@/app/api/payment/callback/route"[39m)[33m;[39m
+    [90m 74|[39m
+    [90m 75|[39m   await expect(GET(new Request(url))).rejects.toThrow(`NEXT_REDIRECT:$…
+    [90m   |[39m                                      [31m^[39m
+    [90m 76|[39m }
+    [90m 77|[39m
+[90m [2m❯[22m tests/payment-callback.test.ts:[2m258:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/zarinpal.test.ts[2m > [22mzarinpal payment adapter[2m > [22mretries a transient fetch failure before returning the payment authority
+[31m[1mAssertionError[22m: promise rejected "TypeError: fetch failed" instead of resolving[39m
+[36m [2m❯[22m tests/zarinpal.test.ts:[2m78:6[22m[39m
+    [90m 76|[39m         mobile[33m:[39m [32m"09123456789"[39m[33m,[39m
+    [90m 77|[39m       })[33m,[39m
+    [90m 78|[39m     )[33m.[39mresolves[33m.[39m[34mtoEqual[39m({
+    [90m   |[39m      [31m^[39m
+    [90m 79|[39m       authority[33m:[39m [32m"A000000000000000000000000000000123456"[39m[33m,[39m
+    [90m 80|[39m       paymentUrl: "https://sandbox.zarinpal.com/pg/StartPay/A000000000…
+
+[31m[1mCaused by: TypeError[22m: fetch failed[39m
+[36m [2m❯[22m tests/zarinpal.test.ts:[2m63:30[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/32]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/zarinpal.test.ts[2m > [22mzarinpal payment adapter[2m > [22mbounds each gateway call with a timeout and retries a timeout only once
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called 2 times, but got 1 times[39m
+[36m [2m❯[22m tests/zarinpal.test.ts:[2m106:23[22m[39m
+    [90m104|[39m       })[33m,[39m
+    [90m105|[39m     )[33m.[39mrejects[33m.[39m[34mtoMatchObject[39m({ name[33m:[39m [32m"TimeoutError"[39m })[33m;[39m
+    [90m106|[39m     [34mexpect[39m(fetchMock)[33m.[39m[34mtoHaveBeenCalledTimes[39m([34m2[39m)[33m;[39m
+    [90m   |[39m                       [31m^[39m
+    [90m107|[39m   })[33m;[39m
+    [90m108|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/32]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m65 passed[39m[22m[90m (69)[39m
+[2m      Tests [22m [1m[31m32 failed[39m[22m[2m | [22m[1m[32m284 passed[39m[22m[90m (316)[39m
+[2m   Start at [22m 20:09:14
+[2m   Duration [22m 6.41s[2m (transform 5.74s, setup 0ms, import 15.79s, tests 7.10s, environment 89ms)[22m
+

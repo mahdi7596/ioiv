@@ -8,6 +8,9 @@ export default defineConfig({
     },
   },
   test: {
+    // Isolated real-DB suites deliberately reset shared synthetic tables. Each
+    // suite exercises its own concurrent connections/processes internally.
+    fileParallelism: process.env.PHASE1_ISOLATED_DB !== "true",
     exclude: [...defaultExclude, "**/.claude/**"],
   },
 });

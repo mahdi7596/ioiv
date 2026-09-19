@@ -1,0 +1,36 @@
+{
+  "sourceCount": 162,
+  "testedCount": 161,
+  "mismatches": [],
+  "changedFromPhase11": [
+    "DEPLOYMENT.md",
+    "lib/actions/admin.ts",
+    "lib/actions/payment.ts",
+    "prisma/facilities-runtime-role-grants.sql",
+    "prisma/schema.prisma",
+    "tests/admin-actions-permissions.test.ts",
+    "tests/legacy-replacement.db.test.ts",
+    "tests/payment-action.test.ts",
+    "tests/payment-coordination.db.test.ts"
+  ],
+  "newFiles": [
+    "app/admin/facilities/applications/[id]/page.tsx",
+    "app/admin/submissions/[id]/page.tsx",
+    "components/admin/FacilitiesReviewActions.tsx",
+    "components/admin/StatusChangeForm.tsx",
+    "components/admin/ValidationCertificatePanel.tsx",
+    "lib/actions/facilities-review.ts",
+    "lib/admin/facilities-access.ts",
+    "lib/admin/require-admin.ts",
+    "lib/admin/review-guard.ts",
+    "prisma/migrations/20260919180000_admin_review_coordination/migration.sql",
+    "prisma/migrations/20260919181000_correction_sms_uncertainty/migration.sql",
+    "prisma/tests/admin-review/browser.ts",
+    "tests/admin-readonly-ui.test.tsx",
+    "tests/admin-review.db.test.ts",
+    "tests/facilities-review-actions.test.ts",
+    "tests/facilities-review-ui.test.tsx",
+    "tests/validation-certificate-panel.test.tsx"
+  ],
+  "envFilesExcluded": true
+}

@@ -15,3 +15,9 @@ docker-compose.yml
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Generate native engines from the locked Prisma dependency inside each image.
+prisma-engine-export
+docs
+.codex
+.claude

@@ -1,0 +1,7 @@
+(node:43710) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"pid":43713,"port":51315,"scannerPort":51314}
+PASS 390px actual legacy upload: failure/unavailable retry, padded tax rows, queued sibling upload+year edit, refresh, stale-tab conflict and protected surviving bytes
+PASS 1440px actual legacy upload: failure/unavailable retry, padded tax rows, queued sibling upload+year edit, refresh, stale-tab conflict and protected surviving bytes
+PASS controlled INSTREAM scanner calls 14; no external requests
+Owned Next/browser/scanner stopped

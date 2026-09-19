@@ -1,0 +1,7 @@
+{
+  "restartFiles": 95,
+  "matchingTestedCopy": 94,
+  "separatelyFingerprintedStaticExamples": [
+    ".env.runtime.example"
+  ]
+}

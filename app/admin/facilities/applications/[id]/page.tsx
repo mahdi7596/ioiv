@@ -41,7 +41,7 @@ export default async function FacilitiesReviewDetailPage({ params }: { params: P
   const result = await getFacilitiesReview(id);
   if (!result) notFound();
   const { application, permissions } = result;
-  const failedCorrection = application.correctionRequests.find((item) => item.smsStatus === "FAILED");
+  const failedCorrection = application.status === "NEEDS_EDIT" ? application.correctionRequests.find((item) => item.smsStatus === "FAILED" && item.smsFailureCode === "PROVIDER_REJECTED" && !item.resolvedAt) : undefined;
   const latestPayment = application.payments[0];
   const employeeEvidence = application.evidence.find((item) => item.kind === "insurance");
   const boardEvidence = application.evidence.find((item) => item.kind === "credit-board");
@@ -54,8 +54,8 @@ export default async function FacilitiesReviewDetailPage({ params }: { params: P
     <section className="panel"><h2>مدارک جاری پروفایل شرکت</h2><EvidenceList applicationId={application.id} bindings={application.company.facilitiesFileBindings} canDownload={permissions.canDownload} /></section>
     <section className="panel"><h2>مدارک درخواست</h2><EvidenceList applicationId={application.id} bindings={application.fileBindings} canDownload={permissions.canDownload} /></section>
     <section className="panel"><h2>تلاش‌های پرداخت</h2><PaymentAttempts payments={application.payments} /></section>
-    <section className="panel"><h2>چرخه‌های اصلاح</h2>{application.correctionRequests.length ? <ol className="facilities-timeline">{application.correctionRequests.map((item) => <li key={item.id}><strong>اصلاح شماره {item.sequence}</strong><span>{item.openedAt.toLocaleString("fa-IR")} — {item.resolvedAt ? "ارسال‌شده" : "باز"}</span><p>{item.note}</p><small>کارشناس: {item.reviewer.name} — پیامک: {item.smsStatus === "SENT" ? "ارسال شد" : item.smsStatus === "FAILED" ? "ناموفق" : "در انتظار"}</small></li>)}</ol> : <p>درخواست اصلاحی ثبت نشده است.</p>}</section>
+    <section className="panel"><h2>چرخه‌های اصلاح</h2>{application.correctionRequests.length ? <ol className="facilities-timeline">{application.correctionRequests.map((item) => <li key={item.id}><strong>اصلاح شماره {item.sequence}</strong><span>{item.openedAt.toLocaleString("fa-IR")} — {item.resolvedAt ? "ارسال‌شده" : "باز"}</span><p>{item.note}</p><small>کارشناس: {item.reviewer.name} — پیامک: {item.smsStatus === "SENT" ? "ارسال شد" : item.smsStatus === "FAILED" ? "ناموفق" : item.smsAttemptCount > 0 ? "نتیجه ارسال نامشخص؛ نیازمند بررسی" : "در انتظار"}</small></li>)}</ol> : <p>درخواست اصلاحی ثبت نشده است.</p>}</section>
     <section className="panel"><h2>سوابق وضعیت</h2><StatusHistoryTimeline items={application.history} /></section>
-    {permissions.canMutate ? <FacilitiesReviewActions applicationId={application.id} status={application.status} failedCorrectionId={failedCorrection?.id} /> : <section className="panel" role="status">دسترسی شما برای مشاهده این پرونده فقط خواندنی است.</section>}
+    {permissions.canMutate ? <FacilitiesReviewActions applicationId={application.id} status={application.status} reviewVersion={application.reviewVersion} failedCorrectionId={failedCorrection?.id} /> : <section className="panel" role="status">دسترسی شما برای مشاهده این پرونده فقط خواندنی است.</section>}
   </AppShell>;
 }

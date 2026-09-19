@@ -1,0 +1,79 @@
+{
+  "suite": {
+    "log": "final3-tests.log",
+    "exitCode": 0,
+    "tests": 440,
+    "files": 73,
+    "otpPostgresCases": 26,
+    "paymentPostgresCases": 39
+  },
+  "build": {
+    "log": "final4-build.log",
+    "exitCode": 0
+  },
+  "types": {
+    "log": "final-types.log",
+    "exitCode": 0
+  },
+  "lint": {
+    "log": "final-lint.log",
+    "exitCode": 0,
+    "warnings": 1,
+    "existingWarning": "public page no-img-element"
+  },
+  "otpProcesses": {
+    "log": "processes-final.log",
+    "exitCode": 0,
+    "scenarios": 4
+  },
+  "paymentProcesses": {
+    "log": "payment-processes.log",
+    "exitCode": 0,
+    "scenarios": 5
+  },
+  "browser": {
+    "log": "browser-ui-final.log",
+    "exitCode": 0,
+    "sizes": [
+      390,
+      1440
+    ],
+    "modes": [
+      "user",
+      "admin"
+    ],
+    "twoNextProcesses": true,
+    "actualCookieRaces": 2,
+    "unavailableDatabase503": true,
+    "exactlyOneRequestPerEntry": true
+  },
+  "migrationRecovery": {
+    "log": "migration-recovery.log",
+    "exitCode": 0
+  },
+  "roleRegression": {
+    "log": "runtime-role.log",
+    "exitCode": 0
+  },
+  "maintenance": {
+    "log": "maintenance.log",
+    "exitCode": 0
+  },
+  "vulnerableBaseline": {
+    "log": "baseline-r3.log",
+    "exitCode": 1,
+    "expectedFailure": "12 real comparisons exceed5"
+  },
+  "limitations": [
+    "Local Node26 not release Node22 images",
+    "No actual SMS/payment/staging proxy/production operations",
+    "Lost commit acknowledgement injected after real commit at Prisma promise boundary",
+    "Hourly scheduler/alerts documented but not installed or qualified in production"
+  ],
+  "workspaceClientGeneration": {
+    "log": "workspace-generate.log",
+    "exitCode": 0,
+    "dotenvDisabled": true,
+    "databaseOperation": false
+  }
+}

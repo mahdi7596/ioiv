@@ -1,0 +1,24 @@
+(node:12462) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"providerPort":61612}
+{"pid":12465,"port":61613}
+{"pid":12477,"port":61614}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"ok","durationsMs":[13271,13286,13177],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"slow","durationsMs":[13053,13124,13110],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"failure","durationsMs":[13054,13037,13137],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"malformed","durationsMs":[13028,13019,13121],"unknownInactiveOtp":0,"sends":1}
+{"pass":"uniform status/body/no cookie and measured timing","provider":"timeout","durationsMs":[13030,13022,13121],"unknownInactiveOtp":0,"sends":1}
+PASS12 distinct unknown probes/two processes/spoofed headers:4 admitted8 denied, no SMS/OTP/account
+{"pid":14163,"port":61783}
+{"pass":"maximum30s provider timeout uniform42s floor","durationsMs":[42585,42806,42701]}
+Owned browser/Next/provider stopped
+locator.waitFor: Error: strict mode violation: getByRole('alert') resolved to 2 elements:
+    1) <p role="alert" class="field__hint" id="admin-otp-error">کد تایید معتبر نیست یا منقضی شده است</p> aka getByText('کد تایید معتبر نیست یا منقضی شده است')
+    2) <div role="alert" aria-live="assertive" id="__next-route-announcer__"></div> aka locator('[id="__next-route-announcer__"]')
+
+Call log:
+  - waiting for getByRole('alert') to be visible
+
+    at main (/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase7-mf44bhm5/source/prisma/tests/admin-enumeration/browser.ts:31:271) {
+  log: [ "  - waiting for getByRole('alert') to be visible" ]
+}

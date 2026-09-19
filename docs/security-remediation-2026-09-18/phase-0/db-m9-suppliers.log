@@ -1,0 +1,86 @@
+
+> sana-registration-review-platform@0.1.0 test:db:m9-suppliers
+> sh prisma/tests/test-facilities-m9-supplier-provisioning.sh
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase0", schema "public" at "127.0.0.1:59677"
+
+24 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+NOTICE:  truncate cascades to table "FacilityIntakeSupplier"
+NOTICE:  truncate cascades to table "QuestionnaireTemplateVersion"
+NOTICE:  truncate cascades to table "FacilitiesApplication"
+NOTICE:  truncate cascades to table "FacilitiesApplicationCompanySnapshot"
+NOTICE:  truncate cascades to table "FacilitiesApplicationShareholder"
+NOTICE:  truncate cascades to table "FacilitiesApplicationOfficer"
+NOTICE:  truncate cascades to table "FacilitiesApplicationDocument"
+NOTICE:  truncate cascades to table "FacilitiesYearDocument"
+NOTICE:  truncate cascades to table "FacilitiesHumanResources"
+NOTICE:  truncate cascades to table "FacilitiesTrialBalance"
+NOTICE:  truncate cascades to table "FacilitiesCreditReport"
+NOTICE:  truncate cascades to table "FacilitiesPaymentAttempt"
+NOTICE:  truncate cascades to table "FacilitiesCorrectionRequest"
+NOTICE:  truncate cascades to table "FacilitiesStatusHistory"
+NOTICE:  truncate cascades to table "FacilitiesAuditLog"
+NOTICE:  truncate cascades to table "FacilitiesFileBinding"
+NOTICE:  truncate cascades to table "FacilitiesApplicationEvidence"
+NOTICE:  truncate cascades to table "FacilitiesFileUploadAttempt"
+NOTICE:  truncate cascades to table "FacilitiesFileUpload"
+NOTICE:  truncate cascades to table "FacilitiesFileDeletionTombstone"
+TRUNCATE TABLE
+NOTICE:  truncate cascades to table "Application"
+NOTICE:  truncate cascades to table "Company"
+NOTICE:  truncate cascades to table "FacilityIntakeSupplier"
+NOTICE:  truncate cascades to table "FacilitiesApplication"
+NOTICE:  truncate cascades to table "FacilitiesCorrectionRequest"
+NOTICE:  truncate cascades to table "FacilitiesFileBinding"
+NOTICE:  truncate cascades to table "ApplicationFile"
+NOTICE:  truncate cascades to table "Payment"
+NOTICE:  truncate cascades to table "StatusHistory"
+NOTICE:  truncate cascades to table "AuditLog"
+NOTICE:  truncate cascades to table "CompanyShareholder"
+NOTICE:  truncate cascades to table "CompanyOfficer"
+NOTICE:  truncate cascades to table "CompanyProfileDocument"
+NOTICE:  truncate cascades to table "FacilitiesApplicationCompanySnapshot"
+NOTICE:  truncate cascades to table "FacilitiesApplicationShareholder"
+NOTICE:  truncate cascades to table "FacilitiesApplicationOfficer"
+NOTICE:  truncate cascades to table "FacilitiesApplicationDocument"
+NOTICE:  truncate cascades to table "FacilitiesYearDocument"
+NOTICE:  truncate cascades to table "FacilitiesHumanResources"
+NOTICE:  truncate cascades to table "FacilitiesTrialBalance"
+NOTICE:  truncate cascades to table "FacilitiesCreditReport"
+NOTICE:  truncate cascades to table "FacilitiesPaymentAttempt"
+NOTICE:  truncate cascades to table "FacilitiesStatusHistory"
+NOTICE:  truncate cascades to table "FacilitiesAuditLog"
+NOTICE:  truncate cascades to table "FacilitiesFileUploadAttempt"
+NOTICE:  truncate cascades to table "FacilitiesFileUpload"
+NOTICE:  truncate cascades to table "FacilitiesApplicationEvidence"
+NOTICE:  truncate cascades to table "FacilitiesFileDeletionTombstone"
+TRUNCATE TABLE
+
+> sana-registration-review-platform@0.1.0 facilities:m9:provision-suppliers
+> tsx scripts/provision-facilities-suppliers.ts
+
+(node:2837) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"event":"facilities_supplier_provisioning","mode":"dry-run","approvedCount":4,"existingApprovedCount":0,"missingCount":4,"insertedCount":0}
+
+> sana-registration-review-platform@0.1.0 facilities:m9:provision-suppliers
+> tsx scripts/provision-facilities-suppliers.ts --apply
+
+(node:2898) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"event":"facilities_supplier_provisioning","mode":"apply","approvedCount":4,"existingApprovedCount":0,"missingCount":4,"insertedCount":4}
+
+> sana-registration-review-platform@0.1.0 facilities:m9:provision-suppliers
+> tsx scripts/provision-facilities-suppliers.ts --apply
+
+(node:2932) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"event":"facilities_supplier_provisioning","mode":"apply","approvedCount":4,"existingApprovedCount":4,"missingCount":0,"insertedCount":0}
+DO

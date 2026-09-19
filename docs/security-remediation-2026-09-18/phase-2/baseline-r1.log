@@ -1,0 +1,300 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:34229) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase2-7q3nwb6w/source[39m
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vgzy80001sbh343dh83sz","paymentId":"cmu7vgzza0005sbh3q6ky9pz3","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vgzy80001sbh343dh83sz","paymentId":"cmu7vgzza0005sbh3q6ky9pz3"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vgzza0005sbh3q6ky9pz3","applicationId":"cmu7vgzy80001sbh343dh83sz","referenceId":"reference-cmu7vgzy80001sbh343dh83sz"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 delayed NOK snapshot cannot undo a committed success
+[22m[39m{"level":"warn","event":"payment_callback_rejected","paymentId":"cmu7vgzza0005sbh3q6ky9pz3","status":"NOK","reason":"callback_not_ok"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves SUBMITTED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh01x000bsbh3jwrox658","paymentId":"cmu7vh02k000fsbh3sagwwhdr","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves SUBMITTED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh01x000bsbh3jwrox658","paymentId":"cmu7vh02k000fsbh3sagwwhdr"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves SUBMITTED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vh02k000fsbh3sagwwhdr","applicationId":"cmu7vh01x000bsbh3jwrox658","referenceId":"reference-cmu7vh01x000bsbh3jwrox658"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh046000lsbh39mrd6wnt","paymentId":"cmu7vh04l000psbh3w8idv7ik","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh046000lsbh39mrd6wnt","paymentId":"cmu7vh04l000psbh3w8idv7ik"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vh04l000psbh3w8idv7ik","applicationId":"cmu7vh046000lsbh39mrd6wnt","referenceId":"reference-cmu7vh046000lsbh39mrd6wnt"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh06j000vsbh3k71nt8f4","paymentId":"cmu7vh06z000zsbh3jkt9yauj","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh06j000vsbh3k71nt8f4","paymentId":"cmu7vh06z000zsbh3jkt9yauj"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vh06z000zsbh3jkt9yauj","applicationId":"cmu7vh06j000vsbh3k71nt8f4","referenceId":"reference-cmu7vh06j000vsbh3k71nt8f4"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh08k0015sbh3oe24ee3v","paymentId":"cmu7vh08w0019sbh3hcrsaph8","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh08k0015sbh3oe24ee3v","paymentId":"cmu7vh08w0019sbh3hcrsaph8"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vh08w0019sbh3hcrsaph8","applicationId":"cmu7vh08k0015sbh3oe24ee3v","referenceId":"reference-cmu7vh08k0015sbh3oe24ee3v"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late request completion cannot reset a later review status
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh0a0001fsbh3fwv6mjmg","paymentId":"cmu7vh0ac001jsbh39gltwumv","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 late request completion cannot reset a later review status
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh0a0001fsbh3fwv6mjmg","paymentId":"cmu7vh0ac001jsbh39gltwumv"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh0as001msbh33ui7bo3h","paymentId":"cmu7vh0b4001qsbh33uvwqaih","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh0as001msbh33ui7bo3h","paymentId":"cmu7vh0b4001qsbh33uvwqaih"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vh0b4001qsbh33uvwqaih","applicationId":"cmu7vh0as001msbh33ui7bo3h","referenceId":"reference-cmu7vh0as001msbh33ui7bo3h"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 stale correction resubmission cannot overwrite an intervening review
+[22m[39m{"level":"info","event":"application_resubmitted_without_payment","applicationId":"cmu7vh0as001msbh33ui7bo3h"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"payment_start_requested","applicationId":"cmu7vh0cf001wsbh30q2am0qt","paymentId":"cmu7vh0ct0020sbh33yun370k","amountToman":3000000}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"payment_start_succeeded","applicationId":"cmu7vh0cf001wsbh30q2am0qt","paymentId":"cmu7vh0ct0020sbh33yun370k"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"payment_verification_succeeded","paymentId":"cmu7vh0ct0020sbh33yun370k","applicationId":"cmu7vh0cf001wsbh30q2am0qt","referenceId":"reference-cmu7vh0cf001wsbh30q2am0qt"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"application_resubmitted_without_payment","applicationId":"cmu7vh0cf001wsbh30q2am0qt"}
+
+[90mstderr[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"warn","event":"admin_submission_notification_skipped","applicationId":"cmu7vh0cf001wsbh30q2am0qt","reason":"missing_admin_alert_mobile"}
+
+[90mstdout[2m | tests/payment-coordination.db.test.ts[2m > [22m[2mR2 real PostgreSQL restricted-role coordination[2m > [22m[2mR1 simultaneous corrections submit once without another charge or payment notification
+[22m[39m{"level":"info","event":"user_submission_notification_sent","applicationId":"cmu7vh0cf001wsbh30q2am0qt"}
+
+ [31m❯[39m tests/payment-coordination.db.test.ts [2m([22m[2m24 tests[22m[2m | [22m[31m8 failed[39m[2m | [22m[33m16 skipped[39m[2m)[22m[33m 678[2mms[22m[39m
+[31m     [31m×[31m R1 delayed NOK snapshot cannot undo a committed success[39m[32m 133[2mms[22m[39m
+[31m     [31m×[31m R1 late capture preserves SUBMITTED and does not invent a submission[39m[32m 87[2mms[22m[39m
+[31m     [31m×[31m R1 late capture preserves UNDER_REVIEW and does not invent a submission[39m[32m 85[2mms[22m[39m
+[31m     [31m×[31m R1 late capture preserves NEEDS_EDIT and does not invent a submission[39m[32m 73[2mms[22m[39m
+[31m     [31m×[31m R1 late capture preserves VALIDATION_COMPLETED and does not invent a submission[39m[32m 53[2mms[22m[39m
+[31m     [31m×[31m R1 late request completion cannot reset a later review status[39m[32m 27[2mms[22m[39m
+[31m     [31m×[31m R1 stale correction resubmission cannot overwrite an intervening review[39m[32m 59[2mms[22m[39m
+[31m     [31m×[31m R1 simultaneous corrections submit once without another charge or payment notification[39m[32m 120[2mms[22m[39m
+     [2m[90m↓[39m[22m concurrent starts cross a provider barrier only once, and replay the same URL
+     [2m[90m↓[39m[22m serializes duplicate callbacks and creates one settlement/history/notification intent
+     [2m[90m↓[39m[22m old authorities before and after settlement never reach provider and retain separate evidence
+     [2m[90m↓[39m[22m unknown request timeout and expired lease never create another remote call
+     [2m[90m↓[39m[22m verification timeout never retries remotely or creates another authority
+     [2m[90m↓[39m[22m crash after authority evidence replays only local persistence and the original URL
+     [2m[90m↓[39m[22m capture evidence survives failed submission commit and retries without provider
+     [2m[90m↓[39m[22m restricted role rejects cross-application selection, amount mutation and result deletion
+     [2m[90m↓[39m[22m notification failure preserves settlement and consumes one durable intent
+     [2m[90m↓[39m[22m a late original worker may persist capture after expiry without enabling takeover
+     [2m[90m↓[39m[22m completed rejection evidence recovers despite crash and unrelated callback evidence
+     [2m[90m↓[39m[22m provider capture with failed evidence persistence remains blocked after DB recovery
+     [2m[90m↓[39m[22m facilities concurrent starts/callbacks and old-authority barriers use the same durable coordination
+     [2m[90m↓[39m[22m facilities request timeout and restart preserve its only attempt
+     [2m[90m↓[39m[22m facilities saved capture completes after a failed DB transaction without contacting provider again
+     [2m[90m↓[39m[22m facilities restores saved authority and resumes its original URL without new provider request
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 8 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 delayed NOK snapshot cannot undo a committed success
+[31m[1mAssertionError[22m: expected 'REDIRECT:/payment/return?status=faile…' to contain 'status=success'[39m
+
+Expected: [32m"status=success"[39m
+Received: [31m"REDIRECT:/payment/return?status=failed&paymentId=cmu7vgzza0005sbh3q6ky9pz3"[39m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m85:42[22m[39m
+    [90m 83|[39m     [35mawait[39m b[33m.[39mreached[33m;[39m
+    [90m 84|[39m     expect(await settleLegacyPayment(p, p.authority!)).toBe("verified"…
+    [90m 85|[39m     b.release(); expect(await cancelled).toContain("status=success"); …
+    [90m   |[39m                                          [31m^[39m
+    [90m 86|[39m     [34mexpect[39m(([35mawait[39m [34mpayment[39m())[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m"VERIFIED"[39m)[33m;[39m
+    [90m 87|[39m     [34mexpect[39m(([35mawait[39m [34mpayment[39m())[33m.[39mapplication[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m"SUBMITTED"[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 late capture preserves SUBMITTED and does not invent a submission
+[31m[1mAssertionError[22m: expected { …(21) } to match object { status: 'SUBMITTED', …(2) }
+(25 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "adminNote": "preserve-review",[22m
+[2m    "status": "SUBMITTED",[22m
+[32m-   "submittedAt": 2026-09-01T00:00:00.000Z,[39m
+[31m+   "submittedAt": 2026-09-19T04:13:24.811Z,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m99:43[22m[39m
+    [90m 97|[39m     await db.application.update({ where: { id: appId }, data: { status…
+    [90m 98|[39m     b[33m.[39m[34mrelease[39m()[33m;[39m [34mexpect[39m([35mawait[39m settlement)[33m.[39m[34mtoBe[39m([32m"verified"[39m)[33m;[39m
+    [90m 99|[39m     expect((await payment()).application).toMatchObject({ status, subm…
+    [90m   |[39m                                           [31m^[39m
+    [90m100|[39m     expect(await db.statusHistory.count({ where: { applicationId: appI…
+    [90m101|[39m     expect(await db.paymentNotificationIntent.count({ where: { obligat…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 late capture preserves UNDER_REVIEW and does not invent a submission
+[31m[1mAssertionError[22m: expected { …(21) } to match object { status: 'UNDER_REVIEW', …(2) }
+(25 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "adminNote": "preserve-review",[22m
+[32m-   "status": "UNDER_REVIEW",[39m
+[32m-   "submittedAt": 2026-09-01T00:00:00.000Z,[39m
+[31m+   "status": "SUBMITTED",[39m
+[31m+   "submittedAt": 2026-09-19T04:13:24.893Z,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m99:43[22m[39m
+    [90m 97|[39m     await db.application.update({ where: { id: appId }, data: { status…
+    [90m 98|[39m     b[33m.[39m[34mrelease[39m()[33m;[39m [34mexpect[39m([35mawait[39m settlement)[33m.[39m[34mtoBe[39m([32m"verified"[39m)[33m;[39m
+    [90m 99|[39m     expect((await payment()).application).toMatchObject({ status, subm…
+    [90m   |[39m                                           [31m^[39m
+    [90m100|[39m     expect(await db.statusHistory.count({ where: { applicationId: appI…
+    [90m101|[39m     expect(await db.paymentNotificationIntent.count({ where: { obligat…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 late capture preserves NEEDS_EDIT and does not invent a submission
+[31m[1mAssertionError[22m: expected { …(21) } to match object { status: 'NEEDS_EDIT', …(2) }
+(25 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "adminNote": "preserve-review",[22m
+[32m-   "status": "NEEDS_EDIT",[39m
+[32m-   "submittedAt": 2026-09-01T00:00:00.000Z,[39m
+[31m+   "status": "SUBMITTED",[39m
+[31m+   "submittedAt": 2026-09-19T04:13:24.971Z,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m99:43[22m[39m
+    [90m 97|[39m     await db.application.update({ where: { id: appId }, data: { status…
+    [90m 98|[39m     b[33m.[39m[34mrelease[39m()[33m;[39m [34mexpect[39m([35mawait[39m settlement)[33m.[39m[34mtoBe[39m([32m"verified"[39m)[33m;[39m
+    [90m 99|[39m     expect((await payment()).application).toMatchObject({ status, subm…
+    [90m   |[39m                                           [31m^[39m
+    [90m100|[39m     expect(await db.statusHistory.count({ where: { applicationId: appI…
+    [90m101|[39m     expect(await db.paymentNotificationIntent.count({ where: { obligat…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 late capture preserves VALIDATION_COMPLETED and does not invent a submission
+[31m[1mAssertionError[22m: expected { …(21) } to match object { Object (status, submittedAt, ...) }
+(25 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "adminNote": "preserve-review",[22m
+[32m-   "status": "VALIDATION_COMPLETED",[39m
+[32m-   "submittedAt": 2026-09-01T00:00:00.000Z,[39m
+[31m+   "status": "SUBMITTED",[39m
+[31m+   "submittedAt": 2026-09-19T04:13:25.024Z,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m99:43[22m[39m
+    [90m 97|[39m     await db.application.update({ where: { id: appId }, data: { status…
+    [90m 98|[39m     b[33m.[39m[34mrelease[39m()[33m;[39m [34mexpect[39m([35mawait[39m settlement)[33m.[39m[34mtoBe[39m([32m"verified"[39m)[33m;[39m
+    [90m 99|[39m     expect((await payment()).application).toMatchObject({ status, subm…
+    [90m   |[39m                                           [31m^[39m
+    [90m100|[39m     expect(await db.statusHistory.count({ where: { applicationId: appI…
+    [90m101|[39m     expect(await db.paymentNotificationIntent.count({ where: { obligat…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 late request completion cannot reset a later review status
+[31m[1mAssertionError[22m: expected 'PENDING_PAYMENT' to be 'UNDER_REVIEW' // Object.is equality[39m
+
+Expected: [32m"UNDER_REVIEW"[39m
+Received: [31m"PENDING_PAYMENT"[39m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m110:50[22m[39m
+    [90m108|[39m     await db.application.update({ where: { id: appId }, data: { status…
+    [90m109|[39m     b[33m.[39m[34mrelease[39m()[33m;[39m [35mawait[39m starting[33m;[39m
+    [90m110|[39m     [34mexpect[39m(([35mawait[39m [34mpayment[39m())[33m.[39mapplication[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m"UNDER_REVIEW"[39m)[33m;[39m
+    [90m   |[39m                                                  [31m^[39m
+    [90m111|[39m     [34mexpect[39m(([35mawait[39m [34mpayment[39m())[33m.[39mauthority)[33m.[39m[34mtoBeTruthy[39m()[33m;[39m
+    [90m112|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 stale correction resubmission cannot overwrite an intervening review
+[31m[1mAssertionError[22m: expected { …(21) } to match object { status: 'UNDER_REVIEW', …(1) }
+(26 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "currentStep": 6,[39m
+[32m-   "status": "UNDER_REVIEW",[39m
+[31m+   "currentStep": 5,[39m
+[31m+   "status": "SUBMITTED",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m122:43[22m[39m
+    [90m120|[39m     await db.application.update({ where: { id: appId }, data: { status…
+    [90m121|[39m     b[33m.[39m[34mrelease[39m()[33m;[39m [35mawait[39m resubmit[33m;[39m spy[33m.[39m[34mmockRestore[39m()[33m;[39m
+    [90m122|[39m     expect((await payment()).application).toMatchObject({ status: "UND…
+    [90m   |[39m                                           [31m^[39m
+    [90m123|[39m     expect(await db.statusHistory.count({ where: { applicationId: appI…
+    [90m124|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/payment-coordination.db.test.ts[2m > [22mR2 real PostgreSQL restricted-role coordination[2m > [22mR1 simultaneous corrections submit once without another charge or payment notification
+[31m[1mAssertionError[22m: expected +0 to be 1 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m tests/payment-coordination.db.test.ts:[2m131:109[22m[39m
+    [90m129|[39m     [35mawait[39m [33mPromise[39m[33m.[39m[34mall[39m([[34mstartPayment[39m(draft)[33m,[39m [34mstartPayment[39m(draft)])[33m;[39m
+    [90m130|[39m     [34mexpect[39m(([35mawait[39m [34mpayment[39m())[33m.[39mapplication[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m"SUBMITTED"[39m)[33m;[39m
+    [90m131|[39m     expect(await db.statusHistory.count({ where: { applicationId: appI…
+    [90m   |[39m                                                                                                             [31m^[39m
+    [90m132|[39m     expect(await db.payment.count({ where: { applicationId: appId } })…
+    [90m133|[39m     [34mexpect[39m(calls)[33m.[39m[34mtoHaveLength[39m([34m2[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m8 failed[39m[22m[2m | [22m[33m16 skipped[39m[90m (24)[39m
+[2m   Start at [22m 07:43:23
+[2m   Duration [22m 1.72s[2m (transform 152ms, setup 0ms, import 912ms, tests 678ms, environment 0ms)[22m
+

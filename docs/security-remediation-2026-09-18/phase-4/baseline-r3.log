@@ -1,0 +1,106 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:5599) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7/source[39m
+
+[90mstdout[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+{"level":"info","event":"otp_verify_started","mode":"user","mobile":"091****0810"}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+[90mstderr[2m | tests/otp-verification.db.test.ts[2m > [22m[2mR3 restricted PostgreSQL verification[2m > [22m[2mtwelve concurrent wrong requests compare the real code at most five times
+[22m[39m{"level":"warn","event":"otp_verify_rejected","mode":"user","mobile":"091****0810","reason":"invalid_code","attempt":1}
+
+ [31m❯[39m tests/otp-verification.db.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m18 skipped[39m[2m)[22m[32m 241[2mms[22m[39m
+[31m     [31m×[31m twelve concurrent wrong requests compare the real code at most five times[39m[32m 230[2mms[22m[39m
+     [2m[90m↓[39m[22m twelve concurrent correct requests issue exactly one session
+     [2m[90m↓[39m[22m expiry during bcrypt prevents user creation and session
+     [2m[90m↓[39m[22m reserve rechecks expiry after an unchanged row-lock wait
+     [2m[90m↓[39m[22m consume rechecks expiry after an unchanged row-lock wait
+     [2m[90m↓[39m[22m consumed and initially expired codes cannot reserve or issue cookies
+     [2m[90m↓[39m[22m cookie failure spends the code and retry cannot create another session
+     [2m[90m↓[39m[22m active admin succeeds without granting runtime administrative UPDATE
+     [2m[90m↓[39m[22m admin deactivated during comparison receives no session
+     [2m[90m↓[39m[22m missing-code flood spends mobile budget; rejected mobile probes still spend address budget
+     [2m[90m↓[39m[22m unknown address is shared across mobiles and purposes
+     [2m[90m↓[39m[22m exact rolling window ignores stale events and retains recent events
+     [2m[90m↓[39m[22m cleanup only removes inactive keys; direct DELETE is denied
+     [2m[90m↓[39m[22m cleanup failure denies before bcrypt and recovers after capability restoration
+     [2m[90m↓[39m[22m reservation DB failure denies before compare and recovers
+     [2m[90m↓[39m[22m lost commit acknowledgement never issues a cookie or reopens the consumed OTP
+     [2m[90m↓[39m[22m missing or inconsistent secrets deny without resetting budgets
+     [2m[90m↓[39m[22m new accounting contains no raw mobile or IP
+     [2m[90m↓[39m[22m ignores untrusted forwarded identity; canonicalizes qualified IPv6
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/otp-verification.db.test.ts[2m > [22mR3 restricted PostgreSQL verification[2m > [22mtwelve concurrent wrong requests compare the real code at most five times
+[31m[1mAssertionError[22m: expected [ [ '000000', …(1) ], …(11) ] to have a length of 5 but got 12[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 5[39m
+[31m+ 12[39m
+
+[36m [2m❯[22m tests/otp-verification.db.test.ts:[2m37:59[22m[39m
+    [90m 35|[39m     const outcomes = await Promise.allSettled(Array.from({ length: 12 …
+    [90m 36|[39m     [34mexpect[39m(outcomes[33m.[39m[34mevery[39m(r [33m=>[39m r[33m.[39mstatus [33m===[39m [32m"rejected"[39m))[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m 37|[39m     expect(compare.mock.calls.filter(c => c[1] === hash)).toHaveLength…
+    [90m   |[39m                                                           [31m^[39m
+    [90m 38|[39m     expect((await owner!.otpCode.findUniqueOrThrow({ where: { id: otp.…
+    [90m 39|[39m     [34mexpect[39m(sessions[33m.[39mcreate)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m18 skipped[39m[90m (19)[39m
+[2m   Start at [22m 09:50:49
+[2m   Duration [22m 548ms[2m (transform 75ms, setup 0ms, import 182ms, tests 241ms, environment 0ms)[22m
+

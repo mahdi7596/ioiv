@@ -1,0 +1,10 @@
+{
+  "facilities-foundation": "PASS owner fixture suite, deferred constraints forced",
+  "facilities-private-files": "PASS owner fixture suite, deferred constraints forced",
+  "facilities-m6-payment": "PASS owner fixture suite, deferred constraints forced",
+  "facilities-m7-review": "PASS owner fixture suite, deferred constraints forced",
+  "facilities-m8-operations": "PASS owner fixture suite, deferred constraints forced",
+  "restricted-r7-quota": "PASS all lifecycle/quota actions SET LOCAL ROLE phase1_runtime after admin fixture",
+  "restricted-role": "PASS repair readonly, no DDL/trigger bypass, restricted role attributes",
+  "m9": "PASS dry-run, apply twice, exactly four suppliers and no programme/intake/template/user/admin"
+}

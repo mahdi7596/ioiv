@@ -1,0 +1,20 @@
+[
+  "DEPLOYMENT.md",
+  "app/globals.css",
+  "components/facilities/CompanyProfileForm.tsx",
+  "components/facilities/FacilitiesApplicationWizard.tsx",
+  "lib/facilities-files/service.ts",
+  "lib/facilities-files/coordination.ts",
+  "lib/facilities-files/orphan-reconciliation.ts",
+  "prisma/schema.prisma",
+  "prisma/facilities-runtime-role-grants.sql",
+  "prisma/migrations/20260919140000_facilities_committed_file_lineage/migration.sql",
+  "prisma/tests/facilities-private-files.integration.sql",
+  "prisma/tests/facilities-m8-operations.integration.sql",
+  "prisma/tests/facilities-replacement/browser.ts",
+  "prisma/tests/facilities-replacement/crash-worker.ts",
+  "scripts/reconcile-facilities-files.ts",
+  "tests/facilities-replacement.db.test.ts",
+  "tests/facilities-reconciliation.test.ts",
+  "tests/payment-coordination.db.test.ts"
+]

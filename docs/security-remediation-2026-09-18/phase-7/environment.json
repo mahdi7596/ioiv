@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase7-mf44bhm5",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase7-mf44bhm5/source",
+  "container": "sana-phase7-mf44bhm5",
+  "containerId": "40bd3542a986bd4b9e96005d1481358f4c16f8323bcd830568df2b3016fe52c6",
+  "label": "sana.task=sana-phase7-mf44bhm5",
+  "port": "60943",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

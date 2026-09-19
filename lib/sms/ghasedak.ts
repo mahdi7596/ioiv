@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import type { SmsMessage } from "./index";
+import { smsRequestTimeoutMs } from "./timeout";
 
 const DEFAULT_GHASEDAK_BASE_URL = "https://api.smsapp.ir/v2";
 let insecureTransportWarned = false;
@@ -35,8 +36,7 @@ type GhasedakResponse = {
 async function postToGhasedak(path: string, body: Record<string, unknown>) {
   const apiKey = process.env.GHASEDAK_API_KEY;
   const baseUrl = resolveGhasedakBaseUrl();
-  const configuredTimeout = Number(process.env.SMS_REQUEST_TIMEOUT_MS || 10000);
-  const timeoutMs = Number.isFinite(configuredTimeout) ? Math.min(30000, Math.max(1000, configuredTimeout)) : 10000;
+  const timeoutMs = smsRequestTimeoutMs();
 
   if (!apiKey) {
     throw new Error("GHASEDAK_API_KEY is required in production");
@@ -62,16 +62,14 @@ async function postToGhasedak(path: string, body: Record<string, unknown>) {
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Ghasedak SMS request failed: ${response.status} ${text}`);
+    throw new Error("SMS provider HTTP failure");
   }
 
   const result = (await response.json()) as GhasedakResponse;
 
-  if (result.IsSuccess === false || result.result === "error") {
-    throw new Error(
-      `Ghasedak SMS request failed: ${result.StatusCode || "unknown"} ${result.Message || result.message || ""}`.trim(),
-    );
+  if (!result || typeof result !== "object" || result.IsSuccess === false || result.result === "error" ||
+      (result.IsSuccess !== true && result.result !== "success")) {
+    throw new Error("SMS provider rejected request");
   }
 
   return result;

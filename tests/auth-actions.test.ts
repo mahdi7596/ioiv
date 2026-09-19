@@ -1,9 +1,12 @@
+import { ADMIN_REQUEST_MESSAGE } from "@/lib/auth/admin-response";
 import { OtpPurpose, UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestOtp, verifyOtp } from "@/lib/actions/auth";
 
 const mocks = vi.hoisted(() => ({
+  waitResponse: vi.fn(),
   db: {
+    $transaction: vi.fn(),
     admin: {
       findUnique: vi.fn(),
     },
@@ -23,9 +26,32 @@ const mocks = vi.hoisted(() => ({
       update: vi.fn(),
     },
   },
+  reserveRequest: vi.fn(),
+  claimDispatch: vi.fn(),
+  reserveBudget: vi.fn(),
+  reserveGuess: vi.fn(),
+  consume: vi.fn(),
   bcryptCompare: vi.fn(),
   createSession: vi.fn(),
   sendSms: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/admin-response", async original => ({
+  ...await original<typeof import("@/lib/auth/admin-response")>(),
+  waitForAdminResponse: mocks.waitResponse,
+}));
+
+vi.mock("@/lib/auth/request", async original => ({
+  ...await original<typeof import("@/lib/auth/request")>(),
+  reserveOtpRequest: mocks.reserveRequest,
+  claimOtpDispatch: mocks.claimDispatch,
+}));
+
+vi.mock("@/lib/auth/verification", async original => ({
+  ...await original<typeof import("@/lib/auth/verification")>(),
+  reserveVerificationBudget: mocks.reserveBudget,
+  reserveOtpGuess: mocks.reserveGuess,
+  consumeOtpForSession: mocks.consume,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -52,6 +78,8 @@ describe("auth actions", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-29T10:00:00.000Z"));
     vi.clearAllMocks();
+    mocks.db.$transaction.mockImplementation(async callback => callback(mocks.db));
+    mocks.waitResponse.mockResolvedValue(undefined);
     mocks.db.admin.findUnique.mockResolvedValue({
       id: "admin-1",
       active: true,
@@ -66,6 +94,11 @@ describe("auth actions", () => {
     mocks.db.otpCode.updateMany.mockResolvedValue({ count: 1 });
     mocks.db.otpCode.create.mockResolvedValue({ id: "otp-1" });
     mocks.db.otpCode.update.mockResolvedValue({ id: "otp-1" });
+    mocks.reserveRequest.mockResolvedValue({ id: "intent-1", mobileKey: "protected" });
+    mocks.claimDispatch.mockResolvedValue(true);
+    mocks.reserveBudget.mockResolvedValue(true);
+    mocks.reserveGuess.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp" });
+    mocks.consume.mockResolvedValue({ subjectId: "user-1", kind: "user" });
     mocks.bcryptCompare.mockResolvedValue(true);
     mocks.createSession.mockResolvedValue(undefined);
     mocks.sendSms.mockResolvedValue({ ok: true });
@@ -74,23 +107,12 @@ describe("auth actions", () => {
   it("invalidates older unused OTPs before creating a replacement", async () => {
     await requestOtp({ mobile: "09123456789", mode: "admin" });
 
-    expect(mocks.db.otpCode.updateMany).toHaveBeenCalledWith({
-      where: {
-        mobile: "09123456789",
-        purpose: OtpPurpose.ADMIN_LOGIN,
-        consumedAt: null,
-      },
-      data: {
-        consumedAt: new Date("2026-04-29T10:00:00.000Z"),
-      },
-    });
-    expect(mocks.db.otpCode.create).toHaveBeenCalledOnce();
+    expect(mocks.claimDispatch).toHaveBeenCalledWith({ id: "intent-1", mobileKey: "protected" }, "09123456789", OtpPurpose.ADMIN_LOGIN, "hashed-otp");
+    expect(mocks.claimDispatch.mock.invocationCallOrder[0]).toBeLessThan(mocks.sendSms.mock.invocationCallOrder[0]);
   });
 
   it("rejects OTP requests made too soon for the same mobile and purpose", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      createdAt: new Date("2026-04-29T09:59:30.000Z"),
-    });
+    mocks.reserveRequest.mockResolvedValue(null);
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
@@ -100,10 +122,7 @@ describe("auth actions", () => {
   });
 
   it("rejects OTP requests after five requests in an hour for the same mobile and purpose", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      createdAt: new Date("2026-04-29T09:55:00.000Z"),
-    });
-    mocks.db.otpCode.count.mockResolvedValue(5);
+    mocks.reserveRequest.mockResolvedValue(null);
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
@@ -112,20 +131,17 @@ describe("auth actions", () => {
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
 
-  it("rejects admin OTP requests for mobiles outside the active admin list", async () => {
+  it("conceals admin OTP requests for mobiles outside the active admin list", async () => {
     mocks.db.admin.findUnique.mockResolvedValue(null);
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).rejects.toMatchObject({
-      status: 403,
-      message: "دسترسی مدیریت برای این شماره فعال نیست",
-    });
+    ).resolves.toEqual({ next: "otp", warning: ADMIN_REQUEST_MESSAGE });
     expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
 
-  it("rejects admin OTP requests for inactive admin mobiles", async () => {
+  it("conceals admin OTP requests for inactive admin mobiles", async () => {
     mocks.db.admin.findUnique.mockResolvedValue({
       id: "admin-1",
       active: false,
@@ -134,10 +150,7 @@ describe("auth actions", () => {
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
-    ).rejects.toMatchObject({
-      status: 403,
-      message: "دسترسی مدیریت برای این شماره فعال نیست",
-    });
+    ).resolves.toEqual({ next: "otp", warning: ADMIN_REQUEST_MESSAGE });
     expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
@@ -150,9 +163,9 @@ describe("auth actions", () => {
     });
 
     await expect(requestOtp({ mobile: "09362116801", mode: "admin" })).resolves.toEqual({
-      next: "otp",
+      next: "otp", warning: ADMIN_REQUEST_MESSAGE,
     });
-    expect(mocks.db.otpCode.create).toHaveBeenCalledOnce();
+    expect(mocks.claimDispatch).toHaveBeenCalledOnce();
     expect(mocks.sendSms).toHaveBeenCalledOnce();
   });
 
@@ -163,65 +176,31 @@ describe("auth actions", () => {
     expect(mocks.db.user.findUnique).not.toHaveBeenCalled();
   });
 
-  it("creates a bare user with just their mobile number on first OTP verification", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      id: "otp-1",
-      codeHash: "hashed-otp",
-    });
-
-    await expect(
-      verifyOtp({
-        mobile: "09123456789",
-        code: "123456",
-        mode: "user",
-      }),
-    ).resolves.toEqual({ redirectTo: "/dashboard" });
-
-    expect(mocks.db.user.create).toHaveBeenCalledWith({
-      data: { mobile: "09123456789" },
-    });
-  });
-
-  it("logs an existing user in without creating a new record", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({
-      id: "otp-1",
-      codeHash: "hashed-otp",
-    });
-    mocks.db.user.findUnique.mockResolvedValueOnce({ id: "user-1", mobile: "09123456789" });
-
-    await expect(
-      verifyOtp({
-        mobile: "09123456789",
-        code: "123456",
-        mode: "user",
-      }),
-    ).resolves.toEqual({ redirectTo: "/dashboard" });
-
-    expect(mocks.db.user.create).not.toHaveBeenCalled();
+  it("issues a cookie only for the transaction winner", async () => {
+    await expect(verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" }))
+      .resolves.toEqual({ redirectTo: "/dashboard" });
+    expect(mocks.consume).toHaveBeenCalledWith("otp-1", "09123456789", OtpPurpose.USER_LOGIN);
     expect(mocks.createSession).toHaveBeenCalledWith({ subjectId: "user-1", kind: "user" });
   });
 
-  it("records the requesting address and rejects an address over the hourly cap", async () => {
+  it("passes qualified address to shared accounting", async () => {
     await requestOtp({ mobile: "09123456789", mode: "user" }, { clientIp: "203.0.113.5" });
-    expect(mocks.db.otpCode.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ requestIp: "203.0.113.5" }),
-    });
-
-    vi.clearAllMocks();
-    mocks.db.otpCode.findFirst.mockResolvedValue(null);
-    // First count is the per-mobile window, second is the per-address window.
-    mocks.db.otpCode.count.mockResolvedValueOnce(0).mockResolvedValueOnce(30);
-
-    await expect(
-      requestOtp({ mobile: "09120000001", mode: "user" }, { clientIp: "203.0.113.5" }),
-    ).rejects.toMatchObject({ status: 429 });
-    expect(mocks.db.otpCode.create).not.toHaveBeenCalled();
+    expect(mocks.reserveRequest).toHaveBeenCalledWith("09123456789", OtpPurpose.USER_LOGIN, "203.0.113.5");
+  });
+  it("keeps code entry available on uncertain delivery without retrying SMS", async () => {
+    mocks.sendSms.mockRejectedValueOnce(new Error("sensitive provider payload"));
+    expect(await requestOtp({ mobile: "09123456789", mode: "user" })).toMatchObject({ next: "otp", warning: expect.any(String) });
+    expect(mocks.sendSms).toHaveBeenCalledOnce();
+  });
+  it("does not dispatch after claim failure", async () => {
+    mocks.claimDispatch.mockRejectedValueOnce(new Error("lost commit"));
+    await expect(requestOtp({ mobile: "09123456789", mode: "user" })).rejects.toMatchObject({ status: 503 });
     expect(mocks.sendSms).not.toHaveBeenCalled();
   });
 
   it("applies rate limits before revealing whether an admin mobile exists", async () => {
     mocks.db.admin.findUnique.mockResolvedValue(null);
-    mocks.db.otpCode.count.mockResolvedValue(5);
+    mocks.reserveRequest.mockResolvedValue(null);
 
     await expect(
       requestOtp({ mobile: "09123456789", mode: "admin" }),
@@ -229,53 +208,44 @@ describe("auth actions", () => {
     expect(mocks.db.admin.findUnique).not.toHaveBeenCalled();
   });
 
-  it("only selects codes that still have verification attempts left", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp", attemptCount: 0 });
-
-    await verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" });
-
-    expect(mocks.db.otpCode.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ attemptCount: { lt: 5 } }) }),
-    );
-  });
-
-  it("counts a wrong code against the OTP and does not create a session", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp", attemptCount: 2 });
+  it("reserves before comparison and does not refund a wrong guess", async () => {
     mocks.bcryptCompare.mockResolvedValue(false);
-
-    await expect(
-      verifyOtp({ mobile: "09123456789", code: "000000", mode: "user" }),
-    ).rejects.toMatchObject({ status: 400 });
-    expect(mocks.db.otpCode.updateMany).toHaveBeenCalledWith({
-      where: { id: "otp-1", consumedAt: null },
-      data: { attemptCount: { increment: 1 } },
-    });
+    await expect(verifyOtp({ mobile: "09123456789", code: "000000", mode: "user" })).rejects.toMatchObject({ status: 400 });
+    expect(mocks.reserveGuess.mock.invocationCallOrder[0]).toBeLessThan(mocks.bcryptCompare.mock.invocationCallOrder[0]);
+    expect(mocks.consume).not.toHaveBeenCalled();
     expect(mocks.createSession).not.toHaveBeenCalled();
-    expect(mocks.db.user.create).not.toHaveBeenCalled();
   });
 
-  it("does not mint a session when the code was consumed concurrently", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue({ id: "otp-1", codeHash: "hashed-otp", attemptCount: 0 });
-    mocks.db.otpCode.updateMany.mockResolvedValueOnce({ count: 0 });
-
-    await expect(
-      verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" }),
-    ).rejects.toMatchObject({ status: 400 });
-    expect(mocks.db.otpCode.updateMany).toHaveBeenCalledWith({
-      where: { id: "otp-1", consumedAt: null },
-      data: { consumedAt: new Date("2026-04-29T10:00:00.000Z") },
-    });
-    expect(mocks.createSession).not.toHaveBeenCalled();
-    expect(mocks.db.user.create).not.toHaveBeenCalled();
-  });
-
-  it("runs a dummy hash comparison when no usable code exists", async () => {
-    mocks.db.otpCode.findFirst.mockResolvedValue(null);
-
-    await expect(
-      verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" }),
-    ).rejects.toMatchObject({ status: 400 });
+  it("bounds dummy comparisons using shared reservations", async () => {
+    mocks.reserveGuess.mockResolvedValue(null);
+    await expect(verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" })).rejects.toMatchObject({ status: 400 });
     expect(mocks.bcryptCompare).toHaveBeenCalledOnce();
-    expect(mocks.db.otpCode.updateMany).not.toHaveBeenCalled();
+    mocks.bcryptCompare.mockClear(); mocks.reserveBudget.mockResolvedValue(false);
+    await expect(verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" })).rejects.toMatchObject({ status: 429 });
+    expect(mocks.bcryptCompare).not.toHaveBeenCalled();
   });
+
+  it("fails closed before comparison on database failure", async () => {
+    mocks.reserveGuess.mockRejectedValueOnce(new Error("database unavailable"));
+    await expect(verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" })).rejects.toMatchObject({ status: 503 });
+    expect(mocks.bcryptCompare).not.toHaveBeenCalled();
+    expect(mocks.createSession).not.toHaveBeenCalled();
+  });
+
+  it("does not issue a session when live consume rejects", async () => {
+    mocks.consume.mockResolvedValue(null);
+    await expect(verifyOtp({ mobile: "09123456789", code: "123456", mode: "user" })).rejects.toMatchObject({ status: 400 });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+  });
+  it.each(["sms", "lookup", "claim", "false-claim"])("uniform admin response on %s uncertainty, with padding and no replay", async failure => {
+    if (failure === "sms") mocks.sendSms.mockRejectedValueOnce(new Error("private"));
+    if (failure === "lookup") mocks.db.admin.findUnique.mockRejectedValueOnce(new Error("private"));
+    if (failure === "claim") mocks.claimDispatch.mockRejectedValueOnce(new Error("private"));
+    if (failure === "false-claim") mocks.claimDispatch.mockResolvedValueOnce(false);
+    await expect(requestOtp({mobile:"09123456789",mode:"admin"})).resolves.toEqual({next:"otp",warning:ADMIN_REQUEST_MESSAGE});
+    expect(mocks.waitResponse).toHaveBeenCalledOnce();
+    expect(mocks.sendSms).toHaveBeenCalledTimes(failure === "sms" ? 1 : 0);
+    expect(mocks.db.user.create).not.toHaveBeenCalled();
+  });
+
 });

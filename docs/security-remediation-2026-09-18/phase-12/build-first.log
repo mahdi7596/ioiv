@@ -1,0 +1,57 @@
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 118ms
+
+  Creating an optimized production build ...
+(node:54453) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ Compiled successfully in 6.7s
+  Running TypeScript ...
+  Finished TypeScript in 5.8s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/27) ...
+  Generating static pages using 7 workers (6/27) 
+  Generating static pages using 7 workers (13/27) 
+  Generating static pages using 7 workers (20/27) 
+✓ Generating static pages using 7 workers (27/27) in 241ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/facilities
+├ ƒ /admin/facilities/applications
+├ ƒ /admin/facilities/applications/[id]
+├ ƒ /admin/facilities/audit
+├ ○ /admin/login
+├ ƒ /admin/submissions
+├ ƒ /admin/submissions/[id]
+├ ƒ /api/admin/export
+├ ƒ /api/admin/facilities/applications/[applicationId]/files/[fileId]
+├ ƒ /api/admin/facilities/export
+├ ƒ /api/admin/facilities/questionnaire-templates
+├ ƒ /api/admin/submissions/certificate
+├ ƒ /api/admin/submissions/status
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/request-otp
+├ ƒ /api/auth/session-reset
+├ ƒ /api/auth/verify-otp
+├ ƒ /api/facilities/application-files
+├ ƒ /api/facilities/files/[id]
+├ ƒ /api/facilities/payment/callback
+├ ƒ /api/facilities/profile-files
+├ ƒ /api/facilities/questionnaires/[id]
+├ ƒ /api/files/[id]
+├ ƒ /api/health
+├ ƒ /api/payment/callback
+├ ƒ /api/uploads
+├ ƒ /dashboard
+├ ƒ /dashboard/application
+├ ƒ /dashboard/facilities-application
+├ ƒ /dashboard/facilities-profile
+└ ƒ /payment/return
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

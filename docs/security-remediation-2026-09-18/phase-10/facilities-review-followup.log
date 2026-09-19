@@ -1,0 +1,104 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:3871) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source[39m
+
+ [31m❯[39m tests/facilities-document-qualification.db.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 20743[2mms[22m[39m
+     [33m[2m✓[22m[39m qualifies application and officer/profile evidence, starts valid payment [33m 1199[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks missing insurance bytes without new payment [33m 890[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks missing profile-articles-of-association bytes without new payment [33m 982[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks missing officer bytes without new payment [33m 891[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects changed hash and foreign caller ownership [33m 813[2mms[22m[39m
+     [33m[2m✓[22m[39m free submission also checks actual bytes [33m 825[2mms[22m[39m
+     [33m[2m✓[22m[39m capture survives missing profile file and repaired paid draft submits without another charge [33m 989[2mms[22m[39m
+     [33m[2m✓[22m[39m paid pending crash is recoverable by browser retry without provider calls [33m 901[2mms[22m[39m
+     [33m[2m✓[22m[39m snapshot maintenance cannot delete submitted snapshots or grant direct deletion [33m 912[2mms[22m[39m
+     [33m[2m✓[22m[39m wizard snapshot refresh and submission serialize in application-first order [33m 990[2mms[22m[39m
+[31m     [31m×[31m paid correction checks profile bytes then accepts repair without new charge[39m[33m 1054[2mms[22m[39m
+     [33m[2m✓[22m[39m actual submission gate rejects synthetic scope metadata corruption [33m 808[2mms[22m[39m
+     [33m[2m✓[22m[39m actual submission gate rejects synthetic slot metadata corruption [33m 784[2mms[22m[39m
+     [33m[2m✓[22m[39m actual submission gate rejects synthetic unscanned metadata corruption [33m 828[2mms[22m[39m
+[31m     [31m×[31m actual submission gate rejects synthetic quarantined metadata corruption[39m[33m 738[2mms[22m[39m
+     [33m[2m✓[22m[39m actual submission gate rejects synthetic stale metadata corruption [33m 836[2mms[22m[39m
+     [33m[2m✓[22m[39m profile replacement and predecessor cleanup are fenced through qualification commit [33m 3044[2mms[22m[39m
+[31m     [31m×[31m officer pruning retains evidence-referenced rows and removes only unreferenced rows[39m[33m 1577[2mms[22m[39m
+     [33m[2m✓[22m[39m blocked wizard refresh does not acquire snapshot before application [33m 1644[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mpaid correction checks profile bytes then accepts repair without new charge
+[31m[1mPrismaClientUnknownRequestError[22m: 
+Invalid `db.facilitiesApplication.update()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source/tests/facilities-document-qualification.db.test.ts:95:34
+
+  92 
+  93 it("paid correction checks profile bytes then accepts repair without new charge",async()=>{
+  94  const f=await fixture();await startFacilitiesPayment({applicationId:f.app.id,confirmed:true});const p=await db.facilitiesPaymentAttempt.findFirstOrThrow({where:{applicationId:f.app.id}});await verifyFacilitiesPaymentCallback({paymentId:p.id,authority:p.authority!,gatewayStatus:"OK"});
+→ 95  await db.facilitiesApplication.update(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "invalid facilities application status transition", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m237:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m95:3[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mactual submission gate rejects synthetic quarantined metadata corruption
+[31m[1mPrismaClientUnknownRequestError[22m: 
+Invalid `tx.facilitiesFileUpload.update()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source/tests/facilities-document-qualification.db.test.ts:114:58
+
+  111 if(mode==="scope")await tx.facilitiesFileBinding.update({where:{id:file.bindingId},data:{scope:"COMPANY_PROFILE"}});
+  112 if(mode==="slot")await tx.facilitiesFileBinding.update({where:{id:file.bindingId},data:{slotKey:"wrong-slot"}});
+  113 if(mode==="unscanned")await tx.storedFile.update({where:{id:file.file.id},data:{scanStatus:"PENDING",scannedAt:null}});
+→ 114 if(mode==="quarantined")await tx.facilitiesFileUpload.update(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "23514", message: "new row for relation \"FacilitiesFileUpload\" violates check constraint \"FacilitiesFileUpload_committed_lineage_check\"", severity: "ERROR", detail: Some("Failing row contains (cmu88glev028ssi0g2vv7i3bn, cmu88glem028osi0gmodh22nm, cmu88glf6028tsi0gko4jbq8m, 397be210-b3eb-48db-b751-4552daaa42a8, 1, null, UNAVAILABLE, null, 89, 2026-09-19 10:17:00.776, 2026-09-19 10:17:01.138, null, 1, null)."), column: None, hint: None }), transient: false })[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m237:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m114:28[22m[39m
+    [90m112|[39m    if(mode==="slot")await tx.facilitiesFileBinding.update({where:{id:f…
+    [90m113|[39m    if(mode==="unscanned")await tx.storedFile.update({where:{id:file.fi…
+    [90m114|[39m    if(mode==="quarantined")await tx.facilitiesFileUpload.update({where…
+    [90m   |[39m                            [31m^[39m
+    [90m115|[39m    if(mode==="stale")await tx.facilitiesFileBinding.update({where:{id:…
+    [90m116|[39m   })[33m;[39m
+[90m [2m❯[22m Proxy._transactionWithCallback node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m722:17[22m[39m
+[90m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m110:3[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/facilities-document-qualification.db.test.ts[2m > [22mR10 facilities required documents and real private bytes[2m > [22mofficer pruning retains evidence-referenced rows and removes only unreferenced rows
+[31m[1mPrismaClientUnknownRequestError[22m: 
+Invalid `db.facilitiesPaymentAttempt.findFirstOrThrow()` invocation in
+/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase10-6b28xnlh/source/tests/facilities-document-qualification.db.test.ts:128:319
+
+  125  expect(await reconcileFacilitiesDeletion({tombstoneId:tomb.id,storage})).toBe(true);await expect(qualify(f.app)).resolves.toBeUndefined();
+  126 });
+  127 it("officer pruning retains evidence-referenced rows and removes only unreferenced rows",async()=>{
+→ 128  const f=await fixture();await startFacilitiesPayment({applicationId:f.app.id,confirmed:true});const p=await db.facilitiesPaymentAttempt.findFirstOrThrow(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "P0001", message: "invalid facilities application status transition", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })[39m
+[90m [2m❯[22m ei.handleRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m237:12[22m[39m
+[90m [2m❯[22m ei.handleAndLogRequestError node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m174:11[22m[39m
+[90m [2m❯[22m ei.request node_modules/@prisma/client/src/runtime/RequestHandler.ts:[2m143:11[22m[39m
+[90m [2m❯[22m a node_modules/@prisma/client/src/runtime/getPrismaClient.ts:[2m833:23[22m[39m
+[36m [2m❯[22m tests/facilities-document-qualification.db.test.ts:[2m128:288[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m16 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 13:46:47
+[2m   Duration [22m 21.29s[2m (transform 202ms, setup 0ms, import 398ms, tests 20.74s, environment 0ms)[22m
+

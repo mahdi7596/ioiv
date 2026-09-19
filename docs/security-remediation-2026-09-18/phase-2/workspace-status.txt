@@ -1,0 +1,163 @@
+ M DEPLOYMENT.md
+ M app/api/payment/callback/route.ts
+ M app/dashboard/application/page.tsx
+ M app/payment/return/page.tsx
+ M components/application/ApplicationWizard.tsx
+ M components/application/FinalPaymentStep.tsx
+ M components/facilities/FacilitiesApplicationWizard.tsx
+ M docs/2026-09-16-payment-upload-security-audit.md
+ M lib/actions/admin.ts
+ M lib/actions/application.ts
+ M lib/actions/facilities-payment.ts
+ M lib/actions/payment.ts
+ M lib/facilities/payment-notice.ts
+ M lib/facilities/submission.ts
+ M lib/payments/legacy-notifications.ts
+ M lib/payments/legacy-settlement.ts
+ M lib/payments/zarinpal-errors.ts
+ M lib/payments/zarinpal.ts
+ M prisma/facilities-runtime-role-grants.sql
+ M prisma/schema.prisma
+ M tests/admin-actions-permissions.test.ts
+ M tests/facilities-payment-action.test.ts
+ M tests/payment-action.test.ts
+ M tests/payment-callback.test.ts
+ M tests/payment-return-page.test.tsx
+ M tests/zarinpal.test.ts
+?? docs/2026-09-18-prelaunch-security-review.md
+?? docs/2026-09-18-security-remediation-master-prompt.md
+?? docs/security-remediation-2026-09-18/phase-0/README.md
+?? docs/security-remediation-2026-09-18/phase-0/build-retry.log
+?? docs/security-remediation-2026-09-18/phase-0/build.log
+?? docs/security-remediation-2026-09-18/phase-0/copy-inventory.json
+?? docs/security-remediation-2026-09-18/phase-0/db-foundation.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m1-recovery.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m1-role.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m2-files.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m6-payment.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m7-review.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m8-operations.log
+?? docs/security-remediation-2026-09-18/phase-0/db-m9-suppliers.log
+?? docs/security-remediation-2026-09-18/phase-0/db-state.log
+?? docs/security-remediation-2026-09-18/phase-0/design.md
+?? docs/security-remediation-2026-09-18/phase-0/documentation-check.json
+?? docs/security-remediation-2026-09-18/phase-0/environment.json
+?? docs/security-remediation-2026-09-18/phase-0/evidence-sha256.json
+?? docs/security-remediation-2026-09-18/phase-0/file-reproduction.log
+?? docs/security-remediation-2026-09-18/phase-0/fixture-env.json
+?? docs/security-remediation-2026-09-18/phase-0/http-probe.mjs.txt
+?? docs/security-remediation-2026-09-18/phase-0/http-results.jsonl
+?? docs/security-remediation-2026-09-18/phase-0/independent-review.md
+?? docs/security-remediation-2026-09-18/phase-0/lint.log
+?? docs/security-remediation-2026-09-18/phase-0/m9-g3.log
+?? docs/security-remediation-2026-09-18/phase-0/m9-structure.log
+?? docs/security-remediation-2026-09-18/phase-0/payment-reproduction.log
+?? docs/security-remediation-2026-09-18/phase-0/run-isolated.py
+?? docs/security-remediation-2026-09-18/phase-0/runtime-role-reproduction.log
+?? docs/security-remediation-2026-09-18/phase-0/shutdown.json
+?? docs/security-remediation-2026-09-18/phase-0/source-sha256.json
+?? docs/security-remediation-2026-09-18/phase-0/types.log
+?? docs/security-remediation-2026-09-18/phase-0/unit-retry.log
+?? docs/security-remediation-2026-09-18/phase-0/unit.log
+?? docs/security-remediation-2026-09-18/phase-0/workspace-after.txt
+?? docs/security-remediation-2026-09-18/phase-0/workspace-before.json
+?? docs/security-remediation-2026-09-18/phase-1/README.md
+?? docs/security-remediation-2026-09-18/phase-1/browser-final.log
+?? docs/security-remediation-2026-09-18/phase-1/browser-qa.md
+?? docs/security-remediation-2026-09-18/phase-1/browser.log
+?? docs/security-remediation-2026-09-18/phase-1/build-final.log
+?? docs/security-remediation-2026-09-18/phase-1/build.log
+?? docs/security-remediation-2026-09-18/phase-1/db-coordination.log
+?? docs/security-remediation-2026-09-18/phase-1/db-coordination2.log
+?? docs/security-remediation-2026-09-18/phase-1/db-coordination3.log
+?? docs/security-remediation-2026-09-18/phase-1/db-coordination4.log
+?? docs/security-remediation-2026-09-18/phase-1/db-coordination5.log
+?? docs/security-remediation-2026-09-18/phase-1/db-final.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-m1-clean.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-m1.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-m6-clean.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-m6.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-m7.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-m8.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-migrate-clean.log
+?? docs/security-remediation-2026-09-18/phase-1/db-regression-role.log
+?? docs/security-remediation-2026-09-18/phase-1/design.md
+?? docs/security-remediation-2026-09-18/phase-1/environment.json
+?? docs/security-remediation-2026-09-18/phase-1/facilities-debug.log
+?? docs/security-remediation-2026-09-18/phase-1/facilities-fixed.log
+?? docs/security-remediation-2026-09-18/phase-1/final-delta-tests.log
+?? docs/security-remediation-2026-09-18/phase-1/independent-review.md
+?? docs/security-remediation-2026-09-18/phase-1/lint-final.log
+?? docs/security-remediation-2026-09-18/phase-1/lint-latest.log
+?? docs/security-remediation-2026-09-18/phase-1/migration-audit-actions.log
+?? docs/security-remediation-2026-09-18/phase-1/migration-audit.log
+?? docs/security-remediation-2026-09-18/phase-1/migration-recovery.log
+?? docs/security-remediation-2026-09-18/phase-1/migration-recovery2.log
+?? docs/security-remediation-2026-09-18/phase-1/migration.log
+?? docs/security-remediation-2026-09-18/phase-1/processes.log
+?? docs/security-remediation-2026-09-18/phase-1/provider-evidence.md
+?? docs/security-remediation-2026-09-18/phase-1/screenshots/return-1440.png
+?? docs/security-remediation-2026-09-18/phase-1/screenshots/return-390.png
+?? docs/security-remediation-2026-09-18/phase-1/screenshots/uncertain-1440.png
+?? docs/security-remediation-2026-09-18/phase-1/screenshots/uncertain-390.png
+?? docs/security-remediation-2026-09-18/phase-1/shutdown.json
+?? docs/security-remediation-2026-09-18/phase-1/source-hashes.json
+?? docs/security-remediation-2026-09-18/phase-1/tests-final.log
+?? docs/security-remediation-2026-09-18/phase-1/tests-serial.log
+?? docs/security-remediation-2026-09-18/phase-1/typecheck-initial.log
+?? docs/security-remediation-2026-09-18/phase-1/types-final.log
+?? docs/security-remediation-2026-09-18/phase-1/types-latest.log
+?? docs/security-remediation-2026-09-18/phase-1/unit-initial.log
+?? docs/security-remediation-2026-09-18/phase-1/unit-latest.log
+?? docs/security-remediation-2026-09-18/phase-1/unit-payment-adjust.log
+?? docs/security-remediation-2026-09-18/phase-1/unit-payment-adjust2.log
+?? docs/security-remediation-2026-09-18/phase-1/workspace-status.txt
+?? docs/security-remediation-2026-09-18/phase-2/README.md
+?? docs/security-remediation-2026-09-18/phase-2/baseline-r1.log
+?? docs/security-remediation-2026-09-18/phase-2/browser-expanded.log
+?? docs/security-remediation-2026-09-18/phase-2/browser-final.log
+?? docs/security-remediation-2026-09-18/phase-2/browser-script-types.log
+?? docs/security-remediation-2026-09-18/phase-2/browser.log
+?? docs/security-remediation-2026-09-18/phase-2/browser2.log
+?? docs/security-remediation-2026-09-18/phase-2/build.log
+?? docs/security-remediation-2026-09-18/phase-2/build2.log
+?? docs/security-remediation-2026-09-18/phase-2/design.md
+?? docs/security-remediation-2026-09-18/phase-2/environment.json
+?? docs/security-remediation-2026-09-18/phase-2/final-build.log
+?? docs/security-remediation-2026-09-18/phase-2/final-delta.log
+?? docs/security-remediation-2026-09-18/phase-2/final-lint.log
+?? docs/security-remediation-2026-09-18/phase-2/final-tests.log
+?? docs/security-remediation-2026-09-18/phase-2/final-types.log
+?? docs/security-remediation-2026-09-18/phase-2/focused.log
+?? docs/security-remediation-2026-09-18/phase-2/focused2.log
+?? docs/security-remediation-2026-09-18/phase-2/independent-review.md
+?? docs/security-remediation-2026-09-18/phase-2/lint.log
+?? docs/security-remediation-2026-09-18/phase-2/phase2-changed-files.json
+?? docs/security-remediation-2026-09-18/phase-2/processes.log
+?? docs/security-remediation-2026-09-18/phase-2/screenshots/cancel-pending-1440.png
+?? docs/security-remediation-2026-09-18/phase-2/screenshots/cancel-pending-390.png
+?? docs/security-remediation-2026-09-18/phase-2/screenshots/verified-review-1440.png
+?? docs/security-remediation-2026-09-18/phase-2/screenshots/verified-review-390.png
+?? docs/security-remediation-2026-09-18/phase-2/server.log
+?? docs/security-remediation-2026-09-18/phase-2/shutdown.json
+?? docs/security-remediation-2026-09-18/phase-2/source-hashes.json
+?? docs/security-remediation-2026-09-18/phase-2/tests.log
+?? docs/security-remediation-2026-09-18/phase-2/types.log
+?? docs/security-remediation-progress.md
+?? docs/security-review-2026-09-18/facilities-failed-replacement.sql
+?? docs/security-review-2026-09-18/http-results.jsonl
+?? docs/security-review-2026-09-18/npm-audit.json
+?? docs/security-review-2026-09-18/otp-request-results.jsonl
+?? docs/security-review-2026-09-18/payment-races.test.ts.txt
+?? lib/payments/coordination.ts
+?? lib/payments/messages.ts
+?? prisma/migrations/20260918120000_payment_coordination/migration.sql
+?? prisma/migrations/20260918121000_payment_audit_status/migration.sql
+?? prisma/migrations/20260918122000_payment_audit_actions/migration.sql
+?? prisma/tests/payment-coordination/browser.ts
+?? prisma/tests/payment-coordination/migration.py
+?? prisma/tests/payment-coordination/phase2-browser.ts
+?? prisma/tests/payment-coordination/processes.ts
+?? prisma/tests/payment-coordination/worker.ts
+?? tests/payment-coordination-mock.ts
+?? tests/payment-coordination.db.test.ts

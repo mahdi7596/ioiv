@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -6,7 +8,7 @@ import { ValidationCertificatePanel } from "@/components/admin/ValidationCertifi
 describe("ValidationCertificatePanel", () => {
   it("renders certificate metadata and replacement control after validation completes", () => {
     const markup = renderToStaticMarkup(
-      <ValidationCertificatePanel
+      <ValidationCertificatePanel draftVersion={0}
         applicationId="app-1"
         currentStatus="VALIDATION_COMPLETED"
         certificate={{
@@ -25,7 +27,7 @@ describe("ValidationCertificatePanel", () => {
 
   it("does not render replacement control before validation completes", () => {
     const markup = renderToStaticMarkup(
-      <ValidationCertificatePanel
+      <ValidationCertificatePanel draftVersion={0}
         applicationId="app-1"
         currentStatus="UNDER_REVIEW"
         certificate={undefined}
@@ -38,7 +40,7 @@ describe("ValidationCertificatePanel", () => {
 
   it("hides certificate actions when permissions deny them", () => {
     const markup = renderToStaticMarkup(
-      <ValidationCertificatePanel
+      <ValidationCertificatePanel draftVersion={0}
         applicationId="app-1"
         currentStatus="VALIDATION_COMPLETED"
         certificate={{

@@ -1,3 +1,4 @@
+import { db } from "@/lib/db";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -29,6 +30,13 @@ export default async function ApplicationPage() {
     redirect("/");
   }
 
+  const snapshot = await db.$transaction(async tx => {
+    const current = await tx.application.findUniqueOrThrow({ where: { id: application.id } });
+    const bindings = await tx.legacyFileBinding.findMany({ where: { applicationId: application.id } });
+    return { current, bindings };
+  }, { isolationLevel: "RepeatableRead" });
+  application = { ...application, ...snapshot.current };
+  const bindings = snapshot.bindings;
   const access = getApplicationAccess(application.status);
   const hasVerifiedPayment = application.payments.some((payment) => payment.status === "VERIFIED");
   const latestPaymentStatus = application.payments[0]?.status;
@@ -59,11 +67,14 @@ export default async function ApplicationPage() {
         applicationId={application.id}
         initialStep={application.currentStep}
         readOnly={!access.canEdit}
-        canRetryPayment={access.canRetryPayment && !hasVerifiedPayment}
+        canRetryPayment={access.canRetryPayment}
         hasVerifiedPayment={hasVerifiedPayment}
         latestPaymentStatus={latestPaymentStatus}
+        paymentCoordinationState={application.paymentObligation?.state}
+        initialGenerations={Object.fromEntries(bindings.map(binding => [binding.slotKey, binding.generation]))}
         initialDraft={
           {
+            draftVersion: application.draftVersion,
             currentStep: application.currentStep,
             taxDeclarations: arrayOrEmpty(application.taxDeclarations),
             financials: arrayOrEmpty(application.financials),

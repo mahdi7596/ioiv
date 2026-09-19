@@ -1,0 +1,17 @@
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase1", schema "public" at "127.0.0.1:61525"
+
+26 migrations found in prisma/migrations
+
+Applying migration `20260918121000_payment_audit_status`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260918121000_payment_audit_status/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.

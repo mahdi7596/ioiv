@@ -24,7 +24,7 @@ type Draft = {
 };
 
 type FieldErrors = Record<string, string>;
-type UploadState = { status: "uploading" | "done" | "error"; fileName?: string; message?: string };
+type UploadState = { status: "uploading" | "done" | "error"; fileName?: string; previousFileName?: string; message?: string };
 
 const emptyDraft: Draft = {
   version: 0,
@@ -228,7 +228,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
       picker.onchange = async () => {
         const file = picker.files?.[0];
         if (!file) return;
-        setUploads((current) => ({ ...current, [slot]: { status: "uploading", fileName: file.name } }));
+        setUploads((current) => ({ ...current, [slot]: { status: "uploading", fileName: file.name, previousFileName: current[slot]?.status === "done" ? current[slot]?.fileName : current[slot]?.previousFileName } }));
         try {
           const body = new FormData();
           body.set("bindingId", binding.id);
@@ -241,14 +241,14 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
           showToast({ type: "success", message: "مدرک با موفقیت بررسی و ثبت شد" });
         } catch (err) {
           const message = err instanceof Error ? err.message : "بارگذاری ناموفق بود";
-          setUploads((current) => ({ ...current, [slot]: { status: "error", fileName: file.name, message } }));
+          setUploads((current) => ({ ...current, [slot]: { status: "error", fileName: file.name, message, previousFileName: current[slot]?.previousFileName } }));
           showToast({ type: "error", message });
         }
       };
       picker.click();
     } catch (e) {
       const message = e instanceof Error ? e.message : "بارگذاری ناموفق بود";
-      setUploads((current) => ({ ...current, [slot]: { status: "error", message } }));
+      setUploads((current) => ({ ...current, [slot]: { status: "error", message, previousFileName: current[slot]?.status === "done" ? current[slot]?.fileName : current[slot]?.previousFileName } }));
       showToast({ type: "error", message });
     }
   }
@@ -433,7 +433,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                     {item.id ? (
                       <div className="member-doc__control">
                         {officerUpload && officerUpload.status !== "uploading" ? (
-                          <span className={`document-list__status document-list__status--${officerUpload.status}`}>
+                          <span role={officerUpload.status === "error" ? "alert" : "status"} className={`document-list__status document-list__status--${officerUpload.status}`}>
                             {officerUpload.status === "done" ? (
                               <>
                                 <Check aria-hidden="true" size={14} strokeWidth={2.6} />
@@ -442,7 +442,8 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                             ) : (
                               <>
                                 <AlertCircle aria-hidden="true" size={14} strokeWidth={2.2} />
-                                {officerUpload.message}
+                                <span className="document-list__error-text">{officerUpload.message}
+                                {officerUpload.previousFileName ? <span className="document-list__previous-file">آخرین فایل ثبت‌شده: «<bdi>{officerUpload.previousFileName}</bdi>». برای دیدن وضعیت فعلی، صفحه را بازخوانی کنید.</span> : null}</span>
                               </>
                             )}
                           </span>
@@ -545,7 +546,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
       return (
         <div className="member-doc__control">
           {state && !uploading ? (
-            <span className={`document-list__status document-list__status--${state.status}`}>
+            <span role={state.status === "error" ? "alert" : "status"} className={`document-list__status document-list__status--${state.status}`}>
               {state.status === "done" ? (
                 <>
                   <Check aria-hidden="true" size={14} strokeWidth={2.6} />
@@ -554,7 +555,8 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
               ) : (
                 <>
                   <AlertCircle aria-hidden="true" size={14} strokeWidth={2.2} />
-                  {state.message}
+                  <span className="document-list__error-text">{state.message}
+                  {state.previousFileName ? <span className="document-list__previous-file">آخرین فایل ثبت‌شده: «<bdi>{state.previousFileName}</bdi>». برای دیدن وضعیت فعلی، صفحه را بازخوانی کنید.</span> : null}</span>
                 </>
               )}
             </span>
@@ -722,7 +724,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                     {label}<span className="field-required" aria-hidden="true">*</span>
                   </span>
                   {state && !uploading ? (
-                    <span className={`document-list__status document-list__status--${state.status}`}>
+                    <span role={state.status === "error" ? "alert" : "status"} className={`document-list__status document-list__status--${state.status}`}>
                       {state.status === "done" ? (
                         <>
                           <Check aria-hidden="true" size={14} strokeWidth={2.6} />
@@ -731,7 +733,8 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                       ) : (
                         <>
                           <AlertCircle aria-hidden="true" size={14} strokeWidth={2.2} />
-                          {state.message}
+                          <span className="document-list__error-text">{state.message}
+                  {state.previousFileName ? <span className="document-list__previous-file">آخرین فایل ثبت‌شده: «<bdi>{state.previousFileName}</bdi>». برای دیدن وضعیت فعلی، صفحه را بازخوانی کنید.</span> : null}</span>
                         </>
                       )}
                     </span>

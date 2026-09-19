@@ -7,10 +7,11 @@ const mocks = vi.hoisted(() => ({
   uploadUpdate: vi.fn(),
   storedFileDelete: vi.fn(),
   transaction: vi.fn(),
+  tombstoneUpsert: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({ db: {
-  facilitiesFileDeletionTombstone: { findUnique: mocks.tombstoneFind, update: mocks.tombstoneUpdate },
+  facilitiesFileDeletionTombstone: { findUnique: mocks.tombstoneFind, update: mocks.tombstoneUpdate, updateMany: mocks.tombstoneUpdate },
   facilitiesFileUpload: { findUnique: mocks.uploadFind },
   $transaction: mocks.transaction,
 } }));
@@ -34,27 +35,36 @@ function storage(remove: () => Promise<void>): FacilitiesPrivateStorage {
 describe("facilities reconciliation recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({ facilitiesFileUpload: { update: mocks.uploadUpdate }, storedFile: { delete: mocks.storedFileDelete } }));
+    mocks.tombstoneUpdate.mockResolvedValue({});
+    mocks.tombstoneUpsert.mockResolvedValue({id:"tombstone-1"});
+    mocks.transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback({
+      $executeRaw: vi.fn(), $queryRaw: vi.fn().mockResolvedValue([{protected:false}]),
+      facilitiesFileBinding: {findUniqueOrThrow: vi.fn().mockResolvedValue({id:"binding-1",currentUploadId:"newer-upload"})},
+      facilitiesFileDeletionTombstone: {findUniqueOrThrow:mocks.tombstoneFind,update:mocks.tombstoneUpdate,upsert:mocks.tombstoneUpsert},
+      facilitiesFileUpload: {findUniqueOrThrow:mocks.uploadFind,update:mocks.uploadUpdate},
+      storedFile: {delete:mocks.storedFileDelete},
+    }));
   });
 
   it("records a retry tombstone when physical deletion is unavailable", async () => {
-    mocks.tombstoneFind.mockResolvedValue({ id: "tombstone-1", status: "PENDING", upload: { id: "upload-1", storedFileId: "file-1", storedFile: { storageKey: "ready/00000000-0000-4000-8000-000000000002" } } });
+    mocks.tombstoneFind.mockResolvedValue({ id: "tombstone-1", status: "PENDING", uploadId: "upload-1", upload: { id: "upload-1", bindingId:"binding-1", storedFileId: "file-1", storedFile: { id:"file-1", storageKey: "ready/00000000-0000-4000-8000-000000000002" } } });
     await expect(reconcileFacilitiesDeletion({ tombstoneId: "tombstone-1", storage: storage(async () => { throw new Error("storage unavailable"); }) })).resolves.toBe(false);
     expect(mocks.tombstoneUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "RETRY_REQUIRED", lastError: "DELETION_FAILED" }) }));
   });
 
   it("treats a missing physical object as idempotent deletion success", async () => {
     mocks.tombstoneFind
-      .mockResolvedValueOnce({ id: "tombstone-1", status: "PENDING", upload: { id: "upload-1", storedFileId: "file-1", storedFile: { storageKey: "ready/00000000-0000-4000-8000-000000000002" } } })
-      .mockResolvedValueOnce({ id: "tombstone-1", status: "SUCCEEDED", upload: { id: "upload-1", storedFileId: null, storedFile: null } });
+      .mockResolvedValueOnce({ id: "tombstone-1", status: "PENDING", uploadId: "upload-1", upload: { id: "upload-1", bindingId:"binding-1", storedFileId: "file-1", storedFile: { id:"file-1", storageKey: "ready/00000000-0000-4000-8000-000000000002" } } })
+      .mockResolvedValue({ id: "tombstone-1", status: "PENDING", uploadId:"upload-1", upload:{id:"upload-1",bindingId:"binding-1",storedFileId:"file-1",storedFile:{id:"file-1",storageKey:"ready/00000000-0000-4000-8000-000000000002"}} });
     await expect(reconcileFacilitiesDeletion({ tombstoneId: "tombstone-1", storage: storage(async () => undefined) })).resolves.toBe(true);
     expect(mocks.tombstoneUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "SUCCEEDED" }) }));
   });
 
   it("retains terminal metadata when quarantine-byte purge fails", async () => {
-    mocks.uploadFind.mockResolvedValue({ id: "upload-1", storedFileId: "file-1", lifecycleStatus: "FAILED", storedFile: { storageKey: "staging/00000000-0000-4000-8000-000000000001" } });
+    mocks.uploadFind.mockResolvedValue({ id: "upload-1", storedFileId: "file-1", lifecycleStatus: "FAILED", storedFile: { id:"file-1", storageKey: "staging/00000000-0000-4000-8000-000000000001" } });
     await expect(reconcileTerminalFacilitiesQuarantine({ uploadId: "upload-1", storage: storage(async () => { throw new Error("storage unavailable"); }) })).resolves.toBe(false);
-    expect(mocks.transaction).not.toHaveBeenCalled();
+    expect(mocks.uploadUpdate).not.toHaveBeenCalled();
+    expect(mocks.storedFileDelete).not.toHaveBeenCalled();
   });
 });
 

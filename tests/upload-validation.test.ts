@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm, realpath } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -72,10 +72,10 @@ describe("upload storage path safety", () => {
 
     const stored = await storeUploadFile({ applicationId: "app-1", fieldKey: "creditReports.ceo", file, scanner: passingScanner });
 
-    expect(stored.storagePath.startsWith(path.join(root, "app-1", "creditReports.ceo") + path.sep)).toBe(true);
+    expect(stored.storagePath.startsWith(path.join(await realpath(root), "app-1", "creditReports.ceo") + path.sep)).toBe(true);
     // The browser-declared type is ignored; the stored type comes from the bytes.
     expect(stored.mimeType).toBe("application/pdf");
-    await expect(readdir(path.join(root, "app-1", "creditReports.ceo"))).resolves.toHaveLength(1);
+    await expect(readdir(path.join(await realpath(root), "app-1", "creditReports.ceo"))).resolves.toHaveLength(1);
   });
 
   it("refuses to write when the field key or application id would leave the root", async () => {

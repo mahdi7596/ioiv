@@ -15,9 +15,11 @@ const noTransitionMessages: Record<string, string> = {
 export function StatusChangeForm({
   applicationId,
   currentStatus,
+  draftVersion,
 }: {
   applicationId: string;
   currentStatus: string;
+  draftVersion: number;
 }) {
   const options = getAllowedNextApplicationStatuses(currentStatus);
   const router = useRouter();
@@ -29,8 +31,9 @@ export function StatusChangeForm({
   const [isPending, startTransition] = useTransition();
   const noTransitionMessage =
     noTransitionMessages[currentStatus] || "در وضعیت فعلی امکان تغییر وضعیت وجود ندارد.";
-  const selectedStatusLabel = applicationStatusLabels[selectedStatus] || selectedStatus;
-  const isFinalDecision = selectedStatus === "VALIDATION_COMPLETED";
+  const effectiveStatus = options.includes(selectedStatus as typeof options[number]) ? selectedStatus : options[0] || "";
+  const selectedStatusLabel = applicationStatusLabels[effectiveStatus] || effectiveStatus;
+  const isFinalDecision = effectiveStatus === "VALIDATION_COMPLETED";
   const certificate = pendingFormData?.get("certificate");
   const canConfirm = !isFinalDecision || (certificate instanceof File && certificate.size > 0);
 
@@ -57,6 +60,9 @@ export function StatusChangeForm({
       }}
     >
       <input type="hidden" name="applicationId" value={applicationId} />
+      <input type="hidden" name="expectedStatus" value={currentStatus} />
+      <input type="hidden" name="expectedVersion" value={draftVersion} />
+      {message ? <p role="status" aria-live="polite" className="text-sm text-stone-700">{message}</p> : null}
       <div className="status-change-panel__summary">
         <div>
           <h2 className="text-lg font-bold text-stone-950">تغییر وضعیت</h2>
@@ -81,7 +87,7 @@ export function StatusChangeForm({
             <select
               name="status"
               className="w-full rounded-md border border-stone-300 px-3 py-2"
-              value={selectedStatus}
+              value={effectiveStatus}
               onChange={(event) => setSelectedStatus(event.target.value)}
             >
               {options.map((value) => (
@@ -91,7 +97,7 @@ export function StatusChangeForm({
               ))}
             </select>
           </div>
-          {selectedStatus === "VALIDATION_COMPLETED" ? (
+          {effectiveStatus === "VALIDATION_COMPLETED" ? (
             <div className="space-y-2">
               <label className="block text-sm font-medium text-stone-800" htmlFor="validation-certificate">
                 فایل PDF گواهی
@@ -137,7 +143,6 @@ export function StatusChangeForm({
           </div>
         </>
       ) : null}
-      {message ? <p className="text-sm text-stone-700">{message}</p> : null}
       {isConfirming ? (
         <div className="modal-backdrop" role="presentation">
           <div
@@ -181,6 +186,7 @@ export function StatusChangeForm({
 
                       if (!response.ok) {
                         const data = (await response.json().catch(() => null)) as { error?: string } | null;
+                        if (response.status === 409) { setIsConfirming(false); setPendingFormData(undefined); router.refresh(); }
                         throw new Error(data?.error || "تغییر وضعیت ناموفق بود");
                       }
 

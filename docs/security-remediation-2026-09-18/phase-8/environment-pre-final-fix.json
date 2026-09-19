@@ -1,0 +1,10 @@
+{
+  "run": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-exs906lv",
+  "source": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase8-exs906lv/source",
+  "container": "sana-phase8-exs906lv",
+  "containerId": "4bb3544dbc7450766805d382cae7a1eedeba9897d06ca2543142f8b506e556d4",
+  "label": "sana.task=sana-phase8-exs906lv",
+  "port": "54689",
+  "database": "phase1",
+  "role": "phase1_runtime"
+}

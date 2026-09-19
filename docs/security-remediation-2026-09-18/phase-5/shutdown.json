@@ -1,0 +1,89 @@
+{
+  "containerId": "cd1fda86a6b35cbe71cdd2ac10f6331a459b3d3ef06ae13921faf7b816afdfd9",
+  "label": "sana.task=sana-phase5-0k02vzyo",
+  "identityVerifiedBeforeRemoval": true,
+  "containerRemoved": true,
+  "formerDatabasePort": "53150",
+  "nextServers": [
+    {
+      "serverPid": 55039,
+      "port": 54163,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 55041,
+      "port": 54164,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 55113,
+      "port": 54190,
+      "proxy": true,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 57747,
+      "port": 54541,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 57748,
+      "port": 54542,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 57810,
+      "port": 54564,
+      "proxy": true,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 58151,
+      "port": 54811,
+      "proxy": false,
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 58173,
+      "port": 54814,
+      "source": "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo/source",
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 58174,
+      "port": 54815,
+      "source": "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo/source",
+      "pidAbsent": true
+    },
+    {
+      "serverPid": 58541,
+      "port": 55124,
+      "source": "/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo/source",
+      "pidAbsent": true
+    }
+  ],
+  "providerAndServerPortsClosed": [
+    53528,
+    54162,
+    54163,
+    54164,
+    54190,
+    54540,
+    54541,
+    54542,
+    54564,
+    54811,
+    54814,
+    54815,
+    55124
+  ],
+  "workers": "all request/verification/payment harnesses exited0",
+  "reviewers": "both completed with local approval",
+  "otherResources": "untouched",
+  "scratchDirectory": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase5-0k02vzyo",
+  "note": "Scratch/env disposable; recreate fresh labelled resources and automatic ports, never reconnect to former endpoints"
+}

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { VALIDATION_CERTIFICATE_FIELD_KEY } from "@/lib/application/certificate";
 import { FacilitiesFileError, describeFacilitiesFileError } from "@/lib/facilities-files/errors";
@@ -22,6 +22,10 @@ export type StoredUpload = {
   mimeType: string;
   size: number;
   storagePath: string;
+  sha256?: string;
+  scanVerdict?: string;
+  verifiedAt?: Date;
+  candidateId?: string;
 };
 
 export function getUploadDir() {
@@ -119,6 +123,7 @@ export async function storeUploadFile(input: {
   file: File;
   pdfOnly?: boolean;
   scanner?: FacilitiesFileScanner;
+  beforeWrite?: (storagePath: string) => Promise<void>;
 }): Promise<StoredUpload> {
   if (input.pdfOnly) {
     validatePdfUploadFile(input.file);
@@ -132,7 +137,8 @@ export async function storeUploadFile(input: {
 
   const extension = path.extname(input.file.name).toLowerCase();
   const generatedName = `${randomUUID()}${extension}`;
-  const root = path.resolve(getUploadDir());
+  await mkdir(path.resolve(getUploadDir()), { recursive: true, mode: 0o700 });
+  const root = await realpath(path.resolve(getUploadDir()));
   const directory = path.resolve(root, input.applicationId, input.fieldKey);
   const storagePath = path.join(directory, generatedName);
   // Defence in depth: the key patterns above already exclude separators, but
@@ -145,13 +151,17 @@ export async function storeUploadFile(input: {
   const verified = verifyLegacyUploadContent(input.file.name, bytes, input.pdfOnly);
   await scanLegacyUpload(bytes, verified, input.scanner ?? createFacilitiesScannerFromEnv());
 
-  await mkdir(directory, { recursive: true });
-  await writeFile(storagePath, bytes);
+  await input.beforeWrite?.(storagePath);
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  await writeFile(storagePath, bytes, { flag: "wx", mode: 0o600 });
 
   return {
     originalName: input.file.name,
     mimeType: verified.detectedMimeType,
     size: input.file.size,
     storagePath,
+    sha256: verified.sha256,
+    scanVerdict: "PASSED",
+    verifiedAt: new Date(),
   };
 }

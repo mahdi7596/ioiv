@@ -1,8 +1,8 @@
 import { PaymentStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { notifyAdminOfSubmission, notifyUserOfSubmission } from "@/lib/payments/legacy-notifications";
-import { markLegacyPaymentFailed, settleLegacyPayment } from "@/lib/payments/legacy-settlement";
+import { dispatchSubmissionIntent } from "@/lib/payments/legacy-notifications";
+import { completeVerifiedLegacySubmission, settleLegacyPayment } from "@/lib/payments/legacy-settlement";
 import { logger } from "@/lib/logger";
 
 type ReturnState = "success" | "failed" | "pending";
@@ -36,26 +36,17 @@ export async function GET(request: Request) {
   }
 
   if (payment.status === PaymentStatus.VERIFIED) {
+    await completeVerifiedLegacySubmission(payment.applicationId);
     logger.info("payment_callback_already_verified", {
       paymentId: payment.id,
       applicationId: payment.applicationId,
     });
+    await dispatchSubmissionIntent(payment.applicationId, payment.application.mobile);
     redirect(createReturnUrl("success", payment.id));
   }
 
-  if (status !== "OK") {
-    logger.warn("payment_callback_rejected", {
-      paymentId,
-      status,
-      reason: "callback_not_ok",
-    });
-    await markLegacyPaymentFailed(payment, {
-      status,
-      reason: "callback_not_ok",
-    });
-    redirect(createReturnUrl("failed", payment.id));
-  }
-
+  // Browser status (including cancellation) is not proof of nonpayment.
+  // The selected authority is checked through the same durable coordinator.
   const outcome = await settleLegacyPayment(payment, authority);
 
   if (outcome === "rejected") {
@@ -63,14 +54,15 @@ export async function GET(request: Request) {
   }
 
   if (outcome === "duplicate") {
-    // The application is already paid through another row; this capture was
-    // left unverified for the gateway to reverse. Show the paid state.
+    // The application is already paid. Preserve the other attempt for reconciliation;
+    // declining verification is not evidence of refund or reversal.
     const verifiedPayment = payment.application.payments.find((candidate) => candidate.status === PaymentStatus.VERIFIED);
     redirect(createReturnUrl("success", verifiedPayment?.id ?? payment.id));
   }
 
   if (outcome === "already-settled") {
     // A concurrent delivery already wrote history and sent the notifications.
+    await dispatchSubmissionIntent(payment.applicationId, payment.application.mobile);
     redirect(createReturnUrl("success", payment.id));
   }
 
@@ -83,10 +75,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    await Promise.all([
-      notifyAdminOfSubmission(payment.applicationId),
-      notifyUserOfSubmission(payment.application.mobile, payment.applicationId),
-    ]);
+    await dispatchSubmissionIntent(payment.applicationId, payment.application.mobile);
   } catch (error) {
     logger.error("payment_notification_failed", error, {
       paymentId: payment.id,

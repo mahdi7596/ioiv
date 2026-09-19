@@ -1,0 +1,37 @@
+{
+  "status": "COMPLETE_LOCALLY",
+  "tests": 607,
+  "testFiles": 80,
+  "restrictedDbTests": 155,
+  "r8Tests": 29,
+  "build": "PASS",
+  "types": "PASS",
+  "lint": "PASS one preexisting public image warning",
+  "browserWidths": [
+    390,
+    1440
+  ],
+  "controlledScannerCalls": 14,
+  "fileCrashBoundaries": [
+    "allocation",
+    "bytes",
+    "commit",
+    "authorization"
+  ],
+  "priorFacilitiesCrashCases": 5,
+  "paymentProcessScenarios": 5,
+  "migrationRehearsal": "PASS injected rollback and historical preservation",
+  "historicalFiles": 5,
+  "historicalBindingsCreated": 1,
+  "historicalRepairRecords": 9,
+  "sourceCount": 119,
+  "testedSourceCount": 118,
+  "codeReview": "APPROVED",
+  "evidenceReview": "APPROVED",
+  "shutdown": "COMPLETE",
+  "productionTouched": false,
+  "facilitiesEnabled": false,
+  "launchVerdict": "NO-GO",
+  "nextBoundary": "Phase10 D4 owner policy decision",
+  "noProgressCount": 0
+}

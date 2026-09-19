@@ -1,0 +1,63 @@
+{
+  "containerId": "6c15d7de30fa383f26bebc065885906d8deeed2345b7290c3edfd06d1d6ef110",
+  "label": "sana.task=sana-phase4-armlocl7",
+  "identityVerifiedBeforeRemoval": true,
+  "containerRemoved": true,
+  "formerDatabasePort": "63828",
+  "nextServers": [
+    {
+      "pid": 9016,
+      "port": 64542,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 9035,
+      "port": 64543,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 21280,
+      "port": 49441,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 21310,
+      "port": 49442,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 21608,
+      "port": 49730,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 24355,
+      "port": 50163,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 24364,
+      "port": 50164,
+      "pidAbsent": true,
+      "portClosed": true
+    },
+    {
+      "pid": 25099,
+      "port": 50489,
+      "pidAbsent": true,
+      "portClosed": true
+    }
+  ],
+  "workers": "all process harnesses exited0",
+  "browsers": "all browser harnesses stopped owned browsers",
+  "reviewers": "all completed; no ongoing review",
+  "otherResources": "untouched",
+  "scratchDirectory": "/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase4-armlocl7",
+  "note": "scratch/env disposable; recreate fresh identities for future work, never reconnect to former ports"
+}

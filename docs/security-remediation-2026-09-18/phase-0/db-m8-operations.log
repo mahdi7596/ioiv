@@ -1,0 +1,22 @@
+
+> sana-registration-review-platform@0.1.0 test:db:m8-operations
+> sh prisma/tests/test-facilities-m8-operations.sh
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma config detected, skipping environment variable loading.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "phase0", schema "public" at "127.0.0.1:59677"
+
+24 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+BEGIN
+DO
+DO
+DO
+INSERT 0 1
+DO
+DO
+ROLLBACK

@@ -1,0 +1,24 @@
+{
+  "stoppedOwnedPids": [
+    84839,
+    84853,
+    89898,
+    91666,
+    91669
+  ],
+  "removedOwnedContainer": "7d996c3a280c8d38f56dce8977874917f2e729957cbefded1bd0576865f1d7b9",
+  "anonymousMounts": [
+    {
+      "Type": "volume",
+      "Name": "98e275a75f4c21a1d4e8e32e13308a10b9158996d9efe3579fdaa2d6de35bfb5",
+      "Source": "/var/lib/docker/volumes/98e275a75f4c21a1d4e8e32e13308a10b9158996d9efe3579fdaa2d6de35bfb5/_data",
+      "Destination": "/var/lib/postgresql/data",
+      "Driver": "local",
+      "Mode": "",
+      "RW": true,
+      "Propagation": ""
+    }
+  ],
+  "unrelatedResourcesDeleted": false,
+  "productionTouched": false
+}

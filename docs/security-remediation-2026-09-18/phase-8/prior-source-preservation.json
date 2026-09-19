@@ -1,0 +1,32 @@
+{
+  "priorCheckpointCount": 82,
+  "changedSincePhase7": [
+    "DEPLOYMENT.md",
+    "components/facilities/FacilitiesApplicationWizard.tsx",
+    "prisma/facilities-runtime-role-grants.sql",
+    "prisma/schema.prisma",
+    "tests/payment-coordination.db.test.ts"
+  ],
+  "unchangedProtectedRuntimeFiles": [
+    "app/api/auth/request-otp/route.ts",
+    "app/api/auth/verify-otp/route.ts",
+    "app/api/payment/callback/route.ts",
+    "lib/actions/auth.ts",
+    "lib/actions/facilities-payment.ts",
+    "lib/actions/payment.ts",
+    "lib/auth/admin-response.ts",
+    "lib/auth/request-guard.ts",
+    "lib/auth/request.ts",
+    "lib/auth/verification.ts",
+    "lib/payments/coordination.ts",
+    "lib/payments/legacy-notifications.ts",
+    "lib/payments/legacy-settlement.ts",
+    "lib/payments/messages.ts",
+    "lib/payments/zarinpal-errors.ts",
+    "lib/payments/zarinpal.ts",
+    "lib/sms/ghasedak.ts",
+    "lib/sms/index.ts",
+    "lib/sms/timeout.ts"
+  ],
+  "auditSha256": "2c775286f74363868519d05f7af6886cf38f77454e4c7394d6f90def8716716e"
+}

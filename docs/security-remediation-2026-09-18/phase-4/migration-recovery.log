@@ -1,0 +1,14 @@
+PASS injected migration failure rolls back
+ absent 
+--------
+ t
+(1 row)
+
+
+PASS exact migration applies after rollback
+ public_cleanup | public_admin 
+----------------+--------------
+ f              | f
+(1 row)
+
+

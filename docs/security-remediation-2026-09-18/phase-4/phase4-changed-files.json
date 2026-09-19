@@ -1,0 +1,23 @@
+[
+  ".env.runtime.example",
+  "DEPLOYMENT.md",
+  "app/admin/login/page.tsx",
+  "app/api/auth/verify-otp/route.ts",
+  "components/auth/AuthFlow.tsx",
+  "lib/actions/auth.ts",
+  "lib/auth/verification.ts",
+  "operations/auth-verification-maintenance.example.cron",
+  "package.json",
+  "prisma/facilities-runtime-role-grants.sql",
+  "prisma/migrations/20260919120000_otp_verification_limits/migration.sql",
+  "prisma/schema.prisma",
+  "prisma/tests/otp-verification/browser.ts",
+  "prisma/tests/otp-verification/no-external-fetch.cjs",
+  "prisma/tests/otp-verification/processes.ts",
+  "prisma/tests/otp-verification/worker.ts",
+  "scripts/prune-auth-verification.ts",
+  "tests/auth-actions.test.ts",
+  "tests/otp-verification-route.test.ts",
+  "tests/otp-verification.db.test.ts",
+  "tests/prune-auth-verification.test.ts"
+]

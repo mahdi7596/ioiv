@@ -1,0 +1,7 @@
+(node:95091) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"providerPort":60068,"pid":95091}
+PASS eight independent processes: counted provider dispatches, restart cannot resend
+PASS reserved: counted provider dispatches, restart cannot resend
+PASS claimed: counted provider dispatches, restart cannot resend
+PASS sent: counted provider dispatches, restart cannot resend

@@ -1,0 +1,6 @@
+(node:14809) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+PASS 390px RTL uncertain state, check action, refresh, forged-success return, no horizontal overflow
+PASS 1440px RTL uncertain state, check action, refresh, forged-success return, no horizontal overflow
+PASS payable resumes exactly the saved authority (browser interception; no provider contact)
+PASS expired/signed-out session reveals no paid assertion

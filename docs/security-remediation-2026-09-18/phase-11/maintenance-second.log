@@ -1,0 +1,21 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/private/var/folders/g_/f5ccnp_51q15by15f4svlw6c0000gn/T/sana-phase11-3kj65vzv/source[39m
+
+(node:27552) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m tests/maintenance.db.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 4120[2mms[22m[39m
+     [33m[2m✓[22m[39m prunes expired 24h-old codes and preserves recent and still-live codes [33m 505[2mms[22m[39m
+     [33m[2m✓[22m[39m reports bounded backlog nonzero and resumes in a new process [33m 536[2mms[22m[39m
+     [33m[2m✓[22m[39m OTP lock contention is nonzero and does not collide with orphan coordination [33m 448[2mms[22m[39m
+     [33m[2m✓[22m[39m reconcile-legacy-files lock contention has an actual nonzero exit [33m 467[2mms[22m[39m
+     [33m[2m✓[22m[39m reconcile-facilities-files lock contention has an actual nonzero exit [33m 641[2mms[22m[39m
+     [33m[2m✓[22m[39m facilities invalid orphan retention is incomplete through the IPC worker [33m 1168[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 14:05:18
+[2m   Duration [22m 4.42s[2m (transform 40ms, setup 0ms, import 125ms, tests 4.12s, environment 0ms)[22m
+

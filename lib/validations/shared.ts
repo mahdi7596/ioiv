@@ -10,7 +10,7 @@ export const MAX_UPLOAD_SIZE_BYTES = 20 * 1024 * 1024;
  * lib/application/certificate.ts and is allowed separately by the storage layer.
  */
 export const LEGACY_UPLOAD_FIELD_KEY_PATTERN =
-  /^(taxDeclarations\.\d{1,2}\.file|financials\.\d{1,2}\.file|humanResources\.insuranceList|trialBalance\.(generalLedger|subsidiaryLedger)|creditReports\.(company|ceo|boardMember))$/;
+  /^(taxDeclarations\.(0|[1-9][0-9]?)\.file|financials\.(0|[1-9][0-9]?)\.file|humanResources\.insuranceList|trialBalance\.(generalLedger|subsidiaryLedger)|creditReports\.(company|ceo|boardMember))$/;
 
 /** Identifiers that are safe to use as a single path segment (cuid and seeded ids). */
 export const SAFE_PATH_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
