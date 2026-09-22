@@ -261,6 +261,10 @@ describe("scan and quarantine lifecycle", () => {
     const ready = await stageVerifyScanPromoteFacilitiesFile({ fileName: "document.pdf", bytes: pdf(), storage, scanner: pass });
     expect(ready).toMatchObject({ scanStatus: "PASSED", quarantine: false, storageKey: "ready/00000000-0000-4000-8000-000000000002" });
     expect(calls.some(([operation]) => operation === "promote")).toBe(true);
+    const bypass = createFacilitiesScannerFromEnv({ NODE_ENV: "production", UPLOAD_ANTIVIRUS_DISABLED: "true" });
+    await expect(stageVerifyScanPromoteFacilitiesFile({ fileName: "document.pdf", bytes: pdf(), storage, scanner: bypass })).resolves.toMatchObject({ scanStatus: "PASSED", quarantine: false });
+    await expect(stageVerifyScanPromoteFacilitiesFile({ fileName: "document.pdf", bytes: Buffer.from("not a PDF"), storage, scanner: bypass })).rejects.toThrow();
+
 
     const unavailable: FacilitiesFileScanner = { scan: async () => ({ status: "UNAVAILABLE", reason: "SCANNER_UNAVAILABLE" }) };
     const quarantined = await stageVerifyScanPromoteFacilitiesFile({ fileName: "document.pdf", bytes: pdf(), storage, scanner: unavailable });
@@ -288,6 +292,14 @@ describe("scan and quarantine lifecycle", () => {
 
     // No opt-in outside production still fails closed.
     await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "development" }).scan(request)).resolves.toMatchObject({ status: "UNAVAILABLE" });
+  });
+
+  it("requires exact production bypass opt-in and identifies policy acceptance", async () => {
+    const request: FacilitiesScanRequest = { storageKey: "staging/00000000-0000-4000-8000-000000000001", byteSize: 1, sha256: "a", fileType: "PDF", bytes: Buffer.from("x") };
+    await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "production", UPLOAD_ANTIVIRUS_DISABLED: "true", FACILITIES_CLAMAV_HOST: "unreachable.invalid", FACILITIES_CLAMAV_PORT: "3310" }).scan(request)).resolves.toEqual({ status: "PASSED", reason: "SCANNING_DISABLED" });
+    for (const value of [undefined, "false", "1", "TRUE", " true "]) {
+      await expect(createFacilitiesScannerFromEnv({ NODE_ENV: "production", UPLOAD_ANTIVIRUS_DISABLED: value }).scan(request)).resolves.toMatchObject({ status: "UNAVAILABLE" });
+    }
   });
 
   it("retains verified staging bytes when promotion storage is temporarily unavailable", async () => {

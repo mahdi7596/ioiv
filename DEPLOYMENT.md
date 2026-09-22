@@ -2132,3 +2132,44 @@ canonical and no-store. Session cookies retain30minute expiry, HttpOnly, SameSit
 Secure in production and root scope. No schema or retention changes. Do not roll back
 to the unconditional GET reset or unguarded logout routes. Actual production proxy and
 HTTPS qualification remain separate release gates; this phase uses local isolation.
+
+
+## 2026-09-22 owner-authorized antivirus bypass
+
+The owner explicitly requested disabling antivirus for the 2 GiB server. The shared
+scanner factory now accepts `UPLOAD_ANTIVIRUS_DISABLED=true` in `.env.runtime`.
+Only the exact value `true` disables scanning; absent, false or malformed values
+retain scanner enforcement. The development passthrough remains prohibited in
+production. Deploy the changed image and set this runtime value before recreating the app
+with `docker compose up -d --force-recreate app`; `docker compose restart` does not
+reload its environment. Changing the file alone does not change a running container.
+
+This applies to legacy uploads/certificates, facilities/profile/template uploads,
+reconciliation retries and explicit historical verification using the shared factory.
+Content/type validation, size/quota limits, hashes, ownership, private storage and
+payment coordination remain enforced. There is no new database migration.
+
+Compatibility limitation: existing PASSED/scanVerdict/scannedAt fields represent
+policy acceptance while this flag is enabled, NOT proof of antivirus scanning.
+No per-file persistent bypass marker is added by this minimal change. Record the
+release/configuration interval; do not claim these records are malware-certified.
+Each bypass logs upload_antivirus_disabled without file content or identifying data.
+Readiness reports antivirusDisabled=true, scannerReady=false and remains unsuccessful;
+this change does not satisfy scanner qualification or authorize facilities enablement.
+
+To re-enable scanning, provision/qualify ClamAV, set the flag to false and recreate
+the app and any separately configured workers. Previously accepted files are NOT
+retroactively scanned or blocked by that change; a separate inventory and explicit
+rescan is required before claiming antivirus coverage for them. Keep existing
+failed/malicious records intact; do not reset state or rewrite verification evidence.
+All existing migration, matched backup/restore and remaining release gates still apply.
+No production configuration or application was changed during this code task.
+
+Local verification for this change: focused scanner/upload suites passed (32 tests);
+full suite: 490 passed, 231 database-dependent tests skipped, one existing
+`no-committed-gateway-credentials` location-allowlist failure (unchanged tracked
+fixture/script paths fall outside its allowlist). Lint: zero errors, one existing
+public-page image warning. Production build including TypeScript passed after
+regenerating the stale local Prisma client. Independent critical review found no
+blocking issue with the documented policy-acceptance limitation. Actual production
+upload/download/submission and pending migrations still require deployment verification.

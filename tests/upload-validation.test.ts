@@ -124,6 +124,14 @@ describe("legacy upload scanning", () => {
 
   const file = () => new File([PDF_BYTES], "doc.pdf", { type: "application/pdf" });
 
+  it("allows valid production uploads with explicit bypass but rejects corrupt content", async () => {
+    await tempRoot();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("UPLOAD_ANTIVIRUS_DISABLED", "true");
+    await expect(storeUploadFile({ applicationId: "app-1", fieldKey: "creditReports.ceo", file: file() })).resolves.toMatchObject({ mimeType: "application/pdf", scanVerdict: "PASSED" });
+    await expect(storeUploadFile({ applicationId: "app-1", fieldKey: "creditReports.ceo", file: new File(["not a PDF"], "doc.pdf") })).rejects.toThrow();
+  });
+
   it("rejects files the configured scanner flags or cannot scan, writing nothing", async () => {
     const root = await tempRoot();
     const flagged: FacilitiesFileScanner = { scan: async () => ({ status: "FAILED", reason: "MALWARE_DETECTED" }) };

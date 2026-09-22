@@ -38,8 +38,10 @@ async function main() {
   const disk = await statfs(getFacilitiesStorageRoot());
   const freeBytes = Number(disk.bavail) * Number(disk.bsize);
   const runtimeAppendOnly = Boolean(privileges?.audit_select && privileges?.audit_insert && privileges?.history_insert && !privileges?.audit_update && !privileges?.audit_delete && !privileges?.history_update && !privileges?.history_delete);
-  const ready = Boolean(urlReady && runtimeAppendOnly && storageReady && scan.status === "PASSED" && agedUnavailable === 0 && agedDeletionBacklog === 0 && freeBytes >= 2 * 1024 * 1024 * 1024);
-  console.info(JSON.stringify({ event: "facilities_m8_readiness", ready, appUrlReady: urlReady, runtimeAuditAndHistoryAppendOnly: runtimeAppendOnly, storageWriteReadDeleteReady: storageReady, scannerReady: scan.status === "PASSED", agedUnavailable, agedDeletionBacklog, diskFreeAtLeast2GiB: freeBytes >= 2 * 1024 * 1024 * 1024, exportApplicationLimit: 5000, exportRelatedRowLimit: 100000 }));
+  const antivirusDisabled = scan.reason === "SCANNING_DISABLED";
+  const scannerReady = scan.status === "PASSED" && !antivirusDisabled;
+  const ready = Boolean(urlReady && runtimeAppendOnly && storageReady && scannerReady && agedUnavailable === 0 && agedDeletionBacklog === 0 && freeBytes >= 2 * 1024 * 1024 * 1024);
+  console.info(JSON.stringify({ event: "facilities_m8_readiness", ready, appUrlReady: urlReady, runtimeAuditAndHistoryAppendOnly: runtimeAppendOnly, storageWriteReadDeleteReady: storageReady, scannerReady, antivirusDisabled, agedUnavailable, agedDeletionBacklog, diskFreeAtLeast2GiB: freeBytes >= 2 * 1024 * 1024 * 1024, exportApplicationLimit: 5000, exportRelatedRowLimit: 100000 }));
   if (!ready) process.exitCode = 1;
 }
 

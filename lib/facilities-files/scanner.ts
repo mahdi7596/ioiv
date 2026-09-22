@@ -1,4 +1,5 @@
 import net from "node:net";
+import { logger } from "@/lib/logger";
 
 import type { FacilitiesStorageKey } from "@/lib/facilities-files/storage";
 import { MAX_FACILITIES_FILE_BYTES, type FacilitiesStoredFileType } from "@/lib/facilities-files/verification";
@@ -16,7 +17,7 @@ export type FacilitiesScanRequest = {
 export type FacilitiesScanResult = {
   status: FacilitiesScanStatus;
   // This is a fixed safe diagnostic category, never scanner output or document data.
-  reason?: "MALWARE_DETECTED" | "SCANNER_UNAVAILABLE";
+  reason?: "MALWARE_DETECTED" | "SCANNER_UNAVAILABLE" | "SCANNING_DISABLED";
 };
 
 export interface FacilitiesFileScanner {
@@ -33,12 +34,24 @@ export class UnavailableFacilitiesFileScanner implements FacilitiesFileScanner {
  * Development-only scanner that reports every file as clean. It exists solely so
  * local work is not blocked when no clamd is provisioned. `createFacilitiesScannerFromEnv`
  * only ever selects it outside production and behind an explicit opt-in flag, so a
- * real deployment can never ship unscanned uploads by accident.
+ * this development flag cannot bypass production scanning.
  */
 export class PassthroughFacilitiesFileScanner implements FacilitiesFileScanner {
   async scan(): Promise<FacilitiesScanResult> {
     return { status: "PASSED" };
   }
+}
+
+/** Owner-authorized policy bypass. PASSED means admitted, not malware-scanned. */
+class DisabledAntivirusScanner implements FacilitiesFileScanner {
+  async scan(): Promise<FacilitiesScanResult> {
+    logger.warn("upload_antivirus_disabled", { reason: "SCANNING_DISABLED" });
+    return { status: "PASSED", reason: "SCANNING_DISABLED" };
+  }
+}
+
+export function isUploadAntivirusDisabled(env: Partial<NodeJS.ProcessEnv> = process.env): boolean {
+  return env.UPLOAD_ANTIVIRUS_DISABLED === "true";
 }
 
 export type ClamdInstreamScannerOptions = {
@@ -171,10 +184,11 @@ const DEFAULT_SCAN_QUEUE_TIMEOUT_MS = 20_000;
 const scanSemaphore = createSemaphore(positiveInteger(process.env.FACILITIES_SCAN_CONCURRENCY, DEFAULT_SCAN_CONCURRENCY));
 
 export function createFacilitiesScannerFromEnv(env: Partial<NodeJS.ProcessEnv> = process.env): FacilitiesFileScanner {
+  if (isUploadAntivirusDisabled(env)) return new DisabledAntivirusScanner();
   // Development escape hatch: when explicitly opted in and never in production,
   // skip scanning so local work is not blocked without a clamd service. The server
   // runs with NODE_ENV=production, so this branch cannot run there; provision clamd
-  // and set FACILITIES_CLAMAV_HOST/PORT instead.
+  // and set FACILITIES_CLAMAV_HOST/PORT unless the separate owner bypass is set.
   if (env.NODE_ENV !== "production" && isDevScanBypassEnabled(env)) {
     return new PassthroughFacilitiesFileScanner();
   }
