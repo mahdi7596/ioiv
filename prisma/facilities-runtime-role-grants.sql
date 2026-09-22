@@ -88,6 +88,11 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
   "FacilitiesCorrectionRequest"
 TO :"runtime_role";
 
+-- Editable profile lists are replaced/removed by saveFacilitiesCompanyDraft.
+-- These are not submitted snapshots, audit records, or file lifecycle metadata.
+GRANT DELETE ON TABLE "CompanyShareholder", "CompanyOfficer" TO :"runtime_role";
+REVOKE TRUNCATE ON TABLE "CompanyShareholder", "CompanyOfficer" FROM :"runtime_role";
+
 -- M2 private-file metadata and lifecycle rows are retained for recovery and
 -- audit. The runtime can progress them but must not delete either metadata,
 -- bindings, revisions, or retry tombstones directly.

@@ -2173,3 +2173,20 @@ public-page image warning. Production build including TypeScript passed after
 regenerating the stale local Prisma client. Independent critical review found no
 blocking issue with the documented policy-acceptance limitation. Actual production
 upload/download/submission and pending migrations still require deployment verification.
+
+## 2026-09-23 rehearsal: editable company-profile permissions
+
+The fae8c69 image rehearsal exposed a missing runtime DELETE grant: saving even
+an empty shareholder list calls CompanyShareholder.deleteMany, and removing an
+unbound officer calls CompanyOfficer.deleteMany. The canonical runtime grant script
+now permits DELETE on only CompanyShareholder and CompanyOfficer and explicitly
+revokes TRUNCATE on both. Submitted snapshot, audit and file-retention permissions
+remain unchanged. Apply the updated canonical grants as database owner after
+migrations and before app activation; no new schema migration or app rebuild is needed.
+
+The existing role regression harness now asserts these grants and denies deletion
+of application shareholder/officer snapshots. A rollback-only check against the
+local migrated rehearsal DB applied the canonical grants and successfully executed
+zero-row DELETE statements as sana_runtime on both tables; no rows or grants were
+persisted by that check. Independent review approved the narrow permissions.
+Full browser profile-save verification is still pending. Production is unchanged.

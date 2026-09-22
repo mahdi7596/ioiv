@@ -51,6 +51,12 @@ SELECT (NOT (has_table_privilege(:'runtime_role', 'public."FacilitiesAuditLog"',
   OR has_table_privilege(:'runtime_role', 'public."FacilitiesFileUpload"', 'DELETE')
   OR has_table_privilege(:'runtime_role', 'public."FacilitiesFileDeletionTombstone"', 'DELETE'))
   AND has_table_privilege(:'runtime_role', 'public."StoredFile"', 'DELETE')
+  AND has_table_privilege(:'runtime_role', 'public."CompanyShareholder"', 'DELETE')
+  AND has_table_privilege(:'runtime_role', 'public."CompanyOfficer"', 'DELETE')
+  AND NOT has_table_privilege(:'runtime_role', 'public."CompanyShareholder"', 'TRUNCATE')
+  AND NOT has_table_privilege(:'runtime_role', 'public."CompanyOfficer"', 'TRUNCATE')
+  AND NOT has_table_privilege(:'runtime_role', 'public."FacilitiesApplicationShareholder"', 'DELETE')
+  AND NOT has_table_privilege(:'runtime_role', 'public."FacilitiesApplicationOfficer"', 'DELETE')
   AND has_table_privilege(:'runtime_role', 'public."FacilitiesFileUpload"', 'SELECT,INSERT,UPDATE')
   AND has_table_privilege(:'runtime_role', 'public."FacilitiesFileUploadAttempt"', 'SELECT,INSERT,UPDATE')
 ) AS runtime_role_table_privileges_restricted \gset
