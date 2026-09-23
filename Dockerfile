@@ -29,6 +29,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build npx --no-install prisma generate
 
+# Patch the package-manager dependencies retained for explicit maintenance commands.
+ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+RUN npm install --global npm@11.19.1 --registry=$NPM_CONFIG_REGISTRY \
+  && npm cache clean --force
+
 USER node
 
 FROM base AS runner
@@ -57,6 +62,11 @@ COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh \
   && mkdir -p /app/uploads \
   && chown -R node:node /app
+
+# npm remains available for the documented startup and operational scripts.
+ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+RUN npm install --global npm@11.19.1 --registry=$NPM_CONFIG_REGISTRY \
+  && npm cache clean --force
 
 USER node
 

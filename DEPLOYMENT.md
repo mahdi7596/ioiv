@@ -2189,4 +2189,50 @@ of application shareholder/officer snapshots. A rollback-only check against the
 local migrated rehearsal DB applied the canonical grants and successfully executed
 zero-row DELETE statements as sana_runtime on both tables; no rows or grants were
 persisted by that check. Independent review approved the narrow permissions.
-Full browser profile-save verification is still pending. Production is unchanged.
+Subsequent local browser verification saved the profile and retained its values
+after refresh. A newly uploaded private ZIP downloaded in the authenticated browser
+before and after app restart; an unauthenticated curl request returned 404.
+These checks do not qualify other-user authorization or all legacy uploads.
+Production is unchanged.
+
+## 2026-09-23 release-image dependency triage
+
+Scout reported 1 critical and 12 high findings in each 44ac862 image. Inspection
+of the actual images located the flagged tar, brace-expansion, ip-address, pacote,
+sigstore and picomatch versions under `/usr/local/lib/node_modules/npm`.
+The application image's only other flagged package was vendor SheetJS `xlsx@0.20.3`.
+
+Both final Docker stages now install pinned npm 11.19.1, compatible with the pinned
+base's Node 22.23.2. This updates retained package-manager tooling without changing
+the app lockfile or dependency installation/pruning. npm and npx remain available
+for documented startup and maintenance commands. Rebuild both images; installing
+the new npm on the host does not update existing containers. No schema change is
+required for this tooling patch.
+
+The two SheetJS findings are not applicable to the installed vendor version:
+[CVE-2023-30533](https://cdn.sheetjs.com/advisories/CVE-2023-30533) was fixed in
+0.19.3, and [CVE-2024-22363](https://cdn.sheetjs.com/advisories/CVE-2024-22363)
+was fixed in 0.20.2. This disposition applies only to those two CVEs and the
+verified vendor 0.20.3 package, not to other spreadsheet or upload risks.
+
+Local candidate tags are `sana-app:44ac862-npm-fix` and
+`sana-migrate:44ac862-npm-fix` (uncommitted Dockerfile patch atop 44ac862).
+Both build successfully. As the unprivileged node user, npm startup returns
+`{"ok":true}` from health and the restricted database client counts 25 applications.
+Maintenance `npx --no-install prisma migrate status` with the rehearsal owner
+reports all 36 migrations applied. The runtime role is correctly denied access
+to migration history. Independent Dockerfile review found no blocking issue.
+Final-image Scout rescans completed: both report 0 critical and 2 high findings,
+only the two non-applicable SheetJS CVEs above. All 11 npm-related findings are
+absent. Raw reports are retained in `docs/security-remediation-2026-09-23/`.
+Verified patched npm dependencies: tar 7.5.22, brace-expansion 5.0.9,
+ip-address 10.5.0, pacote 21.5.1, sigstore 4.1.1, picomatch 4.0.4.
+Image IDs: app `sha256:c8784774197825c15aff91bce230f0a995242d93e880aeb7d57c7fb5a7b3f1ae`;
+maintenance `sha256:d1785cdc661ade6833e60c54e74758be77d7667fb38e363baaeaf706b6c04451`.
+This closes the reported high/critical dependency triage, not the remaining
+production deployment and functional verification requirements.
+
+The existing production app has been restarted and is serving HTTP 200. Because
+production writes resumed, take a fresh matched database/uploads/configuration
+backup before the eventual deployment; the September 22 backup is no longer the
+deployment cutover snapshot. No production update was performed by this patch.
