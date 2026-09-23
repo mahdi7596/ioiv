@@ -2236,3 +2236,50 @@ The existing production app has been restarted and is serving HTTP 200. Because
 production writes resumed, take a fresh matched database/uploads/configuration
 backup before the eventual deployment; the September 22 backup is no longer the
 deployment cutover snapshot. No production update was performed by this patch.
+
+### Company-profile form error handling (2026-09-23)
+
+Profile draft saving, upload-slot preparation, and completion now return expected
+validation errors as serializable results to the client form. This preserves Persian
+validation messages that production React otherwise redacts as error #441. Unexpected
+failures return a generic retry message and emit `facilities.profile.action_failed`
+with the operation name only; no submitted data or raw exception is logged.
+
+No schema or storage migration is required. Deploy through the normal application
+release process; rollback restores the previous application build. Verify in a
+non-production environment that missing documents and a share total other than 100
+show actionable Persian messages, while a valid complete profile reaches the dashboard.
+
+### Local login prerequisites (2026-09-23)
+
+Local development requires the current database migrations and a dedicated random
+`OTP_VERIFY_LIMIT_SECRET` of at least 32 characters in the ignored `.env` file. Use
+`node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"`
+to generate it, then save the output as `OTP_VERIFY_LIMIT_SECRET` in `.env`; do not
+commit the generated value or reuse production secrets. Restart the development server after changing local configuration.
+The existing request/verification limits remain enabled locally.
+
+Before updating an existing local database, take a protected `pg_dump -Fc` backup and
+verify its archive listing. Run `npx prisma migrate deploy` against the confirmed local
+database. If previously applied manual changes cause a duplicate-column failure,
+inspect every statement in that migration and the actual column definitions before
+marking it applied; do not reset the database or blindly mark pending migrations.
+Restore the protected dump with the previous application/configuration if rollback is
+required. This local recovery procedure does not authorize production migrations.
+
+For actual SMS delivery during `next dev`, use valid provider configuration and
+`SMS_SEND_IN_DEVELOPMENT=true`. The default false setting suppresses delivery and
+neither displays nor logs the OTP; it is not an interactive login bypass.
+
+### PDF upload detection — 2026-09-23
+
+At the owner's request, facilities PDF detection now checks the leading `%PDF-`
+signature without requiring object, trailer/cross-reference, or end-of-file markers.
+The legacy uploader uses this same detector and receives the same PDF relaxation;
+its application workflow is unchanged.
+This is format identification, not a guarantee that a PDF is complete or readable.
+Extension matching, size limits, authorization, private storage, and the separate
+malware-scanning policy remain unchanged. No schema or storage migration is needed.
+Verify with `npx vitest run tests/facilities-files.test.ts`; rollback consists of
+restoring the previous PDF detector and its tests. Previously accepted uploads are
+not revalidated by this change.

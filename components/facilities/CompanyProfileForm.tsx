@@ -2,11 +2,22 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, FileText, Loader2, Plus, Trash2, UploadCloud, UserCog, Users, Check, AlertCircle } from "lucide-react";
-import { completeFacilitiesCompanyProfile, ensureFacilitiesProfileDocumentSlot, saveFacilitiesCompanyDraft } from "@/lib/actions/facilities-company";
+import { completeCompanyProfileForm, prepareCompanyProfileUpload, saveCompanyProfileForm } from "@/lib/actions/facilities-company-form";
 import { showToast } from "@/components/ui/toast";
 import { JalaliDatePicker } from "@/components/ui/JalaliDatePicker";
 import { IRAN_PROVINCES } from "@/lib/data/iran-cities";
 import { normalizeDigits, normalizedText, CEO_POSITION, isCeoRole } from "@/lib/validations/facilities-company";
+
+async function receive<T>(request: Promise<{ ok: true; data: T } | { ok: false; error: string }>): Promise<T> {
+  let result;
+  try {
+    result = await request;
+  } catch {
+    throw new Error("ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی و دوباره تلاش کنید.");
+  }
+  if (!result.ok) throw new Error(result.error);
+  return result.data;
+}
 
 type Person = { id?: string; fullName: string; nationalId?: string; ownershipPercentage?: string; position?: string };
 type Draft = {
@@ -206,7 +217,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
     if (!runValidation()) return;
     start(async () => {
       try {
-        const company = await saveFacilitiesCompanyDraft(draft);
+        const company = await receive(saveCompanyProfileForm(draft));
         setDraft((current) => mergeSaved(current, company));
         setFormError(null);
         showToast({ type: "success", message: "پیش‌نویس ذخیره شد" });
@@ -221,7 +232,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
   async function upload(kind: string, officerId?: string) {
     const slot = officerId ? `officer-${officerId}` : kind;
     try {
-      const binding = await ensureFacilitiesProfileDocumentSlot(kind, officerId);
+      const binding = await receive(prepareCompanyProfileUpload(kind, officerId));
       const picker = document.createElement("input");
       picker.type = "file";
       picker.accept = officerId ? ".zip" : ".pdf,.doc,.docx,.xls,.xlsx,.csv,.zip,.jpg,.jpeg,.png,.webp,.heic,.heif";
@@ -261,7 +272,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
     if (!runValidation()) return;
     start(async () => {
       try {
-        const company = await saveFacilitiesCompanyDraft(draft);
+        const company = await receive(saveCompanyProfileForm(draft));
         const merged = mergeSaved(draft, company);
         setDraft(merged);
         const officerId = merged.officers[index]?.id;
@@ -766,9 +777,9 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
               if (!runValidation()) return;
               start(async () => {
                 try {
-                  const company = await saveFacilitiesCompanyDraft(draft);
+                  const company = await receive(saveCompanyProfileForm(draft));
                   setDraft((current) => mergeSaved(current, company));
-                  await completeFacilitiesCompanyProfile({ version: company.profileVersion });
+                  await receive(completeCompanyProfileForm({ version: company.profileVersion }));
                   setFormError(null);
                   showToast({ type: "success", message: "پروفایل شرکت کامل شد" });
                   router.push("/dashboard");

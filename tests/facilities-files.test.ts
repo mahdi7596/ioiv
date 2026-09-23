@@ -125,9 +125,15 @@ describe("facilities content verification", () => {
     expect(verifyFacilitiesUpload({ fileName: "optimised.pdf", bytes: xrefStreamPdf() }).fileType).toBe("PDF");
   });
 
-  it("rejects extension/content mismatches and incomplete PDFs", () => {
+  it("rejects extension/content mismatches", () => {
     expect(() => verifyFacilitiesUpload({ fileName: "not-a-pdf.pdf", bytes: zip([{ name: "a.txt", contents: Buffer.from("a") }]) })).toThrow(FacilitiesFileError);
-    expect(() => verifyFacilitiesUpload({ fileName: "incomplete.pdf", bytes: Buffer.from("%PDF-1.7\n") })).toThrow("CONTENT_TYPE_MISMATCH");
+    expect(() => verifyFacilitiesUpload({ fileName: "text.pdf", bytes: Buffer.from("not a PDF") })).toThrow("CONTENT_TYPE_MISMATCH");
+  });
+
+  it("detects PDFs by signature without requiring structural markers", () => {
+    expect(verifyFacilitiesUpload({ fileName: "report.pdf", bytes: Buffer.from("%PDF-1.7\n") }).fileType).toBe("PDF");
+    const extended = Buffer.concat([pdf(), Buffer.alloc(9000, 32)]);
+    expect(verifyFacilitiesUpload({ fileName: "extended.pdf", bytes: extended }).fileType).toBe("PDF");
   });
 
   it("allows only documents and scans inside applicant ZIPs", () => {

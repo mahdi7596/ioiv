@@ -155,16 +155,10 @@ function detectFacilitiesContentType(bytes: Buffer): FacilitiesStoredFileType | 
 }
 
 function isPdf(bytes: Buffer): boolean {
-  if (bytes.byteLength < 15 || !bytes.subarray(0, 5).equals(Buffer.from("%PDF-"))) return false;
-  // Require bounded structural markers. Every PDF ends with startxref/%%EOF and
-  // holds at least one object; the cross-reference is either a classic
-  // `trailer` dictionary or (PDF 1.5+, including most linearized and
-  // Acrobat-optimised files) a `/XRef` stream object. Contents are never rendered.
-  const tail = bytes.subarray(Math.max(0, bytes.byteLength - 8_192));
-  return tail.includes(Buffer.from("%%EOF"))
-    && tail.includes(Buffer.from("startxref"))
-    && bytes.includes(Buffer.from(" obj"))
-    && (tail.includes(Buffer.from("trailer")) || bytes.includes(Buffer.from("/XRef")));
+  // Detect the format without imposing a partial PDF parser's structural rules.
+  // This identifies PDF content; it does not guarantee document readability.
+  // Upload limits and the separate malware scan still apply.
+  return bytes.subarray(0, 5).equals(Buffer.from("%PDF-"));
 }
 
 // Image formats are detected by their magic bytes only; pixel data is never

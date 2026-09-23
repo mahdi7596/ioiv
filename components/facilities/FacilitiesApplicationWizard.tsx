@@ -288,13 +288,13 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
       });
     };
     return (
-      <div className="profile-form" style={{ paddingBlockEnd: 84 }}>
-        <div className="panel wizard">
+      <div className="profile-form">
+        <div className="panel wizard facilities-wizard">
           <div className="wizard__progress">
             <StepIndicator currentStep={1} totalSteps={editSteps.length} title={editSteps[0]} />
           </div>
           <section className="wizard__body">
-            <form className="wizard__step" onSubmit={(event) => { event.preventDefault(); createDraft(); }}>
+            <form id="facilities-create-draft" className="wizard__step" onSubmit={(event) => { event.preventDefault(); createDraft(); }}>
               <h2>{editSteps[0]}</h2>
               <div className="stack">
                 <section className="profile-list" aria-labelledby="facilities-intake-heading">
@@ -344,11 +344,11 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
                   </div>
                 </section>
               </div>
-              <div className="sticky-actions">
-                <button className="button button--primary" disabled={pending || !supplierId}>ایجاد پیش‌نویس</button>
-              </div>
             </form>
           </section>
+          <div className="facilities-wizard__actions">
+            <button type="submit" form="facilities-create-draft" className="button button--primary" disabled={pending || !supplierId}>{pending ? "در حال ایجاد پیش‌نویس…" : "ایجاد پیش‌نویس و ادامه"}</button>
+          </div>
         </div>
       </div>
     );
@@ -481,11 +481,11 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
   }
 
   return (
-    <div className="profile-form" style={{ paddingBlockEnd: 84 }}>
+    <div className="profile-form">
       {noticePanel}
       {app.status === "NEEDS_EDIT" && latestCorrection ? <section className="panel review-message" role="alert"><p className="eyebrow">اقدام لازم</p><h2>موارد درخواستی کارشناس</h2><p>{latestCorrection.note}</p><p className="review-message__hint">اگر مورد خواسته‌شده مربوط به مدارک پروفایل شرکت است (مانند اساسنامه یا آگهی تأسیس)، آن را از <a href="/dashboard/facilities-profile">صفحهٔ پروفایل شرکت</a> جایگزین کنید، سپس در همین صفحه «ارسال اصلاحات» را بزنید.</p></section> : null}
 
-      <div className="panel wizard">
+      <div className="panel wizard facilities-wizard">
         <div className="wizard__progress">
           <StepIndicator currentStep={step} totalSteps={editSteps.length} title={editSteps[step - 1]} />
         </div>
@@ -605,7 +605,7 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
           </div>
         </section>
 
-        <div className="sticky-actions">
+        <div className="facilities-wizard__actions">
           <button type="button" className="button button--ghost" disabled={step === 1 || busy} onClick={goPrev}>مرحله قبل</button>
           <button type="button" className="button button--primary" disabled={step === editSteps.length || busy} onClick={goNext}>
             {busy ? <Loader2 aria-hidden="true" size={15} className="spin" /> : null}
