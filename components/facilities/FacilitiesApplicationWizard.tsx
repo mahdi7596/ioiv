@@ -554,6 +554,16 @@ export function FacilitiesApplicationWizard({ data, notice, initialStep = 1 }: {
                 {documentGroups.map((group) => (
                   <section className="profile-list" key={group.title}>
                     <h3 className="section-legend">{group.title}</h3>
+                    {group.title === "گزارش‌های اعتباری" ? (
+                      <p className="credit-report-notice">
+                        با مراجعه به سایت{" "}
+                        <a href="https://ics24.ir/" target="_blank" rel="noopener noreferrer">
+                          ics24.ir
+                        </a>{" "}
+                        نسبت به تهیه گزارش اعتبارسنجی به تاریخ روز برای شرکت، مدیرعامل و یکی از اعضای هیات مدیره
+                        ترجیحا رئیس یا نایب رئیس هیات مدیره اقدام نمائید.
+                      </p>
+                    ) : null}
                     <div className="document-list">
                       {group.items.map((item) => (
                         <DocRow key={item[0]} item={item} status={docStatus[item[0]]} disabled={pending || uploading} onPick={(file) => void upload(item[0], file)} />

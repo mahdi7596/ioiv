@@ -5,6 +5,7 @@ vi.mock("@/lib/actions/facilities-application", () => ({ createFacilitiesDraft: 
 vi.mock("@/lib/actions/facilities-payment", () => ({ startFacilitiesPayment: vi.fn(), submitFacilitiesApplication: vi.fn() }));
 
 import { FacilitiesApplicationWizard } from "@/components/facilities/FacilitiesApplicationWizard";
+import { CreditReportStep } from "@/components/application/CreditReportStep";
 
 function data(paymentEnabledSnapshot: boolean, status = "DRAFT") {
   return {
@@ -45,5 +46,32 @@ describe("facilities application payment confirmation UI", () => {
   it("clamps an out-of-range initial step into the wizard", () => {
     const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true)} initialStep={99} />);
     expect(markup).toContain("مرحله 3 از 3");
+  });
+
+  it("shows the credit-report instructions with the facilities provider link", () => {
+    const markup = renderToStaticMarkup(<FacilitiesApplicationWizard data={data(true)} initialStep={2} />);
+    const normalizedText = markup.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    expect(normalizedText).toContain(
+      "با مراجعه به سایت ics24.ir نسبت به تهیه گزارش اعتبارسنجی به تاریخ روز برای شرکت، مدیرعامل و یکی از اعضای هیات مدیره ترجیحا رئیس یا نایب رئیس هیات مدیره اقدام نمائید.",
+    );
+    expect(markup).toContain('href="https://ics24.ir/"');
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toContain('rel="noopener noreferrer"');
+    expect(markup).not.toContain("mycredit.ir");
+  });
+
+  it("keeps the existing credit-report provider in the legacy workflow", () => {
+    const markup = renderToStaticMarkup(
+      <CreditReportStep
+        applicationId="legacy-app"
+        draft={{ currentStep: 5, taxDeclarations: [], financials: [], humanResources: {}, trialBalance: {}, creditReports: {} }}
+        uploadProgress={{}}
+        uploadErrors={{}}
+        onDraftChange={vi.fn()}
+        onUpload={vi.fn()}
+      />,
+    );
+    expect(markup).toContain('href="https://www.mycredit.ir/"');
+    expect(markup).not.toContain("ics24.ir");
   });
 });
