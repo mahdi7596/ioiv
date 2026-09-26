@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, FileText, Loader2, Plus, Trash2, UploadCloud, UserCog, Users, Check, AlertCircle } from "lucide-react";
 import { completeCompanyProfileForm, prepareCompanyProfileUpload, saveCompanyProfileForm } from "@/lib/actions/facilities-company-form";
@@ -8,15 +8,28 @@ import { JalaliDatePicker } from "@/components/ui/JalaliDatePicker";
 import { IRAN_PROVINCES } from "@/lib/data/iran-cities";
 import { normalizeDigits, normalizedText, CEO_POSITION, isCeoRole } from "@/lib/validations/facilities-company";
 
-async function receive<T>(request: Promise<{ ok: true; data: T } | { ok: false; error: string }>): Promise<T> {
+// The server refused a save because the profile changed after this page loaded.
+class ProfileConflictError extends Error {}
+
+async function receive<T>(request: Promise<{ ok: true; data: T } | { ok: false; error: string; conflict?: boolean }>): Promise<T> {
   let result;
   try {
     result = await request;
   } catch {
     throw new Error("ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی و دوباره تلاش کنید.");
   }
-  if (!result.ok) throw new Error(result.error);
+  if (!result.ok) throw result.conflict ? new ProfileConflictError(result.error) : new Error(result.error);
   return result.data;
+}
+
+// Everything the user can edit, without the server version, so we can tell
+// whether the page has unsaved changes.
+function editableSnapshot(draft: Draft) {
+  return JSON.stringify({ ...draft, version: 0 });
+}
+
+function uploadsFrom(documents?: Record<string, { fileName: string }>): Record<string, UploadState> {
+  return Object.fromEntries(Object.entries(documents ?? {}).map(([slot, doc]) => [slot, { status: "done", fileName: doc.fileName } as UploadState]));
 }
 
 type Person = { id?: string; fullName: string; nationalId?: string; ownershipPercentage?: string; position?: string };
@@ -171,9 +184,67 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
   const [pending, start] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [uploads, setUploads] = useState<Record<string, UploadState>>(() =>
-    Object.fromEntries(Object.entries(documents ?? {}).map(([slot, doc]) => [slot, { status: "done", fileName: doc.fileName } as UploadState]))
-  );
+  const [uploads, setUploads] = useState<Record<string, UploadState>>(() => uploadsFrom(documents));
+  const [conflict, setConflict] = useState(false);
+  const savedSnapshot = useRef<string | null>(null);
+  if (savedSnapshot.current === null) savedSnapshot.current = editableSnapshot(draft);
+  const initialVersion = initial?.version ?? 0;
+
+  // A page restored by Back (router cache or bfcache) still holds the version
+  // it was rendered with. Ask the server for fresh data once on mount; the
+  // effect below adopts it, so users normally never see a version conflict.
+  useEffect(() => {
+    router.refresh();
+    const onPageShow = (event: PageTransitionEvent) => { if (event.persisted) router.refresh(); };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [router]);
+
+  // Newer server data arrived: adopt it when nothing is unsaved; otherwise
+  // keep the user's edits and ask them to reload rather than overwrite.
+  useEffect(() => {
+    if (initialVersion <= draft.version) return;
+    if (editableSnapshot(draft) === savedSnapshot.current) {
+      const fresh = initialDraft(initial);
+      savedSnapshot.current = editableSnapshot(fresh);
+      setDraft(fresh);
+      // Keep uploads still in flight; everything else comes from the server.
+      setUploads((current) => ({
+        ...uploadsFrom(documents),
+        ...Object.fromEntries(Object.entries(current).filter(([, upload]) => upload.status === "uploading")),
+      }));
+      setFieldErrors({});
+      setFormError(null);
+      setConflict(false);
+    } else {
+      setConflict(true);
+    }
+    // Only a version change matters; the other values are read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialVersion]);
+
+  const conflictPanel = useRef<HTMLDivElement>(null);
+  // Save/complete become disabled while focused; move focus to the explanation.
+  useEffect(() => {
+    if (conflict) conflictPanel.current?.focus();
+  }, [conflict]);
+
+  function reportFailure(error: unknown, fallback: string) {
+    if (error instanceof ProfileConflictError) {
+      setConflict(true);
+      setFormError(null);
+      showToast({ type: "error", message: "نسخهٔ جدیدتری از پروفایل وجود دارد" });
+      return;
+    }
+    const message = error instanceof Error ? error.message : fallback;
+    setFormError(message);
+    showToast({ type: "error", message });
+  }
+
+  function markSaved(next: Draft) {
+    savedSnapshot.current = editableSnapshot(next);
+    return next;
+  }
 
   const clearError = (key: string) =>
     setFieldErrors((current) => {
@@ -219,12 +290,11 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
       try {
         const company = await receive(saveCompanyProfileForm(draft));
         setDraft((current) => mergeSaved(current, company));
+        markSaved(mergeSaved(draft, company));
         setFormError(null);
         showToast({ type: "success", message: "پیش‌نویس ذخیره شد" });
       } catch (e) {
-        const message = e instanceof Error ? e.message : "ذخیره ناموفق بود";
-        setFormError(message);
-        showToast({ type: "error", message });
+        reportFailure(e, "ذخیره ناموفق بود");
       }
     });
   }
@@ -273,16 +343,14 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
     start(async () => {
       try {
         const company = await receive(saveCompanyProfileForm(draft));
-        const merged = mergeSaved(draft, company);
+        const merged = markSaved(mergeSaved(draft, company));
         setDraft(merged);
         const officerId = merged.officers[index]?.id;
         if (!officerId) throw new Error("ذخیره ناموفق بود؛ دوباره تلاش کنید");
         setFormError(null);
         await upload("officer", officerId);
       } catch (e) {
-        const message = e instanceof Error ? e.message : "ذخیره ناموفق بود";
-        setFormError(message);
-        showToast({ type: "error", message });
+        reportFailure(e, "ذخیره ناموفق بود");
       }
     });
   }
@@ -462,7 +530,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                         <button
                           type="button"
                           className="button button--ghost button--sm"
-                          disabled={officerUpload?.status === "uploading"}
+                          disabled={conflict || officerUpload?.status === "uploading"}
                           onClick={() => upload("officer", item.id)}
                         >
                           {officerUpload?.status === "uploading" ? (
@@ -485,7 +553,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                         <button
                           type="button"
                           className="button button--ghost button--sm"
-                          disabled={pending}
+                          disabled={pending || conflict}
                           onClick={() => saveThenUploadOfficer(index)}
                         >
                           {pending ? (
@@ -572,7 +640,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
               )}
             </span>
           ) : null}
-          <button type="button" className="button button--ghost button--sm" disabled={uploading} onClick={() => upload(kind, officerId)}>
+          <button type="button" className="button button--ghost button--sm" disabled={uploading || conflict} onClick={() => upload(kind, officerId)}>
             {uploading ? (
               <>
                 <Loader2 aria-hidden="true" size={15} strokeWidth={2.2} className="spin" />
@@ -656,7 +724,23 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
 
   return (
     <div className="space-y-6">
-      <form className="panel profile-form" onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
+      <form className="panel profile-form" onSubmit={(e) => { e.preventDefault(); if (!conflict) save(); }} noValidate>
+        {conflict ? (
+          <div role="alert" className="form-error profile-conflict" ref={conflictPanel} tabIndex={-1}>
+            <AlertCircle aria-hidden="true" size={20} strokeWidth={2.2} />
+            <div className="profile-conflict__body">
+              <strong>اطلاعات این صفحه قدیمی است</strong>
+              <p>
+                پروفایل شرکت پس از باز شدن این صفحه تغییر کرده است (مثلاً در زبانهٔ دیگری از مرورگر یا با تکمیل پروفایل).
+                برای اینکه اطلاعات جدیدتر از بین نرود، ذخیره در این صفحه متوقف شده است. صفحه را تازه‌سازی کنید تا آخرین اطلاعات نمایش داده شود؛
+                تغییراتی که در این صفحه ذخیره نشده‌اند پاک می‌شوند و باید دوباره وارد شوند.
+              </p>
+            </div>
+            <button type="button" className="button button--primary" onClick={() => window.location.reload()}>
+              تازه‌سازی صفحه
+            </button>
+          </div>
+        ) : null}
         {formError ? <div role="alert" className="form-error">{formError}</div> : null}
         <section className="profile-list" role="group" aria-labelledby="company-info-heading">
           <h3 className="section-legend" id="company-info-heading">
@@ -750,7 +834,7 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
                       )}
                     </span>
                   ) : null}
-                  <button className="button button--ghost button--sm" type="button" disabled={uploading} onClick={() => upload(kind)}>
+                  <button className="button button--ghost button--sm" type="button" disabled={uploading || conflict} onClick={() => upload(kind)}>
                     {uploading ? (
                       <>
                         <Loader2 aria-hidden="true" size={15} strokeWidth={2.2} className="spin" />
@@ -768,25 +852,24 @@ export function CompanyProfileForm({ initial, documents, locked = false, correct
           </ul>
         </section>
         <div className="sticky-actions">
-          <button className="button button--ghost" disabled={pending}>ذخیره پیش‌نویس</button>
+          <button className="button button--ghost" disabled={pending || conflict}>ذخیره پیش‌نویس</button>
           <button
             type="button"
             className="button button--primary"
-            disabled={pending}
+            disabled={pending || conflict}
             onClick={() => {
-              if (!runValidation()) return;
+              if (conflict || !runValidation()) return;
               start(async () => {
                 try {
                   const company = await receive(saveCompanyProfileForm(draft));
                   setDraft((current) => mergeSaved(current, company));
+                  markSaved(mergeSaved(draft, company));
                   await receive(completeCompanyProfileForm({ version: company.profileVersion }));
                   setFormError(null);
                   showToast({ type: "success", message: "پروفایل شرکت کامل شد" });
                   router.push("/dashboard");
                 } catch (e) {
-                  const message = e instanceof Error ? e.message : "تکمیل ناموفق بود";
-                  setFormError(message);
-                  showToast({ type: "error", message });
+                  reportFailure(e, "تکمیل ناموفق بود");
                 }
               });
             }}

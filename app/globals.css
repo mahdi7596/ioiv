@@ -122,6 +122,12 @@ textarea:focus-visible {
 .profile-list legend { font-weight: 700; padding-inline: .35rem; }
 .profile-row { align-items: end; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
 .form-error { background: #fff1ef; border: 1px solid var(--color-danger); border-radius: var(--radius-control); color: #8e241c; padding: .75rem; }
+.profile-conflict { align-items: flex-start; display: flex; flex-wrap: wrap; gap: .75rem; }
+.profile-conflict > svg { flex: none; margin-top: .15rem; }
+.profile-conflict__body { flex: 1 1 16rem; min-width: 0; }
+.profile-conflict__body p { line-height: 1.9; margin: .25rem 0 0; }
+.profile-conflict .button { flex: none; }
+@media (max-width: 640px) { .profile-conflict .button { width: 100%; } }
 
 /* Required marker + inline field errors (used across the company profile form) */
 .field-label { display: inline-flex; align-items: baseline; gap: .15rem; }

@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/auth/session";
 import { ActionError } from "@/lib/actions/auth";
 import { companyDraftSchema, isCeoRole } from "@/lib/validations/facilities-company";
 import { assertFacilitiesProfileDocumentEditable, assertFacilitiesProfileEditable } from "@/lib/facilities/profile-lock";
+import { ProfileVersionConflictError } from "@/lib/facilities/profile-version";
 
 const DOCUMENT_SLOTS = ["incorporation-notice", "articles-of-association", "board-changes-gazette", "capital-increase-gazette"] as const;
 
@@ -58,7 +59,7 @@ export async function saveFacilitiesCompanyDraft(input: unknown) {
         await tx.company.update({ where: { id: current.id }, data: { updatedAt: new Date() } });
         await assertFacilitiesProfileEditable(tx, current.id);
       }
-      if (current && value.version !== undefined && current.profileVersion !== value.version) throw new ActionError("پروفایل در جای دیگری تغییر کرده است؛ صفحه را تازه‌سازی کنید", 409);
+      if (current && value.version !== undefined && current.profileVersion !== value.version) throw new ProfileVersionConflictError("پروفایل در جای دیگری تغییر کرده است؛ صفحه را تازه‌سازی کنید");
       const fields = { name: value.name, nationalId: value.nationalId, registrationNumber: value.registrationNumber, registrationPlace: value.registrationPlace, registrationDate: dateOnly(value.registrationDate), registeredCapitalRial: new Prisma.Decimal(value.registeredCapitalRial), contactFullName: value.contactFullName, contactMobile: value.contactMobile, profileCompletedAt: null };
       const company = current ? await tx.company.update({ where: { id: current.id }, data: { ...fields, profileVersion: { increment: 1 } } }) : await tx.company.create({ data: { userId: session.subjectId, ...fields, profileVersion: 1 } });
       // Existing officer ids are deliberately retained so their identity slots cannot be reassigned.
@@ -113,7 +114,7 @@ export async function ensureFacilitiesProfileDocumentSlot(kind: string, officerI
 export async function completeFacilitiesCompanyProfile(input: { version: number }) {
   const session = await requireSession("user");
   const company = await db.company.findUnique({ where: { userId: session.subjectId }, include: { shareholders: true, officers: true, facilitiesFileBindings: { include: { currentUpload: { include: { storedFile: true } } } } } });
-  if (!company || company.profileVersion !== input.version) throw new ActionError("پروفایل تغییر کرده است؛ صفحه را تازه‌سازی کنید", 409);
+  if (!company || company.profileVersion !== input.version) throw new ProfileVersionConflictError("پروفایل تغییر کرده است؛ صفحه را تازه‌سازی کنید");
   await assertFacilitiesProfileEditable(db, company.id);
   const fields = [company.name, company.nationalId, company.registrationNumber, company.registrationPlace, company.registrationDate, company.registeredCapitalRial, company.contactFullName, company.contactMobile];
   if (fields.some((field) => field === null || field === undefined) || !company.shareholders.length || !company.officers.length) throw new ActionError("همه اطلاعات و فهرست‌ها را تکمیل کنید");

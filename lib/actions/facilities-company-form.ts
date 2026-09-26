@@ -2,6 +2,7 @@
 
 import { logger } from "@/lib/logger";
 import { ActionError } from "@/lib/actions/auth";
+import { ProfileVersionConflictError } from "@/lib/facilities/profile-version";
 import { completeFacilitiesCompanyProfile, ensureFacilitiesProfileDocumentSlot, saveFacilitiesCompanyDraft } from "@/lib/actions/facilities-company";
 
 // Expected failures must be returned as data: production React redacts thrown
@@ -15,6 +16,9 @@ async function result<T>(action: string, operation: () => Promise<T>) {
     }
     return {
       ok: false as const,
+      // The profile changed after this page loaded (stale tab, Back
+      // navigation). The client offers a reload instead of a dead-end error.
+      conflict: error instanceof ProfileVersionConflictError,
       error: error instanceof ActionError
         ? error.message
         : error instanceof Error && error.message === "Unauthorized"

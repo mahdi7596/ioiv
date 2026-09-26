@@ -7,6 +7,7 @@ vi.mock("@/lib/actions/facilities-company", () => ({
 }));
 import { logger } from "@/lib/logger";
 import { ActionError } from "@/lib/actions/auth";
+import { ProfileVersionConflictError } from "@/lib/facilities/profile-version";
 import { saveFacilitiesCompanyDraft, completeFacilitiesCompanyProfile, ensureFacilitiesProfileDocumentSlot } from "@/lib/actions/facilities-company";
 import { saveCompanyProfileForm, completeCompanyProfileForm, prepareCompanyProfileUpload } from "@/lib/actions/facilities-company-form";
 
@@ -18,7 +19,18 @@ describe("profile form server-action boundary", () => {
     "پروفایل تغییر کرده است؛ صفحه را تازه‌سازی کنید",
   ])("returns completion validation as serializable data: %s", async (message) => {
     vi.mocked(completeFacilitiesCompanyProfile).mockRejectedValue(new ActionError(message));
-    expect(JSON.parse(JSON.stringify(await completeCompanyProfileForm({ version: 4 })))).toEqual({ ok: false, error: message });
+    expect(JSON.parse(JSON.stringify(await completeCompanyProfileForm({ version: 4 })))).toEqual({ ok: false, conflict: false, error: message });
+  });
+  it("flags version conflicts so the form can offer a reload", async () => {
+    vi.mocked(saveFacilitiesCompanyDraft).mockRejectedValue(new ProfileVersionConflictError("پروفایل در جای دیگری تغییر کرده است؛ صفحه را تازه‌سازی کنید"));
+    expect(await saveCompanyProfileForm({ version: 1 })).toEqual({ ok: false, conflict: true, error: "پروفایل در جای دیگری تغییر کرده است؛ صفحه را تازه‌سازی کنید" });
+    vi.mocked(completeFacilitiesCompanyProfile).mockRejectedValue(new ProfileVersionConflictError("پروفایل تغییر کرده است؛ صفحه را تازه‌سازی کنید"));
+    expect(await completeCompanyProfileForm({ version: 1 })).toMatchObject({ ok: false, conflict: true });
+  });
+  it("keeps a locked profile's own message instead of a reload prompt", async () => {
+    const locked = "تا پایان بررسی پرونده فعال، اطلاعات و مدارک پروفایل شرکت قابل تغییر نیست";
+    vi.mocked(saveFacilitiesCompanyDraft).mockRejectedValue(new ActionError(locked, 409));
+    expect(await saveCompanyProfileForm({ version: 1 })).toEqual({ ok: false, conflict: false, error: locked });
   });
   it("preserves successful saved officer IDs and version", async () => {
     const data = { profileVersion: 4, officers: [{ id: "officer", fullName: "عضو", position: "مدیرعامل" }] };

@@ -2364,3 +2364,20 @@ database access (see [Docker Runtime](#docker-runtime)).
 
 The Troubleshooting entries that still described rsync file patches and the old
 Prisma engine export were rewritten for the git-based deploy.
+
+### Company-profile stale-page handling (2026-09-26)
+
+Saving the company profile replaces its shareholder and officer lists, so the
+server keeps rejecting a save or completion sent with an older `profileVersion`
+(for example after completing the profile and pressing Back, or from a second tab).
+Previously users were stuck with a raw red toast. Now only that version mismatch
+(`ProfileVersionConflictError`, `lib/facilities/profile-version.ts`) is flagged as
+`conflict` to the form, which shows a Persian explanation with a "تازه‌سازی صفحه"
+button and disables saving/uploads until reload. A locked profile keeps its own
+409 message. On open (including Back/bfcache restores) the form refreshes server
+data and silently adopts a newer version when it has no unsaved edits.
+
+No schema, storage or configuration change; deploy with `bash scripts/deploy-server.sh`
+and roll back to the previous image. Verify: complete a profile, press Back, and
+save; the page should either save normally or show the reload panel, never the
+bare "پروفایل در جای دیگری تغییر کرده است" toast.
