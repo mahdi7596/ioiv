@@ -1094,14 +1094,14 @@ Then repeat the Docker Compose command.
 
 ### Prisma tries to download from `binaries.prisma.sh`
 
-This means the image does not have the correct Linux Prisma engine export, or the runtime is trying to run a Prisma command without the `schema-engine`.
+The image is built on the server and `prisma generate` downloads the engines from
+`binaries.prisma.sh` during the build (reachable from the server as of 2026-09-26).
+The runtime image must not run Prisma CLI commands; migrations use the `migrate`
+maintenance image.
 
-Fix:
-
-1. Recreate `prisma-engine-export.tar.gz` locally using `Dockerfile.prisma-export`.
-2. Confirm it contains Linux musl engine files.
-3. Upload and extract it on the server.
-4. Rebuild `sana-app`.
+Fix: check the server can reach `https://binaries.prisma.sh`, then rerun
+`bash scripts/deploy-server.sh`. Do not reintroduce `prisma-engine-export`; it is
+obsolete (see [Prisma generation and immutable image delivery](#prisma-generation-and-immutable-image-delivery)).
 
 ### Build error: Prisma enum or field missing
 
@@ -1110,28 +1110,22 @@ Example errors:
 - `Module '"@prisma/client"' has no exported member 'ApplicationStatus'`
 - `Property 'companyName' does not exist`
 
-Cause: stale Prisma client export.
+Cause: the server checkout is behind or has local edits, or the schema change was
+not pushed.
 
-Fix: regenerate the Prisma export from the current local schema and upload it again.
+Fix: `git status` and `git log -1 --oneline` on the server must show a clean
+checkout of the expected `origin/master` commit; push the missing change from the
+Mac and rerun `bash scripts/deploy-server.sh`.
 
 ### Upload API returns `404`
 
-Cause: route file missing from server source or deployed image.
+Cause: route file missing from the deployed image (not committed or not deployed).
 
-Fix:
-
-```bash
-rsync -az --progress \
-  app/api/uploads/route.ts \
-  administrator@192.168.50.109:/data/apps/sana/app/api/uploads/
-
-rsync -az --progress \
-  lib/uploads/storage.ts \
-  administrator@192.168.50.109:/data/apps/sana/lib/uploads/
-```
-
-Then commit and push the missing file and redeploy with
+Fix: confirm the file is in `origin/master` (`git ls-files app/api/uploads/route.ts`
+on the server), commit and push it if missing, then redeploy with
 `bash scripts/deploy-server.sh` (see [Deploy Code Changes](#deploy-code-changes)).
+Never copy single files into `/data/apps/sana`: the deploy script refuses a checkout
+with edited tracked files.
 
 ### Upload API returns `500`
 
@@ -2355,7 +2349,18 @@ no app errors in the first five minutes. Old tarballs, `prisma-engine-export`,
 `sana-app:latest` and 26 GB of build cache were removed; `/data` went from 89% to
 30% used. `sana-app:80d4da9` is kept for rollback.
 
-Open item: the running `sana-postgres` container was created before the loopback
-port change and still publishes `0.0.0.0:55433`. Recreate it in a scheduled window
-after a fresh database dump (`docker compose up -d postgres`) and confirm
-`127.0.0.1:55433` in `docker compose ps`.
+The running `sana-postgres` container had been created before the loopback port
+change and still published `0.0.0.0:55433` (audit High finding not yet effective in
+production). After a fresh verified dump
+(`/data/backups/sana/sana-before-pg-port-20260926-071602.dump`, 49 table-data
+entries, mode 600) and confirming the container already used the local
+`postgres:16-alpine` image (`sha256:4e6e670b…`, so no version change), it was
+recreated with
+`docker compose -f docker-compose.yml -f docker-compose.release.yml up -d --no-deps postgres`.
+The `sana_sana-postgres-data` volume was reattached unchanged. Verified: postgres
+and app healthy, `ss -ltnp` shows only `127.0.0.1:55433` and `127.0.0.1:3000`,
+`/api/health` `{"ok":true}`, no app errors. Use an SSH tunnel for workstation
+database access (see [Docker Runtime](#docker-runtime)).
+
+The Troubleshooting entries that still described rsync file patches and the old
+Prisma engine export were rewritten for the git-based deploy.
