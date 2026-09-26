@@ -2418,3 +2418,12 @@ grant-only command above; no app rebuild is needed for this change. Rollback:
 `deploy-server.sh` now accepts `--manual-steps-done` so a release containing
 grant/migration changes can be deployed after the manual step instead of being
 blocked permanently.
+
+Applied in production on 2026-09-26: canonical grants re-applied (five `User`
+columns listed for `sana_runtime`). Two completed profiles lacked the `User` mirror;
+one was repaired by re-completing through the app, the other by a one-off
+transactional backfill copying `Company.name`, `nationalId`, `contactFullName` and
+`contactNationalCode` onto the owner's `User` row where
+`profileCompletedAt IS NOT NULL AND User.companyNationalId IS DISTINCT FROM
+Company.nationalId` (1 row updated, 0 remaining). Profile completion verified in
+the browser.
