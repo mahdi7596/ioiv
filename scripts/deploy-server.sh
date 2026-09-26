@@ -11,6 +11,7 @@
 # It refuses to continue when the update contains migrations, runtime grant
 # changes, or Compose/env contract changes: those need the manual procedure in
 # DEPLOYMENT.md (fresh backup, migrate image, grants) before the app switch.
+# After doing those steps, rerun with --manual-steps-done to deploy the app.
 #
 # The whole body is inside main() so bash parses it completely before
 # `git merge` can replace this file on disk.
@@ -18,6 +19,12 @@
 set -euo pipefail
 
 main() {
+  local manual_steps_done=false
+  case "${1:-}" in
+    "") ;;
+    --manual-steps-done) manual_steps_done=true ;;
+    *) echo "Usage: bash scripts/deploy-server.sh [--manual-steps-done]" >&2; exit 2 ;;
+  esac
   local release_file=docker-compose.release.yml
   local compose=(docker compose -f docker-compose.yml -f "$release_file")
 
@@ -75,8 +82,12 @@ main() {
     echo >&2
     echo "This update changes files that need manual deployment steps:" >&2
     echo "$manual" >&2
-    echo "Follow 'Deploy Code Changes > Updates that need manual steps' in DEPLOYMENT.md." >&2
-    exit 1
+    if [[ "$manual_steps_done" != true ]]; then
+      echo "Follow 'Deploy Code Changes > Updates that need manual steps' in DEPLOYMENT.md," >&2
+      echo "then rerun: bash scripts/deploy-server.sh --manual-steps-done" >&2
+      exit 1
+    fi
+    echo "Continuing: --manual-steps-done confirms those steps were completed." >&2
   fi
 
   echo

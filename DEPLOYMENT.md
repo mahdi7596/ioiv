@@ -674,7 +674,22 @@ re-applied.
 
 ### Updates that need manual steps
 
-When the script reports migrations, grant SQL, Compose or env-contract changes:
+When the script reports migrations, grant SQL, Compose or env-contract changes, do
+the steps below, then deploy the app with
+`bash scripts/deploy-server.sh --manual-steps-done` (the flag only skips this stop;
+confirmation, build, health check and automatic rollback still apply).
+
+Grant-only changes (`prisma/facilities-runtime-role-grants.sql`) need no backup,
+migration or image rebuild; apply the canonical policy as the database owner after
+`git pull --ff-only`:
+
+```bash
+cd /data/apps/sana
+docker compose exec -T postgres psql -U postgres -d sana -v ON_ERROR_STOP=1 \
+  -v runtime_role=sana_runtime < prisma/facilities-runtime-role-grants.sql
+```
+
+Full procedure for schema/Compose/env changes:
 
 1. Take a fresh matched backup (see [Backups](#backups)): database dump, uploads
    archive and the config files listed above.
@@ -2381,3 +2396,25 @@ No schema, storage or configuration change; deploy with `bash scripts/deploy-ser
 and roll back to the previous image. Verify: complete a profile, press Back, and
 save; the page should either save normally or show the reload panel, never the
 bare "پروفایل در جای دیگری تغییر کرده است" toast.
+
+### Runtime grant: legacy User mirror on profile completion (2026-09-26)
+
+Production reported `permission denied for table User` and the generic
+"انجام عملیات ممکن نشد" error on «تأیید تکمیل پروفایل». Completion first marks the
+company profile complete, then mirrors the company identity onto the legacy `User`
+row (`completeFacilitiesCompanyProfile`), but the canonical policy granted
+`sana_runtime` only `SELECT, INSERT` on `User`. Local development did not show it
+because it connects as the superuser. Affected users' profiles were marked complete
+while the UI reported failure and their `User` company fields were not updated.
+
+The policy now grants column-level `UPDATE` on `User` (`companyName`,
+`companyNationalId`, `companyContactFullName`, `companyContactNationalCode`,
+`updatedAt`) only; `mobile` and `id` stay read-only. `npm run test:db:m1-role`
+asserts both, and executes the runtime update as the restricted role. Apply with the
+grant-only command above; no app rebuild is needed for this change. Rollback:
+`REVOKE UPDATE ("companyName", "companyNationalId", "companyContactFullName",
+"companyContactNationalCode", "updatedAt") ON "User" FROM sana_runtime;`
+
+`deploy-server.sh` now accepts `--manual-steps-done` so a release containing
+grant/migration changes can be deployed after the manual step instead of being
+blocked permanently.

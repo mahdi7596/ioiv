@@ -38,6 +38,11 @@ TO :"runtime_role";
 -- read-only admin lookup, and append-only status/audit history. It intentionally
 -- does not authorize seed/admin management, schema migration, or table deletion.
 GRANT SELECT, INSERT ON TABLE "User" TO :"runtime_role";
+-- Completing the facilities company profile mirrors the company identity onto
+-- the legacy User row (completeFacilitiesCompanyProfile). Only those columns
+-- and Prisma's @updatedAt are writable; mobile and ids stay read-only.
+GRANT UPDATE ("companyName", "companyNationalId", "companyContactFullName", "companyContactNationalCode", "updatedAt")
+  ON TABLE "User" TO :"runtime_role";
 GRANT SELECT ON TABLE "Admin" TO :"runtime_role";
 GRANT SELECT, INSERT, UPDATE ON TABLE "OtpCode" TO :"runtime_role";
 GRANT SELECT, INSERT, UPDATE ON TABLE "Application" TO :"runtime_role";

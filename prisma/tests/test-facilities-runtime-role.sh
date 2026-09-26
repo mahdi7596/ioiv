@@ -59,6 +59,14 @@ SELECT (NOT (has_table_privilege(:'runtime_role', 'public."FacilitiesAuditLog"',
   AND NOT has_table_privilege(:'runtime_role', 'public."FacilitiesApplicationOfficer"', 'DELETE')
   AND has_table_privilege(:'runtime_role', 'public."FacilitiesFileUpload"', 'SELECT,INSERT,UPDATE')
   AND has_table_privilege(:'runtime_role', 'public."FacilitiesFileUploadAttempt"', 'SELECT,INSERT,UPDATE')
+  AND NOT has_table_privilege(:'runtime_role', 'public."User"', 'UPDATE')
+  AND has_column_privilege(:'runtime_role', 'public."User"', 'companyName', 'UPDATE')
+  AND has_column_privilege(:'runtime_role', 'public."User"', 'companyNationalId', 'UPDATE')
+  AND has_column_privilege(:'runtime_role', 'public."User"', 'companyContactFullName', 'UPDATE')
+  AND has_column_privilege(:'runtime_role', 'public."User"', 'companyContactNationalCode', 'UPDATE')
+  AND has_column_privilege(:'runtime_role', 'public."User"', 'updatedAt', 'UPDATE')
+  AND NOT has_column_privilege(:'runtime_role', 'public."User"', 'mobile', 'UPDATE')
+  AND NOT has_column_privilege(:'runtime_role', 'public."User"', 'id', 'UPDATE')
 ) AS runtime_role_table_privileges_restricted \gset
 \if :runtime_role_table_privileges_restricted
 \else
@@ -73,6 +81,10 @@ SET LOCAL ROLE :"runtime_role";
 
 -- A legacy runtime read and write remain available to the restricted role.
 SELECT count(*) FROM "User";
+-- Profile completion mirrors company identity onto the legacy User row.
+UPDATE "User" SET "companyName" = "companyName", "companyNationalId" = "companyNationalId",
+  "companyContactFullName" = "companyContactFullName", "companyContactNationalCode" = "companyContactNationalCode",
+  "updatedAt" = "updatedAt" WHERE false;
 INSERT INTO "OtpCode" ("id", "mobile", "codeHash", "purpose", "expiresAt") VALUES
   ('m1-runtime-role-otp', '09900000009', 'test', 'USER_LOGIN', CURRENT_TIMESTAMP + INTERVAL '5 minutes');
 
