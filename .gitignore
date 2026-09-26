@@ -40,6 +40,9 @@ yarn-error.log*
 !.env.runtime.example
 !.env.migration.example
 
+# production release pins and rollback copies (server-only)
+/docker-compose.release.yml*
+
 # vercel
 .vercel
 

@@ -100,7 +100,7 @@ Production redeploy and reset verified on May 7, 2026:
 
 Use L2TP when connecting to the private server IP:
 
-- Required: SSH, rsync, or any command using `192.168.50.109`.
+- Required: SSH or any command using `192.168.50.109`. (Code now comes from GitHub; rsync is no longer used for deploys.)
 - Required: internal checks against the server shell or Docker Compose.
 - Not required: opening `https://sana.ioiv.ir` in a public browser.
 - Not required: local-only commands inside `/Users/mahdi/Documents/work/ioiv`.
@@ -204,11 +204,16 @@ Useful commands:
 ```bash
 cd /data/apps/sana
 
-docker compose build app
-docker compose up -d
+bash scripts/deploy-server.sh   # build and switch the app (see Deploy Code Changes)
 docker compose ps
 docker compose logs --tail=80 app
 ```
+
+Never run a bare `docker compose build app` / `docker compose up -d` in production:
+without `-f docker-compose.release.yml` it builds or starts an unpinned image, and
+without `--no-deps` it can recreate the `sana-postgres` container. Older dated
+sections below still show those commands as historical records; use
+[Deploy Code Changes](#deploy-code-changes) instead.
 
 The app container runs:
 
@@ -587,71 +592,126 @@ compatible with current additive schema; preserve all earlier data/backup requir
 
 ## Deploy Code Changes
 
-Before uploading, verify locally:
+Since 2026-09-26 production gets its code from GitHub, not from rsync or uploaded
+tarballs. `/data/apps/sana` is a git checkout of `master` from the public repository
+`https://github.com/mahdi7596/ioiv.git`, and the app image is built on the server.
+The server can reach GitHub, the npm registry, Docker Hub, Alpine mirrors and Prisma
+binaries (checked 2026-09-26), so no Mac-side image build or transfer is needed.
 
-```bash
-cd /Users/mahdi/Documents/work/ioiv
-npm test
-npm run build
+Never clone into another directory and run Compose from there: the Compose project
+name comes from the directory name, and only `/data/apps/sana` uses the real
+`sana_sana-postgres-data` and `sana_sana-uploads` volumes. A different directory
+starts an empty database.
+
+Files that stay on the server and are not in git (all ignored by `.gitignore`):
+`.env`, `.env.runtime`, `.env.migration`, `docker-compose.release.yml` and its
+`docker-compose.release.yml.bak-<sha>` rollback copies. `docker-compose.release.yml`
+pins the running images:
+
+```yaml
+services:
+  app:
+    image: sana-app:<short-sha>
+  migrate:
+    image: sana-migrate:<short-sha-of-last-schema-release>
 ```
 
-Upload source to the server. Keep server `.env`, uploads, generated build folders, and archives out of rsync:
+Always pass both Compose files for `up`, otherwise Compose would build or start an
+unpinned image: `docker compose -f docker-compose.yml -f docker-compose.release.yml ...`.
+
+### Routine update (no migrations, grants or env changes)
+
+1. Push to `master` after local checks (`npm test`, `npm run lint`, `npm run build`).
+2. Connect the L2TP VPN, SSH in and run:
+
+   ```bash
+   cd /data/apps/sana && bash scripts/deploy-server.sh
+   ```
+
+   The script shows the commits between the running tag and `origin/master`, asks
+   for confirmation, fast-forwards the checkout, builds `sana-app:<short-sha>` (the
+   live app keeps serving; about 5–10 minutes), updates the app tag in
+   `docker-compose.release.yml`, recreates **only** the app container
+   (`--no-deps --no-build`, Postgres is never touched) and waits for it to become
+   healthy. If it does not, it restores the previous tag automatically. It stops
+   before changing anything when the update touches `prisma/migrations`,
+   `prisma/schema.prisma`, `prisma/*.sql`, `prisma.config.ts`, `package.json`,
+   `package-lock.json` (a Prisma bump needs a matching `sana-migrate` image),
+   `docker-compose.yml` or the env examples. It cannot detect a new required env
+   variable that was not added to `.env.runtime.example`; keep the examples current.
+   It also refuses to run when the checkout is not on `master` or tracked files
+   were edited on the server.
+
+3. Verify:
+
+   ```bash
+   curl -s http://127.0.0.1:3000/api/health; echo
+   curl -sI https://sana.ioiv.ir | head -1
+   docker compose logs --since 5m app | grep -iE 'error|fail|warn'
+   ```
+
+   Then check the changed screens in a browser.
+
+4. Keep the previous app image for rollback and remove older ones, then clear the
+   build cache (the server disk is 49 GB; one build cache reached 26 GB):
+
+   ```bash
+   docker images | grep sana
+   docker image rm sana-app:<older-sha>
+   docker image prune -f && docker builder prune -f
+   df -h /data
+   ```
+
+Manual rollback (the script prints the exact command):
 
 ```bash
-cd /Users/mahdi/Documents/work/ioiv
-
-rsync -az --delete \
-  --exclude '.git' \
-  --exclude 'node_modules' \
-  --exclude '.next' \
-  --exclude 'uploads' \
-  --exclude '.env' \
-  --exclude '.DS_Store' \
-  --exclude '*.tar' \
-  --exclude '*.tar.gz' \
-  ./ administrator@192.168.50.109:/data/apps/sana/
+cd /data/apps/sana && cp docker-compose.release.yml.bak-<previous-sha> docker-compose.release.yml && docker compose -f docker-compose.yml -f docker-compose.release.yml up -d --no-deps --no-build app
 ```
 
-If only one missing file needs to be patched, upload that file directly, for example:
+Run the deploy and rollback commands separately. On 2026-09-26 both were pasted
+together, so the release was deployed and immediately rolled back; it had to be
+re-applied.
 
-```bash
-ssh administrator@192.168.50.109 'mkdir -p /data/apps/sana/app/api/uploads'
+### Updates that need manual steps
 
-rsync -az --progress \
-  app/api/uploads/route.ts \
-  administrator@192.168.50.109:/data/apps/sana/app/api/uploads/
-```
+When the script reports migrations, grant SQL, Compose or env-contract changes:
 
-After upload, rebuild and restart:
+1. Take a fresh matched backup (see [Backups](#backups)): database dump, uploads
+   archive and the config files listed above.
+2. `git merge --ff-only origin/master`, then build both images:
 
-```bash
-cd /data/apps/sana
+   ```bash
+   SHA=$(git rev-parse --short=7 HEAD)
+   docker build -t sana-app:$SHA .
+   docker build --target maintenance -t sana-migrate:$SHA .
+   ```
 
-docker compose build app
-docker compose up -d
-docker compose ps
-docker compose logs --tail=80 app
-```
+3. Add any new runtime settings to `.env.runtime` / `.env.migration`.
+4. Point both tags in `docker-compose.release.yml` at `$SHA` (keep a `.bak` copy),
+   then run migrations explicitly:
+   `docker compose -f docker-compose.yml -f docker-compose.release.yml --profile migration run --rm migrate`.
+5. Re-apply the canonical runtime grants if `prisma/*.sql` changed (see
+   [M1 database credentials and migration procedure](#m1-database-credentials-and-migration-procedure)).
+6. `docker compose -f docker-compose.yml -f docker-compose.release.yml up -d --no-deps --no-build app`
+   and verify as above. `docker compose restart` does not reload env files; after
+   env-only changes use
+   `docker compose -f docker-compose.yml -f docker-compose.release.yml up -d --no-deps --no-build --force-recreate app`.
 
-Important: `docker compose build app` only builds a new image. It does not replace the running
-container. Confirm `docker compose ps` after `docker compose up -d`; the app container `CREATED`
-age should be recent, and health should become `healthy`.
+Changing `docker-compose.yml` for the `postgres` service recreates the database
+container on the next `up` without `--no-deps`; schedule that separately.
 
-If the build fails with a TypeScript error involving a property that exists locally, check for a
-stale or partially uploaded source file on the server. Example from May 7, 2026:
+### History: rsync and image-tarball deploys
 
-```bash
-grep -R "pdfOnly" -n lib app components tests
-grep -R "function storeUploadFile\|storeUploadFile" -n lib/uploads lib/actions/admin.ts
-```
+Before 2026-09-26 source was rsync'd (without `.git`) and images were built on the
+Mac with `docker build --platform linux/amd64`, saved with `docker save`, copied
+with `scp` and loaded on the server. That path is retired. When copying anything
+from a Mac, check the prompt first: on 2026-09-26 a Mac-side `docker save | gzip`
+was run on the server and produced an empty 20-byte archive, because a pipe without
+`set -o pipefail` hides the failure.
 
-Then upload the missing file directly, for example:
-
-```bash
-rsync -az --progress \
-  lib/uploads/storage.ts \
-  administrator@192.168.50.109:/data/apps/sana/lib/uploads/storage.ts
-```
+The pre-git server source was archived as
+`/data/backups/sana/sana-source-before-git-<timestamp>.tar.gz` (mode 600; contains the
+env files).
 
 ## Database
 
@@ -1070,13 +1130,8 @@ rsync -az --progress \
   administrator@192.168.50.109:/data/apps/sana/lib/uploads/
 ```
 
-Then rebuild:
-
-```bash
-cd /data/apps/sana
-docker compose build app
-docker compose up -d
-```
+Then commit and push the missing file and redeploy with
+`bash scripts/deploy-server.sh` (see [Deploy Code Changes](#deploy-code-changes)).
 
 ### Upload API returns `500`
 
@@ -2283,3 +2338,24 @@ malware-scanning policy remain unchanged. No schema or storage migration is need
 Verify with `npx vitest run tests/facilities-files.test.ts`; rollback consists of
 restoring the previous PDF detector and its tests. Previously accepted uploads are
 not revalidated by this change.
+
+## 2026-09-26 production release 6cd4ea3 and git-based deploys
+
+Production moved from `sana-app:80d4da9` to `sana-app:6cd4ea3` (commits `b1eade7`
+facilities form actions/profile errors/PDF detection and `6cd4ea3` credit report
+guidance). No migration, grant, Dockerfile or env change; `sana-migrate:80d4da9`
+remains the current migration image. The owner chose to rely on the 2026-09-22
+backup (`/data/backups/sana/20260922-180032`) because the release did not touch
+data, schema or uploads.
+
+`/data/apps/sana` was converted in place into a git checkout of `origin/master`
+(untracked env and release files preserved) and the image was built on the server.
+Verified: container healthy, `/api/health` `{"ok":true}`, public `HTTP/1.1 200`,
+no app errors in the first five minutes. Old tarballs, `prisma-engine-export`,
+`sana-app:latest` and 26 GB of build cache were removed; `/data` went from 89% to
+30% used. `sana-app:80d4da9` is kept for rollback.
+
+Open item: the running `sana-postgres` container was created before the loopback
+port change and still publishes `0.0.0.0:55433`. Recreate it in a scheduled window
+after a fresh database dump (`docker compose up -d postgres`) and confirm
+`127.0.0.1:55433` in `docker compose ps`.
